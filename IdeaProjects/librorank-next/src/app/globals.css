@@ -1,0 +1,3 @@
+/* Bootstrap primero para que los overrides del CSS propio ganen */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
