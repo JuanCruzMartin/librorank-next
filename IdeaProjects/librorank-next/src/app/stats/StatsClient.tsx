@@ -19,12 +19,15 @@ export default function StatsClient({ generos, moods, paginas, autorMasLeido, me
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    import('https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js' as never).catch(() => {
+    const existingScript = document.querySelector('script[src*="chart.js"]')
+    if (existingScript) {
+      renderCharts()
+    } else {
       const script = document.createElement('script')
       script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js'
-      document.head.appendChild(script)
       script.onload = renderCharts
-    })
+      document.head.appendChild(script)
+    }
 
     function renderCharts() {
       const Chart = ((window as unknown) as { Chart: new (...args: unknown[]) => unknown }).Chart
@@ -110,7 +113,6 @@ export default function StatsClient({ generos, moods, paginas, autorMasLeido, me
         </div>
       </div>
 
-      <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js" async />
     </div>
   )
 }
