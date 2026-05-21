@@ -39,6 +39,7 @@ export default function PerfilClient({
   const [mensaje, setMensaje] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [subiendo, setSubiendo] = useState(false)
+  const [avatarActual, setAvatarActual] = useState(usuario.avatar_url || '/img/personajes/personaje_1.png')
 
   async function guardarPerfil(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -60,6 +61,7 @@ export default function PerfilClient({
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ avatar_url: url }),
     })
+    setAvatarActual(url)
     router.refresh()
   }
 
@@ -69,8 +71,15 @@ export default function PerfilClient({
     setSubiendo(true)
     const fd = new FormData()
     fd.append('foto', file)
-    await fetch('/api/upload', { method: 'POST', body: fd })
+    const res = await fetch('/api/upload', { method: 'POST', body: fd })
+    const json = await res.json()
     setSubiendo(false)
+    if (json.avatarUrl) {
+      setAvatarActual(json.avatarUrl)
+      setMensaje('¡Foto actualizada!')
+    } else {
+      setMensaje(json.error || 'Error al subir la foto')
+    }
     router.refresh()
   }
 
@@ -89,9 +98,10 @@ export default function PerfilClient({
           <div className="card p-4 text-center">
             <div className="user-avatar" style={{ position: 'relative' }}>
               <img
-                src={usuario.avatar_url || '/img/personajes/personaje_1.png'}
+                src={avatarActual}
                 alt="Avatar"
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                onError={e => { (e.target as HTMLImageElement).src = '/img/personajes/personaje_1.png' }}
               />
               {esMiPerfil && (
                 <label style={{
