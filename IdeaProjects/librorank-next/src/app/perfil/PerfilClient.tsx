@@ -149,12 +149,19 @@ export default function PerfilClient({
               />
               {esMiPerfil && (
                 <label style={{
-                  position: 'absolute', bottom: 4, right: 4,
-                  background: 'var(--accent-gold)', borderRadius: '50%',
-                  width: 30, height: 30, display: 'flex',
+                  position: 'absolute', bottom: 0, right: 0,
+                  background: 'linear-gradient(135deg,#d4af37,#f1c40f)',
+                  borderRadius: '50%',
+                  width: 40, height: 40, display: 'flex',
                   alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', fontSize: '0.9rem',
-                }}>
+                  cursor: 'pointer', fontSize: '1.1rem',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
+                  border: '2px solid #1a1614',
+                  transition: 'transform 0.15s',
+                }}
+                  onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.15)')}
+                  onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+                >
                   📷
                   <input type="file" accept="image/*" className="d-none" onChange={abrirCrop} />
                 </label>
