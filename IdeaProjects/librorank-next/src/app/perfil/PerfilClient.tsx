@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Usuario, NivelInfo } from '@/lib/dao/usuarioDAO'
@@ -40,6 +40,11 @@ export default function PerfilClient({
   const [guardando, setGuardando] = useState(false)
   const [subiendo, setSubiendo] = useState(false)
   const [avatarActual, setAvatarActual] = useState(usuario.avatar_url || '/img/personajes/personaje_1.png')
+  const [cropFile, setCropFile] = useState<File | null>(null)
+  const [cropPreviewUrl, setCropPreviewUrl] = useState<string | null>(null)
+  const [cropPos, setCropPos] = useState({ x: 50, y: 50 })
+  const isDragging = useRef(false)
+  const lastDrag = useRef({ x: 0, y: 0 })
 
   async function guardarPerfil(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -65,22 +70,61 @@ export default function PerfilClient({
     router.refresh()
   }
 
-  async function subirFoto(e: React.ChangeEvent<HTMLInputElement>) {
+  function abrirCrop(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    setCropFile(file)
+    setCropPreviewUrl(URL.createObjectURL(file))
+    setCropPos({ x: 50, y: 50 })
+    e.target.value = ''
+  }
+
+  function onDragStart(e: React.MouseEvent | React.TouchEvent) {
+    isDragging.current = true
+    const pt = 'touches' in e ? e.touches[0] : e
+    lastDrag.current = { x: pt.clientX, y: pt.clientY }
+  }
+
+  function onDragMove(e: React.MouseEvent | React.TouchEvent) {
+    if (!isDragging.current) return
+    const pt = 'touches' in e ? e.touches[0] : e
+    const dx = pt.clientX - lastDrag.current.x
+    const dy = pt.clientY - lastDrag.current.y
+    lastDrag.current = { x: pt.clientX, y: pt.clientY }
+    setCropPos(prev => ({
+      x: Math.max(0, Math.min(100, prev.x - dx * 0.3)),
+      y: Math.max(0, Math.min(100, prev.y - dy * 0.3)),
+    }))
+  }
+
+  function onDragEnd() { isDragging.current = false }
+
+  async function confirmarCrop() {
+    if (!cropFile) return
     setSubiendo(true)
-    const fd = new FormData()
-    fd.append('foto', file)
-    const res = await fetch('/api/upload', { method: 'POST', body: fd })
-    const json = await res.json()
-    setSubiendo(false)
-    if (json.avatarUrl) {
-      setAvatarActual(json.avatarUrl)
-      setMensaje('¡Foto actualizada!')
-    } else {
-      setMensaje(json.error || 'Error al subir la foto')
-    }
-    router.refresh()
+    const img = new Image()
+    img.src = cropPreviewUrl!
+    await new Promise(res => { img.onload = res })
+    const canvas = document.createElement('canvas')
+    canvas.width = 400; canvas.height = 400
+    const ctx = canvas.getContext('2d')!
+    const size = Math.min(img.width, img.height)
+    const sx = (img.width - size) * (cropPos.x / 100)
+    const sy = (img.height - size) * (cropPos.y / 100)
+    ctx.drawImage(img, sx, sy, size, size, 0, 0, 400, 400)
+    canvas.toBlob(async (blob) => {
+      if (!blob) return
+      const fd = new FormData()
+      fd.append('foto', blob, 'avatar.jpg')
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      const json = await res.json()
+      setSubiendo(false)
+      setCropFile(null)
+      setCropPreviewUrl(null)
+      if (json.avatarUrl) { setAvatarActual(json.avatarUrl); setMensaje('¡Foto actualizada!') }
+      else setMensaje(json.error || 'Error al subir la foto')
+      router.refresh()
+    }, 'image/jpeg', 0.92)
   }
 
   const nivelPct = Math.min((leidosEsteAnio / (usuario.objetivo_anual || 12)) * 100, 100)
@@ -112,7 +156,7 @@ export default function PerfilClient({
                   cursor: 'pointer', fontSize: '0.9rem',
                 }}>
                   📷
-                  <input type="file" accept="image/*" className="d-none" onChange={subirFoto} />
+                  <input type="file" accept="image/*" className="d-none" onChange={abrirCrop} />
                 </label>
               )}
             </div>
@@ -393,7 +437,7 @@ export default function PerfilClient({
                 <div className="d-flex gap-3 flex-wrap align-items-center mt-2">
                   <label className="btn--brand" style={{ cursor: 'pointer', fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
                     {subiendo ? 'Subiendo...' : '📷 Subir foto'}
-                    <input type="file" accept="image/*" className="d-none" onChange={subirFoto} />
+                    <input type="file" accept="image/*" className="d-none" onChange={abrirCrop} />
                   </label>
                   {AVATARES.map(av => (
                     <button key={av} onClick={() => seleccionarAvatar(av)} style={{
@@ -442,5 +486,63 @@ export default function PerfilClient({
         </div>
       </div>
     </div>
+
+    {/* ── MODAL DE RECORTE ── */}
+    {cropFile && cropPreviewUrl && (
+      <div style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
+        zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <div className="card p-4" style={{ width: 320, textAlign: 'center' }}>
+          <h5 className="font-title mb-2" style={{ color: 'var(--accent-gold)' }}>Ajustá tu foto</h5>
+          <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginBottom: '1.25rem' }}>
+            Arrastrá para elegir qué parte mostrar
+          </p>
+
+          <div
+            style={{
+              width: 200, height: 200, borderRadius: '50%', overflow: 'hidden',
+              margin: '0 auto 1.5rem', cursor: 'grab',
+              border: '3px solid var(--accent-gold)',
+              boxShadow: '0 0 20px rgba(212,175,55,0.3)',
+              userSelect: 'none',
+            }}
+            onMouseDown={onDragStart}
+            onMouseMove={onDragMove}
+            onMouseUp={onDragEnd}
+            onMouseLeave={onDragEnd}
+            onTouchStart={onDragStart}
+            onTouchMove={onDragMove}
+            onTouchEnd={onDragEnd}
+          >
+            <img
+              src={cropPreviewUrl}
+              alt="preview"
+              draggable={false}
+              style={{
+                width: '100%', height: '100%',
+                objectFit: 'cover',
+                objectPosition: `${cropPos.x}% ${cropPos.y}%`,
+                pointerEvents: 'none',
+              }}
+            />
+          </div>
+
+          <div className="d-flex gap-2 justify-content-center">
+            <button
+              onClick={() => { setCropFile(null); setCropPreviewUrl(null) }}
+              style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, padding: '0.5rem 1.25rem', color: '#fff', cursor: 'pointer' }}>
+              Cancelar
+            </button>
+            <button
+              onClick={confirmarCrop}
+              disabled={subiendo}
+              style={{ background: 'linear-gradient(135deg,#d4af37,#f1c40f)', border: 'none', borderRadius: 8, padding: '0.5rem 1.5rem', fontWeight: 700, cursor: 'pointer', color: '#000' }}>
+              {subiendo ? 'Subiendo...' : 'Guardar'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
   )
 }
