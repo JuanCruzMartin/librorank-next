@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import type { LibroRecomendado } from '@/app/api/recomendaciones/route'
+import BannerExplicativo from '@/components/BannerExplicativo'
 
 const MOODS: { key: string; emoji: string; descripcion: string; color: string }[] = [
   { key: 'Relajado',    emoji: '☕', descripcion: 'Algo tranquilo y cómodo',     color: '#4a9e7a' },
@@ -75,6 +76,20 @@ export default function RecomendacionesClient({ moodFavorito, topGeneros }: Prop
 
   return (
     <div style={{ minHeight: '100vh' }}>
+      <div className="container pt-4">
+        <BannerExplicativo
+          icon="✨"
+          titulo="Recomendaciones para vos"
+          descripcion="Libros elegidos según tu estado de ánimo"
+          pasos={[
+            { icon: '🎭', texto: 'Elegí tu mood del momento' },
+            { icon: '🤖', texto: 'Recibís sugerencias personalizadas' },
+            { icon: '📚', texto: 'Basadas en tus géneros favoritos' },
+            { icon: '➕', texto: 'Agregá los que te gusten directo a tu biblioteca' },
+          ]}
+          color="#9b59b6"
+        />
+      </div>
 
       {/* ── HERO ── */}
       <div style={{
@@ -341,6 +356,7 @@ export default function RecomendacionesClient({ moodFavorito, topGeneros }: Prop
           50% { opacity: 0.5; }
         }
       `}</style>
+    </div>
     </div>
   )
 }

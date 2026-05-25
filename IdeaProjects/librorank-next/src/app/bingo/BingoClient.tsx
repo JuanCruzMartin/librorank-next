@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { BingoCasilla } from '@/lib/dao/bingoDAO'
 import type { Libro } from '@/lib/dao/libroDAO'
+import BannerExplicativo from '@/components/BannerExplicativo'
 
 interface Props {
   bingo: BingoCasilla[]
@@ -39,7 +40,18 @@ export default function BingoClient({ bingo: bingoIni, misLibros }: Props) {
 
   return (
     <div className="container py-5">
-
+      <BannerExplicativo
+        icon="🎲"
+        titulo="Bingo Lector"
+        descripcion="Desafíos de lectura en formato bingo"
+        pasos={[
+          { icon: '📋', texto: 'Cada casilla es una categoría de libro' },
+          { icon: '✅', texto: 'Marcá una casilla cuando leés ese tipo de libro' },
+          { icon: '🏆', texto: 'Completar una fila entera da puntos extra' },
+          { icon: '⭐', texto: 'Ganás 25 puntos por cada casilla completada' },
+        ]}
+        color="#f39c12"
+      />
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-5">
         <div>

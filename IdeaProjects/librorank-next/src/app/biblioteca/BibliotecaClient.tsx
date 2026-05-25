@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import type { Libro, PerfilStats } from '@/lib/dao/libroDAO'
 import type { Usuario } from '@/lib/dao/usuarioDAO'
+import BannerExplicativo from '@/components/BannerExplicativo'
 
 const ESTADOS = ['PENDIENTE', 'LEYENDO', 'LEIDO', 'PAUSA']
 const GENEROS = ['Fantasía', 'Ciencia Ficción', 'Romance', 'Terror', 'Misterio', 'Historia', 'Biografía', 'Autoayuda', 'Poesía', 'Otro']
@@ -221,6 +222,17 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
 
       <main className="container my-5">
         {mensaje && <div className="alert alert-danger">{mensaje}</div>}
+        <BannerExplicativo
+          icon="📚"
+          titulo="Tu Biblioteca"
+          descripcion="Todo lo que leés, en un solo lugar"
+          pasos={[
+            { icon: '🔍', texto: 'Buscá un libro por título y agregalo' },
+            { icon: '🏷️', texto: 'Marcá su estado: Pendiente, Leyendo, Leído o Pausa' },
+            { icon: '⭐', texto: 'Calificalo y escribí tu reseña' },
+            { icon: '📝', texto: 'Anotá citas y usá el diario de lectura' },
+          ]}
+        />
 
         {/* Filtros */}
         <div className="d-flex gap-2 flex-wrap mb-4 align-items-center">

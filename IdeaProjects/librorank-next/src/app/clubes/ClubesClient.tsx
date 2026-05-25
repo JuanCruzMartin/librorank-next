@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Club } from '@/lib/dao/clubDAO'
+import BannerExplicativo from '@/components/BannerExplicativo'
 
 const COMO_FUNCIONA = [
   { emoji: '📖', titulo: 'Elegís un libro', texto: 'Al crear el club indicás qué libro van a leer juntos. Puede ser cualquiera.' },
@@ -159,7 +160,18 @@ export default function ClubesClient({ clubesIniciales }: Props) {
       {/* ── CONTENIDO ── */}
       <div className="container py-5">
         {error && <div className="alert alert-danger mb-4">{error}</div>}
-
+        <BannerExplicativo
+          icon="📚"
+          titulo="Clubes de Lectura"
+          descripcion="Leé y discutí libros en comunidad"
+          pasos={[
+            { icon: '➕', texto: 'Creá tu propio club o unite a uno existente' },
+            { icon: '📖', texto: 'Cada club está dedicado a un libro' },
+            { icon: '💬', texto: 'Discutí por capítulos para evitar spoilers' },
+            { icon: '✦', texto: 'El creador del club modera la discusión' },
+          ]}
+          color="#5dade2"
+        />
         {/* Mis clubes */}
         {misClubes.length > 0 && (
           <div className="mb-5">

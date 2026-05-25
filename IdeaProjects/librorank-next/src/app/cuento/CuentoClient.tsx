@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { FragmentoHistoria } from '@/lib/dao/cuentoDAO'
+import BannerExplicativo from '@/components/BannerExplicativo'
 
 interface Props {
   fragmentos: FragmentoHistoria[]
@@ -40,7 +41,18 @@ export default function CuentoClient({ fragmentos: fragmentosIni, yaEscribio: ya
 
   return (
     <div className="container py-5">
-
+      <BannerExplicativo
+        icon="✍️"
+        titulo="Cuento Colaborativo"
+        descripcion="Una historia escrita entre todos"
+        pasos={[
+          { icon: '📖', texto: 'Cada usuario agrega un fragmento a la historia' },
+          { icon: '🔗', texto: 'Los fragmentos se encadenan en orden' },
+          { icon: '🎨', texto: 'Dejate llevar y sé creativo' },
+          { icon: '⭐', texto: 'Ganás 30 puntos por cada fragmento que aportás' },
+        ]}
+        color="#27ae60"
+      />
       {/* Encabezado */}
       <div className="mb-5">
         <h1 className="font-title display-5 mb-2">✍️ El Gran Cuento</h1>

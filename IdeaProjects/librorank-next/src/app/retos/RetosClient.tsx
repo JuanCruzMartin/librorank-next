@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { RetoAmigo } from '@/lib/dao/retoDAO'
 import type { Libro } from '@/lib/dao/libroDAO'
+import BannerExplicativo from '@/components/BannerExplicativo'
 
 interface Props {
   retos: RetoAmigo[]
@@ -50,7 +51,18 @@ export default function RetosClient({ retos: retosIni, misLibros, usuarioId }: P
 
   return (
     <div className="container py-5">
-
+      <BannerExplicativo
+        icon="⚔️"
+        titulo="Retos de Lectura"
+        descripcion="Competí con tus amigos a ver quién lee más"
+        pasos={[
+          { icon: '👥', texto: 'Desafiá a un amigo a leer una cantidad de libros' },
+          { icon: '⏱️', texto: 'Los retos tienen fecha límite' },
+          { icon: '🏅', texto: 'El que llega a la meta primero gana' },
+          { icon: '⭐', texto: 'Ganás puntos por crear y completar retos' },
+        ]}
+        color="#e74c3c"
+      />
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-5">
         <div>
