@@ -76,20 +76,6 @@ export default function RecomendacionesClient({ moodFavorito, topGeneros }: Prop
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      <div className="container pt-4">
-        <BannerExplicativo
-          icon="✨"
-          titulo="Recomendaciones para vos"
-          descripcion="Libros elegidos según tu estado de ánimo"
-          pasos={[
-            { icon: '🎭', texto: 'Elegí tu mood del momento' },
-            { icon: '🤖', texto: 'Recibís sugerencias personalizadas' },
-            { icon: '📚', texto: 'Basadas en tus géneros favoritos' },
-            { icon: '➕', texto: 'Agregá los que te gusten directo a tu biblioteca' },
-          ]}
-          color="#9b59b6"
-        />
-      </div>
 
       {/* ── HERO ── */}
       <div style={{
@@ -171,6 +157,18 @@ export default function RecomendacionesClient({ moodFavorito, topGeneros }: Prop
 
       {/* ── RESULTADOS ── */}
       <div className="container py-5">
+        <BannerExplicativo
+          icon="✨"
+          titulo="Recomendaciones para vos"
+          descripcion="Libros elegidos según tu estado de ánimo"
+          pasos={[
+            { icon: '🎭', texto: 'Elegí tu mood del momento' },
+            { icon: '🤖', texto: 'Recibís sugerencias personalizadas' },
+            { icon: '📚', texto: 'Basadas en tus géneros favoritos' },
+            { icon: '➕', texto: 'Agregá los que te gusten directo a tu biblioteca' },
+          ]}
+          color="#9b59b6"
+        />
 
         {/* Header resultados */}
         <div className="d-flex align-items-center justify-content-between mb-4">
@@ -356,7 +354,6 @@ export default function RecomendacionesClient({ moodFavorito, topGeneros }: Prop
           50% { opacity: 0.5; }
         }
       `}</style>
-    </div>
     </div>
   )
 }
