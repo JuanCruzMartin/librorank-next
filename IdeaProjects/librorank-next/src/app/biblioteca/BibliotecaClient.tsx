@@ -275,7 +275,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
 
                   {/* Overlay hover */}
                   <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.75) 55%, transparent 100%)', padding: '1.2rem 0.65rem 0.75rem', transform: hovered ? 'translateY(0)' : 'translateY(35%)', opacity: hovered ? 1 : 0, transition: 'all 0.25s ease' }}>
-                    <p style={{ margin: '0 0 2px', fontWeight: 700, fontSize: '0.75rem', color: '#fff', lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{libro.titulo}</p>
+                    <p style={{ margin: '0 0 2px', fontWeight: 700, fontSize: '0.75rem', color: '#fff', lineHeight: 1.25, overflow: 'hidden', maxHeight: '2.5rem' } as React.CSSProperties}>{libro.titulo}</p>
                     <p style={{ margin: '0 0 6px', fontSize: '0.65rem', color: 'rgba(255,255,255,0.55)' }}>{libro.autor}</p>
                     {(libro.estrellas ?? 0) > 0 && (
                       <p style={{ margin: '0 0 7px', fontSize: '0.65rem', letterSpacing: 1 }}>{'⭐'.repeat(libro.estrellas ?? 0)}</p>
