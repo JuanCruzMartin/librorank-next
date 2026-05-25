@@ -109,11 +109,13 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
     return true
   })
 
-  const badgeEstado = (estado: string) => {
-    if (estado === 'LEIDO') return 'badge bg-success-subtle text-success border border-success-subtle'
-    if (estado === 'LEYENDO') return 'badge bg-warning-subtle text-warning border border-warning-subtle'
-    if (estado === 'PAUSA') return 'badge bg-info-subtle text-info border border-info-subtle'
-    return 'badge bg-secondary-subtle text-secondary border border-secondary-subtle'
+  const [hoveredId, setHoveredId] = useState<number | null>(null)
+
+  const estadoColor = (estado: string) => {
+    if (estado === 'LEIDO')    return { bg: '#4cd137', color: '#000' }
+    if (estado === 'LEYENDO')  return { bg: '#f1c40f', color: '#000' }
+    if (estado === 'PAUSA')    return { bg: '#5dade2', color: '#000' }
+    return { bg: 'rgba(255,255,255,0.25)', color: '#fff' }
   }
 
   return (
@@ -192,40 +194,58 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
             <button onClick={() => setShowModal(true)} className="btn btn-gold btn-sm mt-2">Agregar mi primer libro</button>
           </div>
         ) : (
-          <div className="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-4" id="contenedorLibros">
-            {librosFiltrados.map(libro => (
-              <div key={libro.id} className="col">
-                <div className="card h-100 text-white p-2" style={{ background: 'var(--bg-card)', border: '1px solid rgba(212,175,55,0.15)' }}>
-                  <div className="position-relative">
-                    {libro.portada_url ? (
-                      <img src={libro.portada_url} alt={libro.titulo} className="card-img-top rounded shadow-sm" style={{ height: 200, objectFit: 'cover' }} />
-                    ) : (
-                      <div className="card-img-top rounded d-flex align-items-center justify-content-center" style={{ height: 200, background: '#36302c', fontSize: '3rem' }}>📚</div>
-                    )}
-                    <div className="position-absolute top-0 end-0 p-1 d-flex gap-1">
-                      <button onClick={() => eliminarLibro(libro.id)} className="btn btn-danger btn-sm p-1" title="Eliminar">
-                        <i className="bi bi-trash"></i>
-                      </button>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '1rem' }}>
+            {librosFiltrados.map(libro => {
+              const hovered = hoveredId === libro.id
+              const ec = estadoColor(libro.estado)
+              return (
+                <div key={libro.id}
+                  style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', aspectRatio: '2/3', cursor: 'pointer', boxShadow: hovered ? '0 12px 40px rgba(0,0,0,0.7)' : '0 2px 10px rgba(0,0,0,0.4)', transform: hovered ? 'translateY(-6px) scale(1.02)' : 'none', transition: 'all 0.22s ease' }}
+                  onMouseEnter={() => setHoveredId(libro.id)}
+                  onMouseLeave={() => setHoveredId(null)}
+                >
+                  {/* Portada */}
+                  {libro.portada_url ? (
+                    <img src={libro.portada_url} alt={libro.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#25211e,#36302c)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                      <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>📚</span>
+                      <span style={{ fontSize: '0.72rem', color: '#fff', textAlign: 'center', fontWeight: 700, lineHeight: 1.3 }}>{libro.titulo}</span>
                     </div>
+                  )}
+
+                  {/* Badge estado */}
+                  <div style={{ position: 'absolute', top: 8, left: 8, background: ec.bg, color: ec.color, borderRadius: 99, padding: '2px 7px', fontSize: '0.55rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    {libro.estado}
                   </div>
-                  <div className="card-body p-2 text-center">
-                    <h6 className="card-title text-truncate mb-1" title={libro.titulo}>{libro.titulo}</h6>
-                    <p className="card-text small text-muted text-truncate mb-2">{libro.autor}</p>
-                    <div className="mb-3">
-                      <span className={badgeEstado(libro.estado)}>{libro.estado}</span>
-                    </div>
-                    <div className="d-grid gap-2">
-                      <Link href={`/diario?libroId=${libro.id}`} className="btn btn-gold btn-sm">
-                        <i className="bi bi-journal-bookmark me-1"></i>Diario / Citas
+
+                  {/* Botón eliminar */}
+                  <button onClick={e => { e.stopPropagation(); eliminarLibro(libro.id) }}
+                    style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.65)', border: 'none', borderRadius: '50%', width: 26, height: 26, color: '#ff5e57', cursor: 'pointer', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: hovered ? 1 : 0, transition: 'opacity 0.2s' }}>
+                    ✕
+                  </button>
+
+                  {/* Overlay hover */}
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.75) 55%, transparent 100%)', padding: '1.2rem 0.65rem 0.75rem', transform: hovered ? 'translateY(0)' : 'translateY(35%)', opacity: hovered ? 1 : 0, transition: 'all 0.25s ease' }}>
+                    <p style={{ margin: '0 0 2px', fontWeight: 700, fontSize: '0.75rem', color: '#fff', lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{libro.titulo}</p>
+                    <p style={{ margin: '0 0 6px', fontSize: '0.65rem', color: 'rgba(255,255,255,0.55)' }}>{libro.autor}</p>
+                    {(libro.estrellas ?? 0) > 0 && (
+                      <p style={{ margin: '0 0 7px', fontSize: '0.65rem', letterSpacing: 1 }}>{'⭐'.repeat(libro.estrellas ?? 0)}</p>
+                    )}
+                    <div style={{ display: 'flex', gap: '0.35rem' }}>
+                      <Link href={`/diario?libroId=${libro.id}`}
+                        style={{ flex: 1, background: '#d4af37', borderRadius: 6, padding: '0.3rem 0.25rem', fontSize: '0.6rem', fontWeight: 700, color: '#000', textDecoration: 'none', textAlign: 'center' }}>
+                        📖 Diario
                       </Link>
-                      <button onClick={() => setEditando(libro)} className="btn btn-outline-warning btn-sm">
-                        <i className="bi bi-pencil me-1"></i>Editar
+                      <button onClick={() => setEditando(libro)}
+                        style={{ flex: 1, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '0.3rem 0.25rem', fontSize: '0.6rem', fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
+                        ✏️ Editar
                       </button>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </main>
