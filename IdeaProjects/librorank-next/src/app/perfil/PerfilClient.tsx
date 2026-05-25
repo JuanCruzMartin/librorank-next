@@ -130,6 +130,7 @@ export default function PerfilClient({
   const nivelPct = Math.min((leidosEsteAnio / (usuario.objetivo_anual || 12)) * 100, 100)
 
   return (
+    <>
     <div className="container">
       <div className="perfil-layout">
 
@@ -495,6 +496,7 @@ export default function PerfilClient({
     </div>
 
     {/* ── MODAL DE RECORTE ── */}
+
     {cropFile && cropPreviewUrl && (
       <div style={{
         position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
@@ -551,5 +553,6 @@ export default function PerfilClient({
         </div>
       </div>
     )}
+    </>
   )
 }
