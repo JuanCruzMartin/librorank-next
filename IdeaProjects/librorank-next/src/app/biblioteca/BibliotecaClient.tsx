@@ -26,6 +26,8 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   const [busqueda, setBusqueda] = useState('')
   const [busquedaModal, setBusquedaModal] = useState('')
   const [sugerencias, setSugerencias] = useState<Sugerencia[]>([])
+  const [busquedaHeader, setBusquedaHeader] = useState('')
+  const [sugerenciasHeader, setSugerenciasHeader] = useState<Sugerencia[]>([])
   const [editando, setEditando] = useState<Libro | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [mensaje, setMensaje] = useState('')
@@ -38,6 +40,12 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
     setSugerencias(await res.json())
   }, [])
 
+  const buscarHeader = useCallback(async (q: string) => {
+    if (q.length < 3) { setSugerenciasHeader([]); return }
+    const res = await fetch(`/api/libros/buscar?q=${encodeURIComponent(q)}`)
+    setSugerenciasHeader(await res.json())
+  }, [])
+
   const seleccionarSugerencia = (s: Sugerencia) => {
     const form = document.getElementById('formNuevo') as HTMLFormElement
     if (!form) return
@@ -48,6 +56,23 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
     ;(form.elements.namedItem('portada_url') as HTMLInputElement).value = s.portada
     setSugerencias([])
     setBusquedaModal(s.titulo)
+  }
+
+  const seleccionarDesdeHeader = (s: Sugerencia) => {
+    setSugerenciasHeader([])
+    setBusquedaHeader('')
+    setShowModal(true)
+    setBusquedaModal(s.titulo)
+    // pequeño delay para que el form esté montado
+    setTimeout(() => {
+      const form = document.getElementById('formNuevo') as HTMLFormElement
+      if (!form) return
+      ;(form.elements.namedItem('titulo') as HTMLInputElement).value = s.titulo
+      ;(form.elements.namedItem('autor') as HTMLInputElement).value = s.autor
+      ;(form.elements.namedItem('anio') as HTMLInputElement).value = s.anio
+      ;(form.elements.namedItem('paginas') as HTMLInputElement).value = s.paginas
+      ;(form.elements.namedItem('portada_url') as HTMLInputElement).value = s.portada
+    }, 100)
   }
 
   async function agregarLibro(e: React.FormEvent<HTMLFormElement>) {
@@ -134,18 +159,40 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                   <p className="text-muted small mb-0">Gestiona tu viaje literario</p>
                 </div>
               </div>
-              <div className="p-3 rounded-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div className="p-3 rounded-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', position: 'relative' }}>
                 <label className="form-label text-gold fw-bold mb-2 text-uppercase" style={{ letterSpacing: '1.5px', fontSize: '0.8rem' }}>
                   <i className="bi bi-plus-circle-fill me-2"></i>Buscar libro para añadir
                 </label>
                 <div className="input-group">
                   <input type="text" className="form-control" placeholder="Escribe el título de un libro..."
                     style={{ border: '1px solid rgba(212,175,55,0.3)' }}
-                    value={busqueda} onChange={e => { setBusqueda(e.target.value); buscarLibros(e.target.value) }} />
+                    value={busquedaHeader}
+                    onChange={e => { setBusquedaHeader(e.target.value); buscarHeader(e.target.value) }} />
                   <button className="btn btn-gold px-4 border-0" type="button" onClick={() => setShowModal(true)}>
                     <i className="bi bi-search fw-bold"></i>
                   </button>
                 </div>
+                {sugerenciasHeader.length > 0 && (
+                  <div style={{ position: 'absolute', left: 0, right: 0, top: '100%', background: '#2c2724', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 10, zIndex: 999, maxHeight: 320, overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.6)', marginTop: 4 }}>
+                    {sugerenciasHeader.map((s, i) => (
+                      <button key={i} onClick={() => seleccionarDesdeHeader(s)}
+                        style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#fff', cursor: 'pointer', textAlign: 'left' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,175,55,0.08)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                      >
+                        {s.portada
+                          ? <img src={s.portada} alt={s.titulo} style={{ width: 38, height: 56, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
+                          : <div style={{ width: 38, height: 56, background: '#36302c', borderRadius: 4, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>📚</div>
+                        }
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '0.82rem', lineHeight: 1.3 }}>{s.titulo}</div>
+                          <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>{s.autor}</div>
+                          {s.anio && <div style={{ fontSize: '0.65rem', color: 'rgba(212,175,55,0.6)' }}>{s.anio}</div>}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             <div className="col-lg-7">
