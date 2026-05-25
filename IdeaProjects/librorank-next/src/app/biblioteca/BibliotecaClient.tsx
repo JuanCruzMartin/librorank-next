@@ -253,7 +253,8 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                 >
                   {/* Portada */}
                   {libro.portada_url ? (
-                    <img src={libro.portada_url} alt={libro.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    <img src={libro.portada_url.replace('http://', 'https://')} alt={libro.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.setAttribute('style', 'display:flex') }} />
                   ) : (
                     <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#25211e,#36302c)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
                       <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>📚</span>

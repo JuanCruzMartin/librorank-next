@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       autor: (item.volumeInfo.authors || []).join(', '),
       anio: item.volumeInfo.publishedDate?.split('-')[0] || '',
       paginas: item.volumeInfo.pageCount || '',
-      portada: item.volumeInfo.imageLinks?.thumbnail || '',
+      portada: (item.volumeInfo.imageLinks?.thumbnail || '').replace('http://', 'https://'),
     }))
 
     return NextResponse.json(items)
