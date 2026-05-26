@@ -54,14 +54,17 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
   const ligaActual = getLigaActual(puntosUsuario)
   const ligaSiguiente = LIGAS[LIGAS.indexOf(ligaActual) + 1] ?? null
 
-  const [ligaTab, setLigaTab] = useState(ligaActual.key)
+  const [ligaTab, setLigaTab] = useState<string>('general')
 
-  const ligaSeleccionada = LIGAS.find(l => l.key === ligaTab)!
+  const esGeneral = ligaTab === 'general'
+  const ligaSeleccionada = LIGAS.find(l => l.key === ligaTab)
 
-  // Filtrar usuarios de la liga seleccionada
-  const usuariosLiga = ranking
-    .filter(u => u.puntos >= ligaSeleccionada.min && u.puntos <= ligaSeleccionada.max)
-    .sort((a, b) => b.puntos - a.puntos)
+  // Usuarios a mostrar según tab
+  const usuariosLiga = esGeneral
+    ? [...ranking].sort((a, b) => b.puntos - a.puntos)
+    : ranking
+        .filter(u => ligaSeleccionada && u.puntos >= ligaSeleccionada.min && u.puntos <= ligaSeleccionada.max)
+        .sort((a, b) => b.puntos - a.puntos)
 
   // Posición del usuario en su propia liga
   const posEnLiga = ranking
@@ -173,8 +176,33 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
       {/* ── CONTENIDO ── */}
       <div className="container py-5">
 
-        {/* Tabs de ligas */}
+        {/* Tabs */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+
+          {/* Tab General */}
+          <button
+            onClick={() => setLigaTab('general')}
+            style={{
+              background: esGeneral ? 'rgba(212,175,55,0.12)' : 'rgba(255,255,255,0.04)',
+              border: esGeneral ? '2px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 20, padding: '0.45rem 1.1rem',
+              fontSize: '0.82rem', fontWeight: 700,
+              color: esGeneral ? '#d4af37' : 'rgba(255,255,255,0.5)',
+              cursor: 'pointer', transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+            }}
+          >
+            🌍 General
+            <span style={{
+              background: esGeneral ? 'rgba(212,175,55,0.3)' : 'rgba(255,255,255,0.08)',
+              color: esGeneral ? '#d4af37' : 'rgba(255,255,255,0.4)',
+              borderRadius: 20, padding: '1px 7px', fontSize: '0.68rem',
+            }}>
+              {ranking.length}
+            </span>
+          </button>
+
+          {/* Tabs de ligas */}
           {LIGAS.map(liga => {
             const activa = liga.key === ligaTab
             const countLiga = ranking.filter(u => u.puntos >= liga.min && u.puntos <= liga.max).length
@@ -205,23 +233,25 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
           })}
         </div>
 
-        {/* Descripción de la liga seleccionada */}
+        {/* Descripción del tab activo */}
         <div style={{
-          background: ligaSeleccionada.colorBg,
-          border: `1px solid ${ligaSeleccionada.border}`,
+          background: esGeneral ? 'rgba(212,175,55,0.06)' : ligaSeleccionada?.colorBg,
+          border: `1px solid ${esGeneral ? 'rgba(212,175,55,0.2)' : ligaSeleccionada?.border}`,
           borderRadius: 12, padding: '0.85rem 1.25rem',
           marginBottom: '1.5rem',
           display: 'flex', alignItems: 'center', gap: '0.75rem',
         }}>
-          <span style={{ fontSize: '1.8rem' }}>{ligaSeleccionada.emoji}</span>
+          <span style={{ fontSize: '1.8rem' }}>{esGeneral ? '🌍' : ligaSeleccionada?.emoji}</span>
           <div>
-            <div style={{ fontWeight: 700, color: ligaSeleccionada.color, fontSize: '0.9rem' }}>
-              Liga {ligaSeleccionada.nombre}
+            <div style={{ fontWeight: 700, color: esGeneral ? '#d4af37' : ligaSeleccionada?.color, fontSize: '0.9rem' }}>
+              {esGeneral ? 'Ranking General' : `Liga ${ligaSeleccionada?.nombre}`}
             </div>
             <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
-              {ligaSeleccionada.max === Infinity
-                ? `${ligaSeleccionada.min}+ puntos · ${usuariosLiga.length} lectores`
-                : `${ligaSeleccionada.min}–${ligaSeleccionada.max} puntos · ${usuariosLiga.length} lectores`
+              {esGeneral
+                ? `Todos los lectores · ${ranking.length} en total`
+                : ligaSeleccionada?.max === Infinity
+                  ? `${ligaSeleccionada.min}+ puntos · ${usuariosLiga.length} lectores`
+                  : `${ligaSeleccionada?.min}–${ligaSeleccionada?.max} puntos · ${usuariosLiga.length} lectores`
               }
             </div>
           </div>
@@ -300,8 +330,17 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
-                      {nivelInfo.emoji} {nivelInfo.titulo}
+                    <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', marginTop: 2, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span>{nivelInfo.emoji} {nivelInfo.titulo}</span>
+                      {esGeneral && (
+                        <span style={{
+                          fontSize: '0.6rem', fontWeight: 700,
+                          color: getLigaActual(u.puntos).color,
+                          opacity: 0.8,
+                        }}>
+                          · {getLigaActual(u.puntos).emoji} {getLigaActual(u.puntos).nombre}
+                        </span>
+                      )}
                     </div>
                   </div>
 
