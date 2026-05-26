@@ -7,6 +7,17 @@ import type { Usuario, NivelInfo } from '@/lib/dao/usuarioDAO'
 import type { Libro, PerfilStats } from '@/lib/dao/libroDAO'
 import type { Logro } from '@/lib/dao/logroDAO'
 
+interface WrappedData {
+  anio: number
+  resumen: { total: number; paginas: number; promedio: number }
+  generos: { genero: string; total: number }[]
+  autores: { autor: string; total: number }[]
+  meses: { mes: string; total: number }[]
+  mesMasActivo: { mes: number; nombre: string; total: number } | null
+  mejorLibro: { titulo: string; autor: string; estrellas: number; portada_url: string } | null
+  librosRecientes: { titulo: string; portada_url: string; autor: string }[]
+}
+
 const AVATARES = [
   '/img/avatar_explorador/avatar_explorador_0.png',
   '/img/avatar_explorador/avatar_explorador_1.png',
@@ -35,7 +46,9 @@ export default function PerfilClient({
   leidosEsteAnio, totalLeidos, nivelInfo, esMiPerfil,
 }: Props) {
   const router = useRouter()
-  const [tab, setTab] = useState<'resumen' | 'config'>('resumen')
+  const [tab, setTab] = useState<'resumen' | 'anio' | 'config'>('resumen')
+  const [wrapped, setWrapped] = useState<WrappedData | null>(null)
+  const [loadingWrapped, setLoadingWrapped] = useState(false)
   const [mensaje, setMensaje] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [subiendo, setSubiendo] = useState(false)
@@ -59,6 +72,15 @@ export default function PerfilClient({
     setGuardando(false)
     if (res.ok) { setMensaje('¡Perfil actualizado!'); router.refresh() }
     else setMensaje('Error al guardar')
+  }
+
+  async function cargarWrapped() {
+    if (wrapped) return
+    setLoadingWrapped(true)
+    const res = await fetch('/api/stats/wrapped')
+    const json = await res.json()
+    setWrapped(json)
+    setLoadingWrapped(false)
   }
 
   async function seleccionarAvatar(url: string) {
@@ -276,6 +298,9 @@ export default function PerfilClient({
               <button onClick={() => setTab('resumen')} className={`tab-btn ${tab === 'resumen' ? 'active' : ''}`}>
                 ✨ Resumen
               </button>
+              <button onClick={() => { setTab('anio'); cargarWrapped() }} className={`tab-btn ${tab === 'anio' ? 'active' : ''}`}>
+                🎬 Mi Año
+              </button>
               <button onClick={() => setTab('config')} className={`tab-btn ${tab === 'config' ? 'active' : ''}`}>
                 ⚙️ Editar Cuenta
               </button>
@@ -421,6 +446,155 @@ export default function PerfilClient({
                 )}
               </div>
             </>
+          )}
+
+          {/* ── MI AÑO (WRAPPED) ── */}
+          {tab === 'anio' && (
+            <div>
+              {loadingWrapped && (
+                <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.4)' }}>
+                  <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
+                  <p>Preparando tu año lector...</p>
+                </div>
+              )}
+              {wrapped && !loadingWrapped && (
+                <>
+                  {/* Hero */}
+                  <div style={{ background: 'linear-gradient(135deg,#0a0a0a,#1a1208,#0d1a0d)', borderRadius: 16, padding: '2rem', marginBottom: '1.5rem', border: '1px solid rgba(212,175,55,0.2)', textAlign: 'center' }}>
+                    <p style={{ fontSize: '0.75rem', letterSpacing: 3, textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: '0.5rem' }}>Tu año en libros</p>
+                    <h2 className="font-title" style={{ fontSize: '3.5rem', color: '#d4af37', margin: 0, lineHeight: 1 }}>{wrapped.anio}</h2>
+                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', marginTop: '0.5rem' }}>Un recorrido por tu año lector</p>
+                  </div>
+
+                  {/* Stats grandes */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+                    {[
+                      { valor: wrapped.resumen.total, label: 'libros leídos', icon: '📚', color: '#d4af37' },
+                      { valor: wrapped.resumen.paginas.toLocaleString(), label: 'páginas', icon: '📄', color: '#4cd137' },
+                      { valor: wrapped.resumen.promedio > 0 ? `${wrapped.resumen.promedio}⭐` : '—', label: 'calificación prom.', icon: '⭐', color: '#f39c12' },
+                    ].map(s => (
+                      <div key={s.label} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${s.color}30`, borderRadius: 12, padding: '1.25rem', textAlign: 'center' }}>
+                        <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{s.icon}</div>
+                        <div style={{ fontSize: '1.8rem', fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.valor}</div>
+                        <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.25rem', textTransform: 'uppercase', letterSpacing: 1 }}>{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Gráfico de barras por mes */}
+                  <div className="card p-4" style={{ marginBottom: '1.5rem' }}>
+                    <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: '1rem' }}>
+                      📅 Lecturas por mes
+                    </p>
+                    {wrapped.mesMasActivo && (
+                      <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: '1rem' }}>
+                        Tu mes más activo fue <strong style={{ color: '#d4af37' }}>{wrapped.mesMasActivo.nombre}</strong> con {wrapped.mesMasActivo.total} libro{wrapped.mesMasActivo.total !== 1 ? 's' : ''}
+                      </p>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: 80 }}>
+                      {(() => {
+                        const maxVal = Math.max(...wrapped.meses.map(m => m.total), 1)
+                        return wrapped.meses.map((m, i) => (
+                          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                            <div style={{
+                              width: '100%',
+                              height: `${Math.max((m.total / maxVal) * 64, m.total > 0 ? 6 : 2)}px`,
+                              background: m.total > 0 ? (wrapped.mesMasActivo?.mes === i + 1 ? '#d4af37' : 'rgba(212,175,55,0.4)') : 'rgba(255,255,255,0.06)',
+                              borderRadius: 4,
+                              transition: 'height 0.3s ease',
+                            }} title={`${m.mes}: ${m.total}`} />
+                            <span style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.3)' }}>{m.mes}</span>
+                          </div>
+                        ))
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Géneros y Autores */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                    {/* Géneros */}
+                    <div className="card p-4">
+                      <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: '1rem' }}>🎭 Géneros</p>
+                      {wrapped.generos.length === 0 ? (
+                        <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>Sin datos aún</p>
+                      ) : (() => {
+                        const max = wrapped.generos[0].total
+                        const colores = ['#d4af37','#4cd137','#5dade2','#af7ac5','#ff5e57']
+                        return wrapped.generos.map((g, i) => (
+                          <div key={g.genero} style={{ marginBottom: '0.6rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: 3 }}>
+                              <span style={{ color: '#fff', fontWeight: 600 }}>{g.genero}</span>
+                              <span style={{ color: 'rgba(255,255,255,0.4)' }}>{g.total}</span>
+                            </div>
+                            <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 99 }}>
+                              <div style={{ height: '100%', width: `${(g.total / max) * 100}%`, background: colores[i] || '#d4af37', borderRadius: 99 }} />
+                            </div>
+                          </div>
+                        ))
+                      })()}
+                    </div>
+
+                    {/* Autores */}
+                    <div className="card p-4">
+                      <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: '1rem' }}>✍️ Autores</p>
+                      {wrapped.autores.length === 0 ? (
+                        <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>Sin datos aún</p>
+                      ) : wrapped.autores.map((a, i) => (
+                        <div key={a.autor} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
+                          <div style={{ width: 28, height: 28, borderRadius: '50%', background: i === 0 ? '#d4af37' : 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800, color: i === 0 ? '#000' : 'rgba(255,255,255,0.5)', flexShrink: 0 }}>
+                            {i + 1}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>{a.autor}</div>
+                            <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)' }}>{a.total} libro{a.total !== 1 ? 's' : ''}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Mejor libro */}
+                  {wrapped.mejorLibro && (
+                    <div style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 16, padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                      {wrapped.mejorLibro.portada_url && (
+                        <img src={wrapped.mejorLibro.portada_url} alt="" style={{ width: 56, height: 80, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
+                      )}
+                      <div>
+                        <p style={{ fontSize: '0.65rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: '0.25rem' }}>⭐ Tu libro del año</p>
+                        <p style={{ fontWeight: 700, color: '#fff', margin: '0 0 2px', fontSize: '0.9rem' }}>{wrapped.mejorLibro.titulo}</p>
+                        <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', margin: 0 }}>{wrapped.mejorLibro.autor}</p>
+                        <p style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>{'⭐'.repeat(wrapped.mejorLibro.estrellas)}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Últimos leídos */}
+                  {wrapped.librosRecientes.length > 0 && (
+                    <div className="card p-4">
+                      <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: '1rem' }}>📖 Últimos leídos</p>
+                      <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
+                        {wrapped.librosRecientes.map((l, i) => (
+                          <div key={i} style={{ flexShrink: 0, width: 56 }}>
+                            {l.portada_url
+                              ? <img src={l.portada_url} alt={l.titulo} style={{ width: 56, height: 80, objectFit: 'cover', borderRadius: 6 }} title={l.titulo} />
+                              : <div style={{ width: 56, height: 80, background: '#36302c', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>📚</div>
+                            }
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {wrapped.resumen.total === 0 && (
+                    <div style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.3)' }}>
+                      <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📚</div>
+                      <p>Todavía no tenés libros marcados como leídos este año.</p>
+                      <p style={{ fontSize: '0.8rem' }}>¡Empezá a leer y volvé acá!</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           )}
 
           {/* ── EDITAR CUENTA ── */}
