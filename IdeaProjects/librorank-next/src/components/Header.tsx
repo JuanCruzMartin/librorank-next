@@ -59,6 +59,7 @@ export default function Header({ user }: HeaderProps) {
           <ul className="d-flex list-unstyled gap-3 mb-0 align-items-center">
             <li><Link href="/biblioteca"      className={isActive('/biblioteca')}>📚 Biblioteca</Link></li>
             <li><Link href="/recomendaciones" className={isActive('/recomendaciones')}>✨ Para vos</Link></li>
+            <li><Link href="/misiones"         className={isActive('/misiones')}>🎯 Misiones</Link></li>
             <li><Link href="/bingo"           className={isActive('/bingo')}>🎲 Bingo</Link></li>
             <li><Link href="/retos"           className={isActive('/retos')}>⚔️ Retos</Link></li>
             <li><Link href="/cuento"          className={isActive('/cuento')}>✍️ Cuento</Link></li>
