@@ -260,7 +260,7 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
         {/* Tabla de la liga */}
         {usuariosLiga.length === 0 ? (
           <div className="text-center py-5">
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{ligaSeleccionada.emoji}</div>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{ligaSeleccionada?.emoji ?? '🏆'}</div>
             <p className="text-muted">Todavía no hay lectores en esta liga.</p>
           </div>
         ) : (
