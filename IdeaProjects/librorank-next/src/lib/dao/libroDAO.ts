@@ -25,7 +25,7 @@ export interface PerfilStats {
   pausa: number
 }
 
-export async function agregar(libro: Omit<Libro, 'id'>): Promise<boolean> {
+export async function agregar(libro: Omit<Libro, 'id'>): Promise<number | false> {
   const globalId = await obtenerOCrear({
     titulo: libro.titulo, autor: libro.autor,
     portada_url: libro.portada_url, anio: libro.anio, paginas: libro.paginas,
@@ -37,7 +37,7 @@ export async function agregar(libro: Omit<Libro, 'id'>): Promise<boolean> {
     [libro.usuario_id, globalId, libro.titulo, libro.autor, libro.anio ?? null,
      libro.paginas ?? null, libro.estado, libro.portada_url ?? null, libro.genero ?? null, libro.mood ?? null]
   )
-  return res.affectedRows > 0
+  return res.affectedRows > 0 ? res.insertId : false
 }
 
 export async function buscarPorUsuario(usuarioId: number): Promise<Libro[]> {

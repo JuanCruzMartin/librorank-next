@@ -5,14 +5,18 @@ import Link from 'next/link'
 import type { ActividadSocial } from '@/lib/dao/actividadDAO'
 
 function formatFechaActividad(tipo: string, tituloLibro?: string | null, detalle?: string | null): string {
+  // tituloLibro viene del JOIN con libros_usuario, si es null usamos detalle como fallback
+  const titulo = tituloLibro || detalle || 'un libro'
   switch (tipo) {
-    case 'NUEVO_LIBRO': return `empezó a leer "${tituloLibro}"`
-    case 'LIBRO_LEIDO': return `terminó de leer "${tituloLibro}"`
-    case 'NUEVO_RETO': return `lanzó un nuevo Reto: "${detalle}"`
-    case 'CAMBIO_ESTADO': return `actualizó "${tituloLibro}" → ${detalle}`
-    case 'NUEVA_CALIFICACION': return `puntuó "${tituloLibro}" con ${detalle} ⭐`
-    case 'DIARIO_LOG': return `actualizó su progreso: ${detalle}`
-    default: return detalle || tipo
+    case 'NUEVO_LIBRO':       return `empezó a leer "${titulo}"`
+    case 'LIBRO_LEIDO':       return `terminó de leer "${titulo}"`
+    case 'RESENA':            return `escribió una reseña de "${titulo}"`
+    case 'NUEVO_RETO':        return `lanzó un nuevo Reto: "${detalle}"`
+    case 'CAMBIO_ESTADO':     return `actualizó "${titulo}" → ${detalle}`
+    case 'NUEVA_CALIFICACION':return `puntuó "${titulo}" con ${detalle} ⭐`
+    case 'DIARIO_LOG':        return `actualizó su progreso: ${detalle}`
+    case 'BINGO':             return `completó una casilla del Bingo 🎲`
+    default:                  return detalle || tipo
   }
 }
 

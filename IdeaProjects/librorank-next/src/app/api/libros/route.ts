@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Ya tienes este libro registrado' }, { status: 409 })
       }
 
-      const ok = await libroDAO.agregar({
+      const nuevoId = await libroDAO.agregar({
         usuario_id: user.id, libro_global_id: null,
         titulo, autor,
         anio: anio ? Number(anio) : null,
@@ -44,12 +44,14 @@ export async function POST(req: NextRequest) {
         estrellas: 0, resena: null,
       })
 
-      if (ok) {
+      if (nuevoId) {
         try {
           await libroDAO.otorgarPuntos(user.id, 50, 'Libro agregado a la biblioteca')
           if (estado === 'LEIDO') {
             await libroDAO.otorgarPuntos(user.id, 30, 'Libro marcado como LEÍDO al agregar')
-            await actividadDAO.registrar(user.id, 'LIBRO_LEIDO', null, `Ha terminado de leer "${titulo}"`)
+            await actividadDAO.registrar(user.id, 'LIBRO_LEIDO', nuevoId, titulo)
+          } else {
+            await actividadDAO.registrar(user.id, 'NUEVO_LIBRO', nuevoId, titulo)
           }
           await logroDAO.verificarLogros(user.id)
         } catch (e) {
@@ -57,7 +59,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      return NextResponse.json({ ok })
+      return NextResponse.json({ ok: !!nuevoId })
     }
 
     if (accion === 'editar') {
