@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['mysql2'],
+  experimental: {
+    serverComponentsExternalPackages: ['mysql2'],
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'books.google.com' },
