@@ -10,7 +10,7 @@ const ESTADOS = ['PENDIENTE', 'LEYENDO', 'LEIDO', 'PAUSA']
 const GENEROS = ['Fantasía', 'Ciencia Ficción', 'Romance', 'Terror', 'Misterio', 'Historia', 'Biografía', 'Autoayuda', 'Poesía', 'Otro']
 const MOODS = ['Relajado', 'Aventurero', 'Emotivo', 'Intelectual', 'Nostálgico', 'Inspirador', 'Oscuro', 'Divertido']
 
-interface Sugerencia { titulo: string; autor: string; anio: string; paginas: string; portada: string }
+interface Sugerencia { titulo: string; autor: string; anio: string; paginas: string; portada: string; genero: string }
 
 interface Props {
   librosIniciales: Libro[]
@@ -27,6 +27,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   const [busqueda, setBusqueda] = useState('')
   const [busquedaModal, setBusquedaModal] = useState('')
   const [sugerencias, setSugerencias] = useState<Sugerencia[]>([])
+  const [formNuevo, setFormNuevo] = useState({ titulo: '', autor: '', anio: '', paginas: '', portada_url: '', genero: '' })
   const [busquedaHeader, setBusquedaHeader] = useState('')
   const [sugerenciasHeader, setSugerenciasHeader] = useState<Sugerencia[]>([])
   const [editando, setEditando] = useState<Libro | null>(null)
@@ -48,13 +49,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   }, [])
 
   const seleccionarSugerencia = (s: Sugerencia) => {
-    const form = document.getElementById('formNuevo') as HTMLFormElement
-    if (!form) return
-    ;(form.elements.namedItem('titulo') as HTMLInputElement).value = s.titulo
-    ;(form.elements.namedItem('autor') as HTMLInputElement).value = s.autor
-    ;(form.elements.namedItem('anio') as HTMLInputElement).value = s.anio
-    ;(form.elements.namedItem('paginas') as HTMLInputElement).value = s.paginas
-    ;(form.elements.namedItem('portada_url') as HTMLInputElement).value = s.portada
+    setFormNuevo({ titulo: s.titulo, autor: s.autor, anio: s.anio, paginas: String(s.paginas), portada_url: s.portada, genero: s.genero || '' })
     setSugerencias([])
     setBusquedaModal(s.titulo)
   }
@@ -62,18 +57,9 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   const seleccionarDesdeHeader = (s: Sugerencia) => {
     setSugerenciasHeader([])
     setBusquedaHeader('')
-    setShowModal(true)
+    setFormNuevo({ titulo: s.titulo, autor: s.autor, anio: s.anio, paginas: String(s.paginas), portada_url: s.portada, genero: s.genero || '' })
     setBusquedaModal(s.titulo)
-    // pequeño delay para que el form esté montado
-    setTimeout(() => {
-      const form = document.getElementById('formNuevo') as HTMLFormElement
-      if (!form) return
-      ;(form.elements.namedItem('titulo') as HTMLInputElement).value = s.titulo
-      ;(form.elements.namedItem('autor') as HTMLInputElement).value = s.autor
-      ;(form.elements.namedItem('anio') as HTMLInputElement).value = s.anio
-      ;(form.elements.namedItem('paginas') as HTMLInputElement).value = s.paginas
-      ;(form.elements.namedItem('portada_url') as HTMLInputElement).value = s.portada
-    }, 100)
+    setShowModal(true)
   }
 
   async function agregarLibro(e: React.FormEvent<HTMLFormElement>) {
@@ -340,18 +326,21 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                 </div>
                 <form id="formNuevo" onSubmit={agregarLibro}>
                   <div className="row g-3">
-                    <div className="col-12"><label className="form-label text-muted">Título *</label><input name="titulo" type="text" className="form-control" required /></div>
-                    <div className="col-12"><label className="form-label text-muted">Autor *</label><input name="autor" type="text" className="form-control" required /></div>
-                    <div className="col-6"><label className="form-label text-muted">Año</label><input name="anio" type="number" className="form-control" /></div>
-                    <div className="col-6"><label className="form-label text-muted">Páginas</label><input name="paginas" type="number" className="form-control" /></div>
-                    <div className="col-12"><label className="form-label text-muted">URL de portada</label><input name="portada_url" type="text" className="form-control" /></div>
+                    <div className="col-12"><label className="form-label text-muted">Título *</label><input name="titulo" type="text" className="form-control" required value={formNuevo.titulo} onChange={e => setFormNuevo(p => ({...p, titulo: e.target.value}))} /></div>
+                    <div className="col-12"><label className="form-label text-muted">Autor *</label><input name="autor" type="text" className="form-control" required value={formNuevo.autor} onChange={e => setFormNuevo(p => ({...p, autor: e.target.value}))} /></div>
+                    <div className="col-6"><label className="form-label text-muted">Año</label><input name="anio" type="number" className="form-control" value={formNuevo.anio} onChange={e => setFormNuevo(p => ({...p, anio: e.target.value}))} /></div>
+                    <div className="col-6"><label className="form-label text-muted">Páginas</label><input name="paginas" type="number" className="form-control" value={formNuevo.paginas} onChange={e => setFormNuevo(p => ({...p, paginas: e.target.value}))} /></div>
+                    <div className="col-12"><label className="form-label text-muted">URL de portada</label><input name="portada_url" type="text" className="form-control" value={formNuevo.portada_url} onChange={e => setFormNuevo(p => ({...p, portada_url: e.target.value}))} /></div>
                     <div className="col-4">
                       <label className="form-label text-muted">Estado</label>
                       <select name="estado" className="form-select">{ESTADOS.map(e => <option key={e} value={e}>{e}</option>)}</select>
                     </div>
                     <div className="col-4">
                       <label className="form-label text-muted">Género</label>
-                      <select name="genero" className="form-select"><option value="">Sin género</option>{GENEROS.map(g => <option key={g} value={g}>{g}</option>)}</select>
+                      <select name="genero" className="form-select" value={formNuevo.genero} onChange={e => setFormNuevo(p => ({...p, genero: e.target.value}))}>
+                        <option value="">Sin género</option>
+                        {GENEROS.map(g => <option key={g} value={g}>{g}</option>)}
+                      </select>
                     </div>
                     <div className="col-4">
                       <label className="form-label text-muted">Mood</label>

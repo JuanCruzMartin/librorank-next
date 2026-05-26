@@ -10,6 +10,20 @@ export async function GET(req: NextRequest) {
     const res = await fetch(url)
     const data = await res.json()
 
+    const mapearGenero = (categories: string[]): string => {
+      const texto = categories.join(' ').toLowerCase()
+      if (texto.includes('fantas') || texto.includes('fantasy')) return 'Fantasía'
+      if (texto.includes('science fiction') || texto.includes('ciencia ficcion') || texto.includes('sci-fi')) return 'Ciencia Ficción'
+      if (texto.includes('romance') || texto.includes('love stories')) return 'Romance'
+      if (texto.includes('terror') || texto.includes('horror') || texto.includes('thriller')) return 'Terror'
+      if (texto.includes('mystery') || texto.includes('misterio') || texto.includes('detective') || texto.includes('crime')) return 'Misterio'
+      if (texto.includes('histor') || texto.includes('history')) return 'Historia'
+      if (texto.includes('biograph') || texto.includes('autobio') || texto.includes('memoir') || texto.includes('biografia')) return 'Biografía'
+      if (texto.includes('self-help') || texto.includes('personal development') || texto.includes('autoayuda') || texto.includes('motivat')) return 'Autoayuda'
+      if (texto.includes('poet') || texto.includes('poesia') || texto.includes('verse')) return 'Poesía'
+      return 'Otro'
+    }
+
     const items = (data.items || []).map((item: {
       id: string;
       volumeInfo: {
@@ -18,6 +32,7 @@ export async function GET(req: NextRequest) {
         publishedDate?: string;
         pageCount?: number;
         imageLinks?: { thumbnail?: string };
+        categories?: string[];
       }
     }) => ({
       id: item.id,
@@ -26,6 +41,7 @@ export async function GET(req: NextRequest) {
       anio: item.volumeInfo.publishedDate?.split('-')[0] || '',
       paginas: item.volumeInfo.pageCount || '',
       portada: (item.volumeInfo.imageLinks?.thumbnail || '').replace('http://', 'https://'),
+      genero: item.volumeInfo.categories?.length ? mapearGenero(item.volumeInfo.categories) : '',
     }))
 
     return NextResponse.json(items)
