@@ -16,82 +16,37 @@ export interface BingoCasilla {
   libro_portada: string | null
 }
 
-// Agrega la columna nota si no existe (sin IF NOT EXISTS para mayor compatibilidad)
-async function asegurarColumnaNota(): Promise<void> {
-  try {
-    await execute(`ALTER TABLE usuario_bingo ADD COLUMN nota TEXT NULL DEFAULT NULL`, [])
-  } catch {
-    // Si falla es porque la columna ya existe — ignorar
-  }
-}
-
-const QUERY_BINGO_CON_NOTA = `
-  SELECT r.id, r.titulo AS titulo_reto, r.posicion,
-         COALESCE(ub.completado, 0) AS completado,
-         ub.libro_id, ub.nota,
-         lu.titulo      AS libro_titulo,
-         lu.autor       AS libro_autor,
-         lu.estrellas   AS libro_estrellas,
-         lu.resena      AS libro_resena,
-         lu.portada_url AS libro_portada
-  FROM bingo_retos r
-  LEFT JOIN usuario_bingo ub ON r.id = ub.reto_id AND ub.usuario_id = ?
-  LEFT JOIN libros_usuario lu ON ub.libro_id = lu.id
-  ORDER BY r.posicion ASC`
-
-const QUERY_BINGO_SIN_NOTA = `
-  SELECT r.id, r.titulo AS titulo_reto, r.posicion,
-         COALESCE(ub.completado, 0) AS completado,
-         ub.libro_id,
-         lu.titulo      AS libro_titulo,
-         lu.autor       AS libro_autor,
-         lu.estrellas   AS libro_estrellas,
-         lu.resena      AS libro_resena,
-         lu.portada_url AS libro_portada
-  FROM bingo_retos r
-  LEFT JOIN usuario_bingo ub ON r.id = ub.reto_id AND ub.usuario_id = ?
-  LEFT JOIN libros_usuario lu ON ub.libro_id = lu.id
-  ORDER BY r.posicion ASC`
-
 export async function obtenerBingo(usuarioId: number): Promise<BingoCasilla[]> {
-  await asegurarColumnaNota()
-
-  try {
-    return await query<BingoCasilla>(QUERY_BINGO_CON_NOTA, [usuarioId])
-  } catch {
-    // Fallback: si por alguna razón la columna sigue sin existir, consultar sin ella
-    const rows = await query<Omit<BingoCasilla, 'nota'>>(QUERY_BINGO_SIN_NOTA, [usuarioId])
-    return rows.map(r => ({ ...r, nota: null }))
-  }
+  return query<BingoCasilla>(
+    `SELECT r.id, r.titulo AS titulo_reto, r.posicion,
+            COALESCE(ub.completado, 0) AS completado,
+            ub.libro_id,
+            IFNULL(ub.nota, NULL) AS nota,
+            lu.titulo      AS libro_titulo,
+            lu.autor       AS libro_autor,
+            lu.estrellas   AS libro_estrellas,
+            lu.resena      AS libro_resena,
+            lu.portada_url AS libro_portada
+     FROM bingo_retos r
+     LEFT JOIN usuario_bingo ub ON r.id = ub.reto_id AND ub.usuario_id = ?
+     LEFT JOIN libros_usuario lu ON ub.libro_id = lu.id
+     ORDER BY r.posicion ASC`,
+    [usuarioId]
+  )
 }
 
 export async function marcarCasilla(usuarioId: number, retoId: number, libroId: number, nota?: string): Promise<boolean> {
-  await asegurarColumnaNota()
-
-  try {
-    const res = await execute(
-      `INSERT INTO usuario_bingo (usuario_id, reto_id, libro_id, completado, nota) VALUES (?, ?, ?, true, ?)
-       ON DUPLICATE KEY UPDATE libro_id=?, completado=true, nota=?`,
-      [usuarioId, retoId, libroId, nota ?? null, libroId, nota ?? null]
-    )
-    if (res.affectedRows > 0) {
-      await execute('UPDATE usuarios SET monedas=monedas+10 WHERE id=?', [usuarioId])
-      await verificarLineas(usuarioId)
-    }
-    return res.affectedRows > 0
-  } catch {
-    // Si falla el insert con nota, intentar sin nota
-    const res = await execute(
-      `INSERT INTO usuario_bingo (usuario_id, reto_id, libro_id, completado) VALUES (?, ?, ?, true)
-       ON DUPLICATE KEY UPDATE libro_id=?, completado=true`,
-      [usuarioId, retoId, libroId, libroId]
-    )
-    if (res.affectedRows > 0) {
-      await execute('UPDATE usuarios SET monedas=monedas+10 WHERE id=?', [usuarioId])
-      await verificarLineas(usuarioId)
-    }
-    return res.affectedRows > 0
+  const res = await execute(
+    `INSERT INTO usuario_bingo (usuario_id, reto_id, libro_id, completado, nota)
+     VALUES (?, ?, ?, true, ?)
+     ON DUPLICATE KEY UPDATE libro_id=?, completado=true, nota=?`,
+    [usuarioId, retoId, libroId, nota ?? null, libroId, nota ?? null]
+  )
+  if (res.affectedRows > 0) {
+    await execute('UPDATE usuarios SET monedas=monedas+10 WHERE id=?', [usuarioId])
+    await verificarLineas(usuarioId)
   }
+  return res.affectedRows > 0
 }
 
 async function verificarLineas(usuarioId: number): Promise<void> {
