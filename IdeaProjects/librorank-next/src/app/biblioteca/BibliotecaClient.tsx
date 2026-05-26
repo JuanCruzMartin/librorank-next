@@ -24,6 +24,9 @@ interface Props {
 export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido, mejorCalificado, paginas }: Props) {
   const [libros, setLibros] = useState(librosIniciales)
   const [filtro, setFiltro] = useState('TODOS')
+  const [filtroGenero, setFiltroGenero] = useState('TODOS')
+  const [filtroEstrellas, setFiltroEstrellas] = useState(0)
+  const [ordenar, setOrdenar] = useState('reciente')
   const [busqueda, setBusqueda] = useState('')
   const [busquedaModal, setBusquedaModal] = useState('')
   const [sugerencias, setSugerencias] = useState<Sugerencia[]>([])
@@ -115,11 +118,27 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
     setLibros(prev => prev.filter(l => l.id !== id))
   }
 
-  const librosFiltrados = libros.filter(l => {
-    if (filtro !== 'TODOS' && l.estado !== filtro) return false
-    if (busqueda && !l.titulo.toLowerCase().includes(busqueda.toLowerCase()) && !l.autor.toLowerCase().includes(busqueda.toLowerCase())) return false
-    return true
-  })
+  const hayFiltrosActivos = filtro !== 'TODOS' || filtroGenero !== 'TODOS' || filtroEstrellas > 0 || busqueda !== ''
+
+  const librosFiltrados = libros
+    .filter(l => {
+      if (filtro !== 'TODOS' && l.estado !== filtro) return false
+      if (filtroGenero !== 'TODOS' && l.genero !== filtroGenero) return false
+      if (filtroEstrellas > 0 && (l.estrellas ?? 0) < filtroEstrellas) return false
+      if (busqueda && !l.titulo.toLowerCase().includes(busqueda.toLowerCase()) && !l.autor.toLowerCase().includes(busqueda.toLowerCase())) return false
+      return true
+    })
+    .sort((a, b) => {
+      if (ordenar === 'titulo')      return a.titulo.localeCompare(b.titulo)
+      if (ordenar === 'autor')       return (a.autor || '').localeCompare(b.autor || '')
+      if (ordenar === 'estrellas')   return (b.estrellas ?? 0) - (a.estrellas ?? 0)
+      if (ordenar === 'paginas')     return (b.paginas ?? 0) - (a.paginas ?? 0)
+      // 'reciente' → orden original (id desc, ya viene así del servidor)
+      return 0
+    })
+
+  // Géneros que realmente existen en la biblioteca del usuario
+  const generosEnBiblioteca = ['TODOS', ...Array.from(new Set(libros.map(l => l.genero).filter(Boolean) as string[]))]
 
   const [hoveredId, setHoveredId] = useState<number | null>(null)
 
@@ -220,15 +239,135 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
           ]}
         />
 
-        {/* Filtros */}
-        <div className="d-flex gap-2 flex-wrap mb-4 align-items-center">
-          <button onClick={() => setFiltro('TODOS')} className={`btn btn-sm ${filtro === 'TODOS' ? 'btn-gold' : 'btn-outline-secondary'}`}>Todos</button>
-          {ESTADOS.map(e => (
-            <button key={e} onClick={() => setFiltro(e)} className={`btn btn-sm ${filtro === e ? 'btn-gold' : 'btn-outline-secondary'}`}>{e}</button>
-          ))}
-          <button onClick={() => setShowModal(true)} className="btn btn-gold btn-sm ms-auto px-4">
-            <i className="bi bi-plus-lg me-2"></i>Agregar libro
-          </button>
+        {/* ── Barra de filtros ── */}
+        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '1rem 1.25rem', marginBottom: '1.5rem' }}>
+
+          {/* Fila 1: Estado + Agregar */}
+          <div className="d-flex gap-2 flex-wrap align-items-center mb-3">
+            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.8px', marginRight: 4 }}>Estado</span>
+            {['TODOS', ...ESTADOS].map(e => (
+              <button key={e} onClick={() => setFiltro(e)}
+                style={{
+                  background: filtro === e ? 'linear-gradient(135deg,#d4af37,#f1c40f)' : 'rgba(255,255,255,0.05)',
+                  border: filtro === e ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 20, padding: '0.3rem 0.85rem',
+                  fontSize: '0.75rem', fontWeight: 700,
+                  color: filtro === e ? '#000' : 'rgba(255,255,255,0.6)',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                }}>
+                {e === 'TODOS' ? 'Todos' : e === 'LEIDO' ? '✅ Leído' : e === 'LEYENDO' ? '📖 Leyendo' : e === 'PENDIENTE' ? '🕐 Pendiente' : '⏸ Pausa'}
+              </button>
+            ))}
+            <button onClick={() => setShowModal(true)} className="btn btn-gold btn-sm ms-auto px-4" style={{ flexShrink: 0 }}>
+              <i className="bi bi-plus-lg me-1"></i>Agregar libro
+            </button>
+          </div>
+
+          {/* Fila 2: Género + Calificación + Ordenar + Búsqueda */}
+          <div className="d-flex gap-2 flex-wrap align-items-center">
+
+            {/* Género */}
+            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.8px', marginRight: 4 }}>Género</span>
+            <select
+              value={filtroGenero}
+              onChange={e => setFiltroGenero(e.target.value)}
+              style={{
+                background: filtroGenero !== 'TODOS' ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.05)',
+                border: filtroGenero !== 'TODOS' ? '1px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 20, padding: '0.3rem 0.85rem',
+                fontSize: '0.75rem', fontWeight: 700,
+                color: filtroGenero !== 'TODOS' ? '#d4af37' : 'rgba(255,255,255,0.6)',
+                cursor: 'pointer', outline: 'none',
+              }}
+            >
+              {generosEnBiblioteca.map(g => (
+                <option key={g} value={g} style={{ background: '#1a1a1a', color: '#fff' }}>
+                  {g === 'TODOS' ? '🌍 Todos los géneros' : g}
+                </option>
+              ))}
+            </select>
+
+            {/* Calificación mínima */}
+            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.8px', marginLeft: 8, marginRight: 4 }}>Mínimo</span>
+            <select
+              value={filtroEstrellas}
+              onChange={e => setFiltroEstrellas(Number(e.target.value))}
+              style={{
+                background: filtroEstrellas > 0 ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.05)',
+                border: filtroEstrellas > 0 ? '1px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 20, padding: '0.3rem 0.85rem',
+                fontSize: '0.75rem', fontWeight: 700,
+                color: filtroEstrellas > 0 ? '#d4af37' : 'rgba(255,255,255,0.6)',
+                cursor: 'pointer', outline: 'none',
+              }}
+            >
+              <option value={0} style={{ background: '#1a1a1a' }}>⭐ Cualquier calificación</option>
+              <option value={3} style={{ background: '#1a1a1a' }}>⭐⭐⭐ 3+ estrellas</option>
+              <option value={4} style={{ background: '#1a1a1a' }}>⭐⭐⭐⭐ 4+ estrellas</option>
+              <option value={5} style={{ background: '#1a1a1a' }}>⭐⭐⭐⭐⭐ Solo 5 estrellas</option>
+            </select>
+
+            {/* Ordenar */}
+            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.8px', marginLeft: 8, marginRight: 4 }}>Ordenar</span>
+            <select
+              value={ordenar}
+              onChange={e => setOrdenar(e.target.value)}
+              style={{
+                background: ordenar !== 'reciente' ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.05)',
+                border: ordenar !== 'reciente' ? '1px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 20, padding: '0.3rem 0.85rem',
+                fontSize: '0.75rem', fontWeight: 700,
+                color: ordenar !== 'reciente' ? '#d4af37' : 'rgba(255,255,255,0.6)',
+                cursor: 'pointer', outline: 'none',
+              }}
+            >
+              <option value="reciente"  style={{ background: '#1a1a1a' }}>🕐 Más reciente</option>
+              <option value="titulo"    style={{ background: '#1a1a1a' }}>🔤 Título A–Z</option>
+              <option value="autor"     style={{ background: '#1a1a1a' }}>✍️ Autor A–Z</option>
+              <option value="estrellas" style={{ background: '#1a1a1a' }}>⭐ Mejor calificado</option>
+              <option value="paginas"   style={{ background: '#1a1a1a' }}>📄 Más páginas</option>
+            </select>
+
+            {/* Búsqueda de texto */}
+            <div style={{ position: 'relative', marginLeft: 'auto' }}>
+              <input
+                type="text"
+                placeholder="🔍 Buscar en mi biblioteca..."
+                value={busqueda}
+                onChange={e => setBusqueda(e.target.value)}
+                style={{
+                  background: busqueda ? 'rgba(212,175,55,0.08)' : 'rgba(255,255,255,0.05)',
+                  border: busqueda ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 20, padding: '0.35rem 1rem',
+                  fontSize: '0.75rem', color: '#fff', outline: 'none',
+                  width: 220,
+                }}
+              />
+              {busqueda && (
+                <button onClick={() => setBusqueda('')}
+                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}>
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Resultado + limpiar filtros */}
+          <div className="d-flex align-items-center justify-content-between mt-3">
+            <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>
+              {librosFiltrados.length === libros.length
+                ? `${libros.length} libro${libros.length !== 1 ? 's' : ''} en total`
+                : `${librosFiltrados.length} de ${libros.length} libros`}
+            </span>
+            {hayFiltrosActivos && (
+              <button
+                onClick={() => { setFiltro('TODOS'); setFiltroGenero('TODOS'); setFiltroEstrellas(0); setOrdenar('reciente'); setBusqueda('') }}
+                style={{ background: 'none', border: 'none', color: '#ff5e57', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', padding: 0 }}
+              >
+                ✕ Limpiar filtros
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Grid */}
