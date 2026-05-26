@@ -80,7 +80,7 @@ export async function inicializarTabla(): Promise<void> {
 // ── Obtener misiones reclamadas del usuario en periodo actual ────────────────
 
 async function getReclamadas(usuarioId: number): Promise<Set<string>> {
-  const periodos = [...new Set(MISIONES.map(m => getPeriodoActual(m.tipo)))]
+  const periodos = Array.from(new Set(MISIONES.map(m => getPeriodoActual(m.tipo))))
   const rows = await query<{ mision_key: string; periodo: string }>(
     `SELECT mision_key, periodo FROM misiones_reclamadas
      WHERE usuario_id = ? AND periodo IN (${periodos.map(() => '?').join(',')})`,
