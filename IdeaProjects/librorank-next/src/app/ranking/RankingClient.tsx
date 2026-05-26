@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { getNivelLector } from '@/lib/dao/usuarioDAO'
+import { getNivelLector } from '@/lib/nivelUtils'
 
 // ── Definición de ligas ──────────────────────────────────────────────────────
 
