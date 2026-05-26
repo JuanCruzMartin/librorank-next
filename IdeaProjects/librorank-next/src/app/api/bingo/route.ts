@@ -22,11 +22,11 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
   const body = await req.json()
-  const { retoId, libroId } = body
+  const { retoId, libroId, nota } = body
 
   if (!retoId || !libroId) return NextResponse.json({ error: 'retoId y libroId requeridos' }, { status: 400 })
 
-  const ok = await bingoDAO.marcarCasilla(user.id, Number(retoId), Number(libroId))
+  const ok = await bingoDAO.marcarCasilla(user.id, Number(retoId), Number(libroId), nota ?? undefined)
   if (ok) {
     await libroDAO.otorgarPuntos(user.id, 25, 'Casilla del bingo completada')
     await registrarActividad(user.id, 'BINGO', Number(retoId), 'Ha completado una casilla del Bingo Lector')
