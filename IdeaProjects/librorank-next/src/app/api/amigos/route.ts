@@ -16,12 +16,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(resultados)
   }
 
-  const [amigos, sugerencias] = await Promise.all([
+  const [amigos, sugerencias, todosLectores] = await Promise.all([
     amigoDAO.obtenerAmigos(user.id),
     amigoDAO.obtenerSugerencias(user.id),
+    amigoDAO.obtenerTodosLectores(user.id),
   ])
 
-  return NextResponse.json({ amigos, sugerencias })
+  return NextResponse.json({ amigos, sugerencias, todosLectores })
 }
 
 export async function POST(req: NextRequest) {

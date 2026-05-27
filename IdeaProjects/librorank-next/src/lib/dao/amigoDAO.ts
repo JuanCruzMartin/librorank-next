@@ -60,6 +60,25 @@ export async function obtenerSugerencias(usuarioId: number) {
   return conComun.filter(u => u.libros_en_comun > 0).slice(0, 5)
 }
 
+export async function obtenerTodosLectores(usuarioId: number) {
+  return query<{
+    id: number; nombre: string; username: string; avatar_url: string | null
+    bio: string | null; generos_favoritos: string | null; total_leidos: number
+    es_seguido: number
+  }>(
+    `SELECT u.id, u.nombre, u.username, u.avatar_url, u.bio, u.generos_favoritos,
+            COUNT(l.id) AS total_leidos,
+            EXISTS(SELECT 1 FROM amigos a WHERE a.usuario_id=? AND a.amigo_id=u.id) AS es_seguido
+     FROM usuarios u
+     LEFT JOIN libros_usuario l ON l.usuario_id=u.id AND UPPER(l.estado) IN ('LEIDO','LEÍDO')
+     WHERE u.id <> ?
+     GROUP BY u.id, u.nombre, u.username, u.avatar_url, u.bio, u.generos_favoritos
+     ORDER BY total_leidos DESC, u.nombre ASC
+     LIMIT 100`,
+    [usuarioId, usuarioId]
+  )
+}
+
 export async function esSonAmigos(id1: number, id2: number): Promise<boolean> {
   const row = await queryOne<{ cnt: number }>(
     'SELECT COUNT(*) as cnt FROM amigos WHERE usuario_id=? AND amigo_id=?', [id1, id2]
