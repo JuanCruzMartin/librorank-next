@@ -57,14 +57,17 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
   const [ligaTab, setLigaTab] = useState<string>('general')
 
   const esGeneral = ligaTab === 'general'
+  const esLibros  = ligaTab === 'libros'
   const ligaSeleccionada = LIGAS.find(l => l.key === ligaTab)
 
   // Usuarios a mostrar según tab
   const usuariosLiga = esGeneral
     ? [...ranking].sort((a, b) => b.puntos - a.puntos)
-    : ranking
-        .filter(u => ligaSeleccionada && u.puntos >= ligaSeleccionada.min && u.puntos <= ligaSeleccionada.max)
-        .sort((a, b) => b.puntos - a.puntos)
+    : esLibros
+      ? [...ranking].sort((a, b) => b.total_leidos - a.total_leidos)
+      : ranking
+          .filter(u => ligaSeleccionada && u.puntos >= ligaSeleccionada.min && u.puntos <= ligaSeleccionada.max)
+          .sort((a, b) => b.puntos - a.puntos)
 
   // Posición del usuario en su propia liga
   const posEnLiga = ranking
@@ -202,6 +205,29 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
             </span>
           </button>
 
+          {/* Tab Libros leídos */}
+          <button
+            onClick={() => setLigaTab('libros')}
+            style={{
+              background: esLibros ? 'rgba(74,158,122,0.15)' : 'rgba(255,255,255,0.04)',
+              border: esLibros ? '2px solid rgba(74,158,122,0.5)' : '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 20, padding: '0.45rem 1.1rem',
+              fontSize: '0.82rem', fontWeight: 700,
+              color: esLibros ? '#4a9e7a' : 'rgba(255,255,255,0.5)',
+              cursor: 'pointer', transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+            }}
+          >
+            📚 Libros leídos
+            <span style={{
+              background: esLibros ? 'rgba(74,158,122,0.3)' : 'rgba(255,255,255,0.08)',
+              color: esLibros ? '#4a9e7a' : 'rgba(255,255,255,0.4)',
+              borderRadius: 20, padding: '1px 7px', fontSize: '0.68rem',
+            }}>
+              {ranking.length}
+            </span>
+          </button>
+
           {/* Tabs de ligas */}
           {LIGAS.map(liga => {
             const activa = liga.key === ligaTab
@@ -241,13 +267,15 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
           marginBottom: '1.5rem',
           display: 'flex', alignItems: 'center', gap: '0.75rem',
         }}>
-          <span style={{ fontSize: '1.8rem' }}>{esGeneral ? '🌍' : ligaSeleccionada?.emoji}</span>
+          <span style={{ fontSize: '1.8rem' }}>
+            {esGeneral ? '🌍' : esLibros ? '📚' : ligaSeleccionada?.emoji}
+          </span>
           <div>
-            <div style={{ fontWeight: 700, color: esGeneral ? '#d4af37' : ligaSeleccionada?.color, fontSize: '0.9rem' }}>
-              {esGeneral ? 'Ranking General' : `Liga ${ligaSeleccionada?.nombre}`}
+            <div style={{ fontWeight: 700, color: esGeneral ? '#d4af37' : esLibros ? '#4a9e7a' : ligaSeleccionada?.color, fontSize: '0.9rem' }}>
+              {esGeneral ? 'Ranking General — Por puntos' : esLibros ? 'Ranking — Por libros leídos' : `Liga ${ligaSeleccionada?.nombre}`}
             </div>
             <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
-              {esGeneral
+              {esGeneral || esLibros
                 ? `Todos los lectores · ${ranking.length} en total`
                 : ligaSeleccionada?.max === Infinity
                   ? `${ligaSeleccionada.min}+ puntos · ${usuariosLiga.length} lectores`
@@ -344,15 +372,19 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
                     </div>
                   </div>
 
-                  {/* Stats */}
+                  {/* Stats — orden cambia según tab */}
                   <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexShrink: 0 }}>
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontWeight: 800, color: '#d4af37', fontSize: '0.95rem' }}>⭐ {u.puntos}</div>
-                      <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>puntos</div>
+                      <div style={{ fontWeight: 800, color: esLibros ? '#4a9e7a' : '#fff', fontSize: esLibros ? '1rem' : '0.9rem' }}>
+                        📚 {u.total_leidos}
+                      </div>
+                      <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>leídos</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.9rem' }}>{u.total_leidos}</div>
-                      <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>leídos</div>
+                      <div style={{ fontWeight: esLibros ? 600 : 800, color: esLibros ? 'rgba(212,175,55,0.6)' : '#d4af37', fontSize: '0.9rem' }}>
+                        ⭐ {u.puntos}
+                      </div>
+                      <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>puntos</div>
                     </div>
                   </div>
                 </div>
