@@ -19,9 +19,10 @@ interface Props {
   mejorCalificado: string
   paginas: number
   usuario: Usuario
+  soloLectura?: boolean
 }
 
-export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido, mejorCalificado, paginas }: Props) {
+export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido, mejorCalificado, paginas, usuario, soloLectura = false }: Props) {
   const [libros, setLibros] = useState(librosIniciales)
   const [filtro, setFiltro] = useState('TODOS')
   const [filtroGenero, setFiltroGenero] = useState('TODOS')
@@ -161,45 +162,53 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                   <i className="bi bi-collection-play-fill text-dark fs-4"></i>
                 </div>
                 <div>
-                  <h1 className="h2 fw-bold text-white mb-0">Mi Biblioteca</h1>
-                  <p className="text-muted small mb-0">Gestiona tu viaje literario</p>
+                  <h1 className="h2 fw-bold text-white mb-0">
+                    {soloLectura ? `Biblioteca de @${usuario.username}` : 'Mi Biblioteca'}
+                  </h1>
+                  <p className="text-muted small mb-0">
+                    {soloLectura ? `${stats.total} libros · ${stats.leidos} leídos` : 'Gestiona tu viaje literario'}
+                  </p>
                 </div>
               </div>
-              <div className="p-3 rounded-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', position: 'relative' }}>
-                <label className="form-label text-gold fw-bold mb-2 text-uppercase" style={{ letterSpacing: '1.5px', fontSize: '0.8rem' }}>
-                  <i className="bi bi-plus-circle-fill me-2"></i>Buscar libro para añadir
-                </label>
-                <div className="input-group">
-                  <input type="text" className="form-control" placeholder="Escribe el título de un libro..."
-                    style={{ border: '1px solid rgba(212,175,55,0.3)' }}
-                    value={busquedaHeader}
-                    onChange={e => { setBusquedaHeader(e.target.value); buscarHeader(e.target.value) }} />
-                  <button className="btn btn-gold px-4 border-0" type="button" onClick={() => setShowModal(true)}>
-                    <i className="bi bi-search fw-bold"></i>
-                  </button>
-                </div>
-                {sugerenciasHeader.length > 0 && (
-                  <div style={{ position: 'absolute', left: 0, right: 0, top: '100%', background: '#2c2724', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 10, zIndex: 999, maxHeight: 320, overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.6)', marginTop: 4 }}>
-                    {sugerenciasHeader.map((s, i) => (
-                      <button key={i} onClick={() => seleccionarDesdeHeader(s)}
-                        style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#fff', cursor: 'pointer', textAlign: 'left' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,175,55,0.08)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-                      >
-                        {s.portada
-                          ? <img src={s.portada} alt={s.titulo} style={{ width: 38, height: 56, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
-                          : <div style={{ width: 38, height: 56, background: '#36302c', borderRadius: 4, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>📚</div>
-                        }
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: '0.82rem', lineHeight: 1.3 }}>{s.titulo}</div>
-                          <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>{s.autor}</div>
-                          {s.anio && <div style={{ fontSize: '0.65rem', color: 'rgba(212,175,55,0.6)' }}>{s.anio}</div>}
-                        </div>
-                      </button>
-                    ))}
+
+              {/* Buscador para agregar — solo visible en mi propia biblioteca */}
+              {!soloLectura && (
+                <div className="p-3 rounded-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', position: 'relative' }}>
+                  <label className="form-label text-gold fw-bold mb-2 text-uppercase" style={{ letterSpacing: '1.5px', fontSize: '0.8rem' }}>
+                    <i className="bi bi-plus-circle-fill me-2"></i>Buscar libro para añadir
+                  </label>
+                  <div className="input-group">
+                    <input type="text" className="form-control" placeholder="Escribe el título de un libro..."
+                      style={{ border: '1px solid rgba(212,175,55,0.3)' }}
+                      value={busquedaHeader}
+                      onChange={e => { setBusquedaHeader(e.target.value); buscarHeader(e.target.value) }} />
+                    <button className="btn btn-gold px-4 border-0" type="button" onClick={() => setShowModal(true)}>
+                      <i className="bi bi-search fw-bold"></i>
+                    </button>
                   </div>
-                )}
-              </div>
+                  {sugerenciasHeader.length > 0 && (
+                    <div style={{ position: 'absolute', left: 0, right: 0, top: '100%', background: '#2c2724', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 10, zIndex: 999, maxHeight: 320, overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.6)', marginTop: 4 }}>
+                      {sugerenciasHeader.map((s, i) => (
+                        <button key={i} onClick={() => seleccionarDesdeHeader(s)}
+                          style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#fff', cursor: 'pointer', textAlign: 'left' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,175,55,0.08)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                        >
+                          {s.portada
+                            ? <img src={s.portada} alt={s.titulo} style={{ width: 38, height: 56, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
+                            : <div style={{ width: 38, height: 56, background: '#36302c', borderRadius: 4, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>📚</div>
+                          }
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: '0.82rem', lineHeight: 1.3 }}>{s.titulo}</div>
+                            <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>{s.autor}</div>
+                            {s.anio && <div style={{ fontSize: '0.65rem', color: 'rgba(212,175,55,0.6)' }}>{s.anio}</div>}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="col-lg-7">
               <div className="row g-3">
@@ -227,17 +236,19 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
 
       <main className="container my-5">
         {mensaje && <div className="alert alert-danger">{mensaje}</div>}
-        <BannerExplicativo
-          icon="📚"
-          titulo="Tu Biblioteca"
-          descripcion="Todo lo que leés, en un solo lugar"
-          pasos={[
-            { icon: '🔍', texto: 'Buscá un libro por título y agregalo' },
-            { icon: '🏷️', texto: 'Marcá su estado: Pendiente, Leyendo, Leído o Pausa' },
-            { icon: '⭐', texto: 'Calificalo y escribí tu reseña' },
-            { icon: '📝', texto: 'Anotá citas y usá el diario de lectura' },
-          ]}
-        />
+        {!soloLectura && (
+          <BannerExplicativo
+            icon="📚"
+            titulo="Tu Biblioteca"
+            descripcion="Todo lo que leés, en un solo lugar"
+            pasos={[
+              { icon: '🔍', texto: 'Buscá un libro por título y agregalo' },
+              { icon: '🏷️', texto: 'Marcá su estado: Pendiente, Leyendo, Leído o Pausa' },
+              { icon: '⭐', texto: 'Calificalo y escribí tu reseña' },
+              { icon: '📝', texto: 'Anotá citas y usá el diario de lectura' },
+            ]}
+          />
+        )}
 
         {/* ── Barra de filtros ── */}
         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '1rem 1.25rem', marginBottom: '1.5rem' }}>
@@ -258,9 +269,11 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                 {e === 'TODOS' ? 'Todos' : e === 'LEIDO' ? '✅ Leído' : e === 'LEYENDO' ? '📖 Leyendo' : e === 'PENDIENTE' ? '🕐 Pendiente' : '⏸ Pausa'}
               </button>
             ))}
-            <button onClick={() => setShowModal(true)} className="btn btn-gold btn-sm ms-auto px-4" style={{ flexShrink: 0 }}>
-              <i className="bi bi-plus-lg me-1"></i>Agregar libro
-            </button>
+            {!soloLectura && (
+              <button onClick={() => setShowModal(true)} className="btn btn-gold btn-sm ms-auto px-4" style={{ flexShrink: 0 }}>
+                <i className="bi bi-plus-lg me-1"></i>Agregar libro
+              </button>
+            )}
           </div>
 
           {/* Fila 2: Género + Calificación + Ordenar + Búsqueda */}
@@ -375,7 +388,9 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
           <div className="text-center text-muted py-5">
             <i className="bi bi-book display-1 mb-3 d-block opacity-25"></i>
             <p>No hay libros en esta categoría.</p>
-            <button onClick={() => setShowModal(true)} className="btn btn-gold btn-sm mt-2">Agregar mi primer libro</button>
+            {!soloLectura && (
+              <button onClick={() => setShowModal(true)} className="btn btn-gold btn-sm mt-2">Agregar mi primer libro</button>
+            )}
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '1rem' }}>
@@ -404,11 +419,13 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                     {libro.estado}
                   </div>
 
-                  {/* Botón eliminar */}
-                  <button onClick={e => { e.stopPropagation(); eliminarLibro(libro.id) }}
-                    style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.65)', border: 'none', borderRadius: '50%', width: 26, height: 26, color: '#ff5e57', cursor: 'pointer', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: hovered ? 1 : 0, transition: 'opacity 0.2s' }}>
-                    ✕
-                  </button>
+                  {/* Botón eliminar — solo en mi propia biblioteca */}
+                  {!soloLectura && (
+                    <button onClick={e => { e.stopPropagation(); eliminarLibro(libro.id) }}
+                      style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.65)', border: 'none', borderRadius: '50%', width: 26, height: 26, color: '#ff5e57', cursor: 'pointer', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: hovered ? 1 : 0, transition: 'opacity 0.2s' }}>
+                      ✕
+                    </button>
+                  )}
 
                   {/* Overlay hover */}
                   <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.75) 55%, transparent 100%)', padding: '1.2rem 0.65rem 0.75rem', transform: hovered ? 'translateY(0)' : 'translateY(35%)', opacity: hovered ? 1 : 0, transition: 'all 0.25s ease' }}>
@@ -417,16 +434,18 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                     {(libro.estrellas ?? 0) > 0 && (
                       <p style={{ margin: '0 0 7px', fontSize: '0.65rem', letterSpacing: 1 }}>{'⭐'.repeat(libro.estrellas ?? 0)}</p>
                     )}
-                    <div style={{ display: 'flex', gap: '0.35rem' }}>
-                      <Link href={`/diario?libroId=${libro.id}`}
-                        style={{ flex: 1, background: '#d4af37', borderRadius: 6, padding: '0.3rem 0.25rem', fontSize: '0.6rem', fontWeight: 700, color: '#000', textDecoration: 'none', textAlign: 'center' }}>
-                        📖 Diario
-                      </Link>
-                      <button onClick={() => setEditando(libro)}
-                        style={{ flex: 1, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '0.3rem 0.25rem', fontSize: '0.6rem', fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
-                        ✏️ Editar
-                      </button>
-                    </div>
+                    {!soloLectura && (
+                      <div style={{ display: 'flex', gap: '0.35rem' }}>
+                        <Link href={`/diario?libroId=${libro.id}`}
+                          style={{ flex: 1, background: '#d4af37', borderRadius: 6, padding: '0.3rem 0.25rem', fontSize: '0.6rem', fontWeight: 700, color: '#000', textDecoration: 'none', textAlign: 'center' }}>
+                          📖 Diario
+                        </Link>
+                        <button onClick={() => setEditando(libro)}
+                          style={{ flex: 1, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '0.3rem 0.25rem', fontSize: '0.6rem', fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
+                          ✏️ Editar
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )
@@ -435,8 +454,8 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
         )}
       </main>
 
-      {/* Modal: Agregar libro */}
-      {showModal && (
+      {/* Modal: Agregar libro — solo en mi propia biblioteca */}
+      {!soloLectura && showModal && (
         <div className="modal show d-block" tabIndex={-1} style={{ background: 'rgba(0,0,0,0.7)' }}>
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content" style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-gold)', borderRadius: 20 }}>
@@ -497,8 +516,8 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
         </div>
       )}
 
-      {/* Modal: Editar libro */}
-      {editando && (
+      {/* Modal: Editar libro — solo en mi propia biblioteca */}
+      {!soloLectura && editando && (
         <div className="modal show d-block" tabIndex={-1} style={{ background: 'rgba(0,0,0,0.7)' }}
           onClick={e => { if (e.target === e.currentTarget) { setEditando(null); setMensajeEdit('') } }}>
           <div className="modal-dialog modal-dialog-centered">

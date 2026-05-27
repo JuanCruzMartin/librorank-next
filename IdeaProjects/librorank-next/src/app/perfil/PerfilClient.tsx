@@ -314,7 +314,11 @@ export default function PerfilClient({
               <div className="card p-4 mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h5 className="font-title mb-0" style={{ color: 'var(--accent-gold)' }}>Últimas conquistas</h5>
-                  <Link href="/biblioteca" className="small text-decoration-none" style={{ color: 'var(--accent-gold)' }}>
+                  <Link
+                    href={esMiPerfil ? '/biblioteca' : `/biblioteca?id=${usuario.id}`}
+                    className="small text-decoration-none"
+                    style={{ color: 'var(--accent-gold)' }}
+                  >
                     Ver biblioteca completa →
                   </Link>
                 </div>

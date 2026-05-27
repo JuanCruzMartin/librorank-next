@@ -6,24 +6,30 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import BibliotecaClient from './BibliotecaClient'
 
-export default async function BibliotecaPage() {
+export default async function BibliotecaPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
   const authUser = await getAuthUser()
   if (!authUser) redirect('/login')
 
-  const [usuario, libros, stats, autorMasLeido, mejorCalificado, paginas] = await Promise.all([
+  const params = await searchParams
+  const targetId = params.id ? Number(params.id) : authUser.id
+  const soloLectura = targetId !== authUser.id
+
+  const [authUsuario, targetUsuario, libros, stats, autorMasLeido, mejorCalificado, paginas] = await Promise.all([
     buscarPorId(authUser.id),
-    buscarPorUsuario(authUser.id),
-    obtenerStatsPorUsuario(authUser.id),
-    obtenerAutorMasLeido(authUser.id),
-    obtenerMejorCalificado(authUser.id),
-    sumarPaginasLeidas(authUser.id),
+    buscarPorId(targetId),
+    buscarPorUsuario(targetId),
+    obtenerStatsPorUsuario(targetId),
+    obtenerAutorMasLeido(targetId),
+    obtenerMejorCalificado(targetId),
+    sumarPaginasLeidas(targetId),
   ])
 
-  if (!usuario) redirect('/login')
+  if (!authUsuario) redirect('/login')
+  if (!targetUsuario) redirect('/biblioteca')
 
   return (
     <>
-      <Header user={usuario} />
+      <Header user={authUsuario} />
       <main>
         <BibliotecaClient
           librosIniciales={libros}
@@ -31,7 +37,8 @@ export default async function BibliotecaPage() {
           autorMasLeido={autorMasLeido}
           mejorCalificado={mejorCalificado}
           paginas={paginas}
-          usuario={usuario}
+          usuario={targetUsuario}
+          soloLectura={soloLectura}
         />
       </main>
       <Footer />
