@@ -1,5 +1,6 @@
 import { query, queryOne, execute, transaction } from '@/lib/db'
 import { obtenerOCrear } from './libroGlobalDAO'
+import { crearNotificacion } from './notificacionDAO'
 
 export interface Libro {
   id: number
@@ -152,14 +153,60 @@ export async function obtenerConteoPorMood(usuarioId: number): Promise<Record<st
 }
 
 export async function otorgarPuntos(usuarioId: number, monto: number, concepto: string): Promise<void> {
+  let saldoAnterior = 0
+  let saldoNuevo = 0
+
   await transaction(async conn => {
     const [rows] = await conn.query('SELECT monedas FROM usuarios WHERE id=?', [usuarioId])
-    const saldo = ((rows as { monedas: number }[])[0])?.monedas ?? 0
-    const nuevo = saldo + monto
-    await conn.execute('UPDATE usuarios SET monedas=? WHERE id=?', [nuevo, usuarioId])
+    saldoAnterior = ((rows as { monedas: number }[])[0])?.monedas ?? 0
+    saldoNuevo = saldoAnterior + monto
+    await conn.execute('UPDATE usuarios SET monedas=? WHERE id=?', [saldoNuevo, usuarioId])
     await conn.execute(
       `INSERT INTO movimientos_moneda (usuario_id, tipo, concepto, monto, saldo_resultante) VALUES (?, 'GANANCIA', ?, ?, ?)`,
-      [usuarioId, concepto, monto, nuevo]
+      [usuarioId, concepto, monto, saldoNuevo]
     )
   })
+
+  // Detectar usuarios superados y notificarlos (fire & forget, no bloquea)
+  if (monto > 0 && saldoNuevo > saldoAnterior) {
+    notificarRankingSuperado(usuarioId, saldoAnterior, saldoNuevo).catch(e =>
+      console.error('[notifRanking] Error notificando posición:', e)
+    )
+  }
+}
+
+async function notificarRankingSuperado(
+  usuarioId: number,
+  saldoAnterior: number,
+  saldoNuevo: number
+): Promise<void> {
+  // Buscar usuarios que estaban entre saldoAnterior y saldoNuevo (fueron superados)
+  const pasados = await query<{ id: number; username: string; monedas: number }>(
+    `SELECT id, username, monedas
+     FROM usuarios
+     WHERE monedas > ? AND monedas < ? AND id != ?`,
+    [saldoAnterior, saldoNuevo, usuarioId]
+  )
+  if (pasados.length === 0) return
+
+  const usuarioRow = await queryOne<{ username: string }>(
+    'SELECT username FROM usuarios WHERE id=?',
+    [usuarioId]
+  )
+  const nombrePasador = usuarioRow?.username ?? 'alguien'
+
+  for (const pasado of pasados) {
+    // Nueva posición del usuario superado (cuántos tienen más monedas que él ahora)
+    const rankRow = await queryOne<{ pos: number }>(
+      'SELECT COUNT(*) + 1 AS pos FROM usuarios WHERE monedas > ?',
+      [pasado.monedas]
+    )
+    const posicion = rankRow?.pos ?? '?'
+
+    await crearNotificacion(
+      pasado.id,
+      'RANKING',
+      `¡@${nombrePasador} te superó en el ranking! Ahora estás en el puesto #${posicion} 🏆`
+    )
+  }
 }

@@ -2,6 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
+
+interface Notificacion {
+  id: number
+  tipo: string
+  mensaje: string
+  leido: boolean
+  fecha_creacion: string
+}
 
 interface HeaderProps {
   user: {
@@ -16,6 +25,10 @@ interface HeaderProps {
 export default function Header({ user }: HeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const [notifs, setNotifs] = useState<Notificacion[]>([])
+  const [noLeidas, setNoLeidas] = useState(0)
+  const [abierto, setAbierto] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const isActive = (path: string) =>
     pathname.startsWith(path) ? 'nav-link-custom active-nav' : 'nav-link-custom'
@@ -24,6 +37,55 @@ export default function Header({ user }: HeaderProps) {
     await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/')
     router.refresh()
+  }
+
+  // Cargar notificaciones al montar (solo si hay usuario)
+  useEffect(() => {
+    if (!user) return
+    fetchNotifs()
+    // Polling cada 2 minutos
+    const interval = setInterval(fetchNotifs, 120_000)
+    return () => clearInterval(interval)
+  }, [user])
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setAbierto(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  async function fetchNotifs() {
+    try {
+      const res = await fetch('/api/notificaciones')
+      if (!res.ok) return
+      const data = await res.json()
+      setNotifs(data.notificaciones ?? [])
+      setNoLeidas(data.total_no_leidas ?? 0)
+    } catch {
+      // silencioso
+    }
+  }
+
+  async function abrirNotifs() {
+    setAbierto(prev => !prev)
+    if (!abierto && noLeidas > 0) {
+      await fetch('/api/notificaciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'leerTodas' }),
+      })
+      setNoLeidas(0)
+      setNotifs(prev => prev.map(n => ({ ...n, leido: true })))
+    }
+  }
+
+  function formatFecha(fecha: string) {
+    return new Date(fecha).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
   }
 
   /* ── Header sin usuario (landing/login) ── */
@@ -88,6 +150,95 @@ export default function Header({ user }: HeaderProps) {
           }}>
             ⭐ {user.puntos ?? 0}
           </span>
+
+          {/* Campana de notificaciones */}
+          <div ref={dropdownRef} style={{ position: 'relative' }}>
+            <button
+              onClick={abrirNotifs}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '0.2rem 0.4rem',
+                position: 'relative',
+                fontSize: '1.1rem',
+                lineHeight: 1,
+              }}
+              title="Notificaciones"
+            >
+              🔔
+              {noLeidas > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: -2,
+                  right: -2,
+                  background: '#e74c3c',
+                  color: '#fff',
+                  borderRadius: '50%',
+                  fontSize: '0.6rem',
+                  fontWeight: 700,
+                  width: 16,
+                  height: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  lineHeight: 1,
+                }}>
+                  {noLeidas > 9 ? '9+' : noLeidas}
+                </span>
+              )}
+            </button>
+
+            {/* Dropdown de notificaciones */}
+            {abierto && (
+              <div style={{
+                position: 'absolute',
+                top: 'calc(100% + 8px)',
+                right: 0,
+                width: 320,
+                background: '#1a1a2e',
+                border: '1px solid rgba(212,175,55,0.3)',
+                borderRadius: 12,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                zIndex: 9999,
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  padding: '10px 14px',
+                  borderBottom: '1px solid rgba(255,255,255,0.08)',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  color: '#d4af37',
+                }}>
+                  🔔 Notificaciones
+                </div>
+
+                {notifs.length === 0 ? (
+                  <div style={{ padding: '16px 14px', color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', textAlign: 'center' }}>
+                    Sin notificaciones
+                  </div>
+                ) : (
+                  <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+                    {notifs.map(n => (
+                      <div key={n.id} style={{
+                        padding: '10px 14px',
+                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        background: n.leido ? 'transparent' : 'rgba(212,175,55,0.06)',
+                        transition: 'background 0.2s',
+                      }}>
+                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.85)', lineHeight: 1.4 }}>
+                          {n.mensaje}
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>
+                          {formatFecha(n.fecha_creacion)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Botón Perfil */}
           <Link href="/perfil" className="btn-gold" style={{
