@@ -278,7 +278,7 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
               {esGeneral || esLibros
                 ? `Todos los lectores · ${ranking.length} en total`
                 : ligaSeleccionada?.max === Infinity
-                  ? `${ligaSeleccionada.min}+ puntos · ${usuariosLiga.length} lectores`
+                  ? `${ligaSeleccionada?.min}+ puntos · ${usuariosLiga.length} lectores`
                   : `${ligaSeleccionada?.min}–${ligaSeleccionada?.max} puntos · ${usuariosLiga.length} lectores`
               }
             </div>
@@ -302,10 +302,10 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
                   key={u.id}
                   style={{
                     background: esYo
-                      ? `linear-gradient(135deg, ${ligaSeleccionada.color}12, ${ligaSeleccionada.color}06)`
+                      ? `linear-gradient(135deg, ${(ligaSeleccionada ?? ligaActual).color}12, ${(ligaSeleccionada ?? ligaActual).color}06)`
                       : pos <= 3 ? 'rgba(255,255,255,0.04)' : 'var(--bg-card)',
                     border: esYo
-                      ? `1px solid ${ligaSeleccionada.border}`
+                      ? `1px solid ${(ligaSeleccionada ?? ligaActual).border}`
                       : pos <= 3 ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.05)',
                     borderRadius: 12, padding: '0.85rem 1.25rem',
                     display: 'flex', alignItems: 'center', gap: '1rem',
@@ -326,7 +326,7 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
                     style={{
                       width: 38, height: 38, borderRadius: '50%',
                       objectFit: 'cover', flexShrink: 0,
-                      border: esYo ? `2px solid ${ligaSeleccionada.color}` : '1px solid rgba(255,255,255,0.1)',
+                      border: esYo ? `2px solid ${(ligaSeleccionada ?? ligaActual).color}` : '1px solid rgba(255,255,255,0.1)',
                     }}
                   />
 
