@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Libro, PerfilStats } from '@/lib/dao/libroDAO'
 import type { Usuario } from '@/lib/dao/usuarioDAO'
 import BannerExplicativo from '@/components/BannerExplicativo'
@@ -43,6 +44,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   const [toast, setToast] = useState<{ puntos: number; mensaje: string } | null>(null)
   const [libroAEliminar, setLibroAEliminar] = useState<Libro | null>(null)
   const [eliminando, setEliminando] = useState(false)
+  const [imgErrors, setImgErrors] = useState<Set<number>>(new Set())
   const searchRef = useRef<HTMLInputElement>(null)
 
   // Atajo "/" enfoca el buscador de la biblioteca
@@ -544,9 +546,15 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                   onMouseLeave={() => setHoveredId(null)}
                 >
                   {/* Portada */}
-                  {libro.portada_url ? (
-                    <img src={libro.portada_url.replace('http://', 'https://')} alt={libro.titulo} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.setAttribute('style', 'display:flex') }} />
+                  {libro.portada_url && !imgErrors.has(libro.id) ? (
+                    <Image
+                      src={libro.portada_url.replace('http://', 'https://')}
+                      alt={libro.titulo}
+                      fill
+                      style={{ objectFit: 'cover' }}
+                      sizes="(max-width: 480px) 33vw, (max-width: 768px) 20vw, 15vw"
+                      onError={() => setImgErrors(prev => { const next = new Set(prev); next.add(libro.id); return next })}
+                    />
                   ) : (
                     <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#25211e,#36302c)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
                       <span style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>📚</span>

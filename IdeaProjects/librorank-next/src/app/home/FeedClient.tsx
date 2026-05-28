@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { ActividadSocial } from '@/lib/dao/actividadDAO'
 
 function formatFechaActividad(tipo: string, tituloLibro?: string | null, detalle?: string | null): string {
@@ -83,7 +84,7 @@ export default function FeedClient({ feedInicial, usuarioId }: Props) {
                 {formatFechaActividad(act.tipo_actividad, act.titulo, act.detalle)}
               </div>
               {act.portada_url && (
-                <img src={act.portada_url} alt={act.titulo || ''} style={{ height: 60, borderRadius: 6 }} className="mb-2" />
+                <Image src={act.portada_url} alt={act.titulo || ''} width={40} height={60} style={{ borderRadius: 6 }} className="mb-2" />
               )}
               <div className="feed-actions mt-2 pt-2 border-top border-secondary d-flex gap-4" style={{ opacity: 0.7 }}>
                 <button

@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import NextImage from 'next/image'
 import type { Usuario, NivelInfo } from '@/lib/dao/usuarioDAO'
 import type { Libro, PerfilStats } from '@/lib/dao/libroDAO'
 import type { Logro } from '@/lib/dao/logroDAO'
@@ -561,7 +562,7 @@ export default function PerfilClient({
                   {wrapped.mejorLibro && (
                     <div style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 16, padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
                       {wrapped.mejorLibro.portada_url && (
-                        <img src={wrapped.mejorLibro.portada_url} alt="" style={{ width: 56, height: 80, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
+                        <NextImage src={wrapped.mejorLibro.portada_url} alt={wrapped.mejorLibro.titulo} width={56} height={80} style={{ objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
                       )}
                       <div>
                         <p style={{ fontSize: '0.65rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: '0.25rem' }}>⭐ Tu libro del año</p>
@@ -580,7 +581,7 @@ export default function PerfilClient({
                         {wrapped.librosRecientes.map((l, i) => (
                           <div key={i} style={{ flexShrink: 0, width: 56 }}>
                             {l.portada_url
-                              ? <img src={l.portada_url} alt={l.titulo} style={{ width: 56, height: 80, objectFit: 'cover', borderRadius: 6 }} title={l.titulo} />
+                              ? <NextImage src={l.portada_url} alt={l.titulo} width={56} height={80} style={{ objectFit: 'cover', borderRadius: 6 }} title={l.titulo} />
                               : <div style={{ width: 56, height: 80, background: '#36302c', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>📚</div>
                             }
                           </div>
