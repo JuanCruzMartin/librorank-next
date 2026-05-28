@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { Libro, PerfilStats } from '@/lib/dao/libroDAO'
 import type { Usuario } from '@/lib/dao/usuarioDAO'
 import BannerExplicativo from '@/components/BannerExplicativo'
+import Toast from '@/components/Toast'
 
 const ESTADOS = ['PENDIENTE', 'LEYENDO', 'LEIDO', 'PAUSA']
 const GENEROS = ['Fantasía', 'Ciencia Ficción', 'Romance', 'Terror', 'Misterio', 'Historia', 'Biografía', 'Autoayuda', 'Poesía', 'Otro']
@@ -39,6 +40,11 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   const [mensaje, setMensaje] = useState('')
   const [mensajeEdit, setMensajeEdit] = useState('')
   const [guardando, setGuardando] = useState(false)
+  const [toast, setToast] = useState<{ puntos: number; mensaje: string } | null>(null)
+
+  function mostrarToast(puntos: number, mensaje: string) {
+    if (puntos > 0) setToast({ puntos, mensaje })
+  }
 
   const buscarLibros = useCallback(async (q: string) => {
     if (q.length < 3) { setSugerencias([]); return }
@@ -75,7 +81,13 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
     })
     const json = await res.json()
     if (!res.ok) { setMensaje(json.error); return }
-    setShowModal(false); window.location.reload()
+    setShowModal(false)
+    if (json.puntosGanados > 0) {
+      mostrarToast(json.puntosGanados, json.toastMsg)
+      setTimeout(() => window.location.reload(), 2000)
+    } else {
+      window.location.reload()
+    }
   }
 
   async function editarLibro(e: React.FormEvent<HTMLFormElement>) {
@@ -105,7 +117,12 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
         return
       }
       setEditando(null)
-      window.location.reload()
+      if (json.puntosGanados > 0) {
+        mostrarToast(json.puntosGanados, json.toastMsg)
+        setTimeout(() => window.location.reload(), 2000)
+      } else {
+        window.location.reload()
+      }
     } catch {
       setMensajeEdit('Error de conexión. Intentá de nuevo.')
     } finally {
@@ -152,6 +169,15 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
 
   return (
     <>
+      {/* Toast de puntos */}
+      {toast && (
+        <Toast
+          puntos={toast.puntos}
+          mensaje={toast.mensaje}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       {/* Header interno estilo original */}
       <header className="library-header py-5" style={{ background: 'linear-gradient(135deg,#0a0a0a 0%,#151515 100%)', borderBottom: '2px solid rgba(212,175,55,0.2)' }}>
         <div className="container">
