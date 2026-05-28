@@ -41,6 +41,8 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   const [mensajeEdit, setMensajeEdit] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [toast, setToast] = useState<{ puntos: number; mensaje: string } | null>(null)
+  const [libroAEliminar, setLibroAEliminar] = useState<Libro | null>(null)
+  const [eliminando, setEliminando] = useState(false)
 
   function mostrarToast(puntos: number, mensaje: string) {
     if (puntos > 0) setToast({ puntos, mensaje })
@@ -130,10 +132,17 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
     }
   }
 
-  async function eliminarLibro(id: number) {
-    if (!confirm('¿Eliminar este libro?')) return
-    await fetch('/api/libros', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accion: 'eliminar', id }) })
-    setLibros(prev => prev.filter(l => l.id !== id))
+  async function confirmarEliminar() {
+    if (!libroAEliminar) return
+    setEliminando(true)
+    await fetch('/api/libros', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accion: 'eliminar', id: libroAEliminar.id }),
+    })
+    setLibros(prev => prev.filter(l => l.id !== libroAEliminar.id))
+    setLibroAEliminar(null)
+    setEliminando(false)
   }
 
   const hayFiltrosActivos = filtro !== 'TODOS' || filtroGenero !== 'TODOS' || filtroEstrellas > 0 || busqueda !== ''
@@ -176,6 +185,72 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
           mensaje={toast.mensaje}
           onClose={() => setToast(null)}
         />
+      )}
+
+      {/* Modal confirmar eliminación */}
+      {libroAEliminar && (
+        <div
+          onClick={() => setLibroAEliminar(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9998,
+            background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '1rem',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#1e1a18',
+              border: '1px solid rgba(255,94,87,0.35)',
+              borderRadius: 18,
+              padding: '2rem',
+              maxWidth: 380,
+              width: '100%',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🗑️</div>
+            <h3 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+              ¿Eliminar este libro?
+            </h3>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
+              &ldquo;{libroAEliminar.titulo}&rdquo;
+            </p>
+            <p style={{ color: 'rgba(255,94,87,0.8)', fontSize: '0.78rem', marginBottom: '1.75rem' }}>
+              Esta acción no se puede deshacer.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                onClick={() => setLibroAEliminar(null)}
+                style={{
+                  flex: 1, padding: '0.75rem',
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: 10, color: '#fff',
+                  fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarEliminar}
+                disabled={eliminando}
+                style={{
+                  flex: 1, padding: '0.75rem',
+                  background: eliminando ? 'rgba(255,94,87,0.3)' : 'rgba(255,94,87,0.15)',
+                  border: '1px solid rgba(255,94,87,0.5)',
+                  borderRadius: 10, color: '#ff5e57',
+                  fontWeight: 700, fontSize: '0.9rem', cursor: eliminando ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Header interno estilo original */}
@@ -447,7 +522,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
 
                   {/* Botón eliminar — solo en mi propia biblioteca */}
                   {!soloLectura && (
-                    <button onClick={e => { e.stopPropagation(); eliminarLibro(libro.id) }}
+                    <button onClick={e => { e.stopPropagation(); setLibroAEliminar(libro) }}
                       style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.65)', border: 'none', borderRadius: '50%', width: 26, height: 26, color: '#ff5e57', cursor: 'pointer', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: hovered ? 1 : 0, transition: 'opacity 0.2s' }}>
                       ✕
                     </button>
