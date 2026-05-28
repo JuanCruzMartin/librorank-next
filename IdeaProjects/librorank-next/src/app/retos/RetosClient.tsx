@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import type { RetoAmigo } from '@/lib/dao/retoDAO'
 import type { Libro } from '@/lib/dao/libroDAO'
-import BannerExplicativo from '@/components/BannerExplicativo'
 
 interface Props {
   retos: RetoAmigo[]
@@ -51,36 +50,73 @@ export default function RetosClient({ retos: retosIni, misLibros, usuarioId }: P
 
   return (
     <div className="container py-5">
-      <BannerExplicativo
-        icon="⚔️"
-        titulo="Retos de Lectura"
-        descripcion="Competí con tus amigos a ver quién lee más"
-        pasos={[
-          { icon: '👥', texto: 'Desafiá a un amigo a leer una cantidad de libros' },
-          { icon: '⏱️', texto: 'Los retos tienen fecha límite' },
-          { icon: '🏅', texto: 'El que llega a la meta primero gana' },
-          { icon: '⭐', texto: 'Ganás puntos por crear y completar retos' },
-        ]}
-        color="#e74c3c"
-      />
-      {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-5">
-        <div>
-          <h1 className="font-title display-5 mb-1">⚔️ Retos</h1>
-          <p className="text-muted">Competí con amigos en desafíos de lectura.</p>
+
+      {/* ── Hero: ¿Qué son los Retos? ── */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(231,76,60,0.08), rgba(231,76,60,0.02))',
+        border: '1px solid rgba(231,76,60,0.2)',
+        borderRadius: 18,
+        padding: '1.75rem',
+        marginBottom: '2rem',
+      }}>
+        <div className="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+          <div style={{ flex: 1, minWidth: 260 }}>
+            <h1 className="font-title mb-1" style={{ fontSize: '1.8rem' }}>⚔️ Retos de Lectura</h1>
+            <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: '1rem', lineHeight: 1.6 }}>
+              Creá un reto, <strong style={{ color: '#fff' }}>invitá a tus amigos</strong> y competí para ver quién
+              llega primero a la meta — un libro específico o un porcentaje de avance —
+              antes de la <strong style={{ color: '#e74c3c' }}>fecha límite</strong>.
+              Ganás puntos por crear retos y por completarlos.
+            </p>
+
+            {/* Diferencia con Bingo */}
+            <div style={{
+              display: 'flex', gap: '0.75rem', flexWrap: 'wrap',
+            }}>
+              <div style={{
+                background: 'rgba(243,156,18,0.08)',
+                border: '1px solid rgba(243,156,18,0.2)',
+                borderRadius: 10, padding: '0.6rem 1rem',
+                fontSize: '0.78rem',
+              }}>
+                <div style={{ fontWeight: 700, color: '#f39c12', marginBottom: 2 }}>🎲 Bingo</div>
+                <div style={{ color: 'rgba(255,255,255,0.5)' }}>Desafíos solo, a tu ritmo,<br />por categorías de libros</div>
+              </div>
+              <div style={{
+                background: 'rgba(231,76,60,0.1)',
+                border: '1px solid rgba(231,76,60,0.3)',
+                borderRadius: 10, padding: '0.6rem 1rem',
+                fontSize: '0.78rem',
+              }}>
+                <div style={{ fontWeight: 700, color: '#e74c3c', marginBottom: 2 }}>⚔️ Retos ← estás acá</div>
+                <div style={{ color: 'rgba(255,255,255,0.5)' }}>Competencia directa contra<br />amigos con fecha límite</div>
+              </div>
+            </div>
+          </div>
+
+          <button onClick={() => setShowModal(true)} className="btn-gold flex-shrink-0" style={{ alignSelf: 'flex-start' }}>
+            + Crear Reto
+          </button>
         </div>
-        <button onClick={() => setShowModal(true)} className="btn-gold">
-          + Nuevo Reto
-        </button>
       </div>
 
       {/* Lista de retos */}
       {retos.length === 0 ? (
-        <div className="card p-5 text-center text-muted">
+        <div style={{
+          textAlign: 'center',
+          padding: '3rem 2rem',
+          background: 'rgba(255,255,255,0.02)',
+          border: '1px dashed rgba(231,76,60,0.25)',
+          borderRadius: 16,
+        }}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚔️</div>
-          <p className="mb-3">Aún no hay retos activos.</p>
-          <button onClick={() => setShowModal(true)} className="btn-gold btn-sm mx-auto" style={{ width: 'fit-content' }}>
-            Crear el primero
+          <h4 style={{ color: '#fff', marginBottom: '0.5rem' }}>Aún no hay retos activos</h4>
+          <p style={{ color: 'rgba(255,255,255,0.4)', maxWidth: 400, margin: '0 auto 1.5rem', fontSize: '0.88rem', lineHeight: 1.6 }}>
+            Creá el primer reto, elegí un libro objetivo o una meta de lectura,
+            ponele fecha límite y compartilos con tus amigos.
+          </p>
+          <button onClick={() => setShowModal(true)} className="btn-gold">
+            Crear mi primer reto
           </button>
         </div>
       ) : (

@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import type { BingoCasilla } from '@/lib/dao/bingoDAO'
 import type { Libro } from '@/lib/dao/libroDAO'
-import BannerExplicativo from '@/components/BannerExplicativo'
 
 interface Props {
   bingo: BingoCasilla[]
@@ -62,49 +61,88 @@ export default function BingoClient({ bingo: bingoIni, misLibros }: Props) {
   const grid: (BingoCasilla | undefined)[] = Array(25).fill(undefined)
   bingo.forEach(c => { grid[c.posicion] = c })
 
+  // Calcular progreso de cada línea (filas, columnas, diagonales)
+  const completadasSet = new Set(bingo.filter(c => c.completado).map(c => c.posicion))
+  const lineas = [
+    // 5 filas
+    [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24],
+    // 5 columnas
+    [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24],
+    // 2 diagonales
+    [0,6,12,18,24], [4,8,12,16,20],
+  ]
+  const lineasCompletas = lineas.filter(l => l.every(p => completadasSet.has(p))).length
+  // Líneas más cercanas a completarse (orden descendente por casillas completadas)
+  const proximaLinea = lineas
+    .map(l => ({ count: l.filter(p => completadasSet.has(p)).length, total: 5 }))
+    .sort((a, b) => b.count - a.count)[0]
+
   return (
     <div className="container py-5">
-      <BannerExplicativo
-        icon="🎲"
-        titulo="Bingo Lector"
-        descripcion="Desafíos de lectura en formato bingo"
-        pasos={[
-          { icon: '📋', texto: 'Cada casilla es una categoría de libro' },
-          { icon: '✅', texto: 'Marcá una casilla cuando leés ese tipo de libro' },
-          { icon: '🏆', texto: 'Completar una fila entera da puntos extra' },
-          { icon: '⭐', texto: 'Ganás 25 puntos por cada casilla completada' },
-        ]}
-        color="#f39c12"
-      />
 
-      {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1 className="font-title display-5 mb-1">🎲 Bingo Literario</h1>
-          <p className="text-muted">
-            Completá desafíos de lectura y ganá <strong style={{ color: 'var(--accent-gold)' }}>recompensas épicas</strong>.
-          </p>
-        </div>
-        <div className="card px-4 py-3 text-center" style={{ minWidth: 160 }}>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--accent-gold)' }}>
-            {completadas}/{totalCasillas}
+      {/* ── Hero: ¿Qué es el Bingo? ── */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(243,156,18,0.08), rgba(243,156,18,0.02))',
+        border: '1px solid rgba(243,156,18,0.2)',
+        borderRadius: 18,
+        padding: '1.75rem',
+        marginBottom: '2rem',
+      }}>
+        <div className="d-flex align-items-start gap-4 flex-wrap">
+          <div style={{ flex: 1, minWidth: 260 }}>
+            <h1 className="font-title mb-1" style={{ fontSize: '1.8rem' }}>🎲 Bingo Literario</h1>
+            <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: '0.75rem', lineHeight: 1.6 }}>
+              Un tablero de <strong style={{ color: '#fff' }}>25 casillas</strong>, cada una con una categoría de libro
+              (un clásico, un libro de más de 500 páginas, una novela gráfica...).
+              Cuando leés un libro que cumple esa categoría, <strong style={{ color: '#f39c12' }}>lo marcás y ganás puntos</strong>.
+              Completá filas y columnas para bonos extra — y si completás todo el tablero, desbloqueás el logro <strong style={{ color: '#f39c12' }}>BINGO MASTER</strong> 👑
+            </p>
+
+            {/* Progreso bar */}
+            <div className="d-flex align-items-center gap-3">
+              <div style={{ flex: 1, height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', width: `${pct}%`,
+                  background: 'linear-gradient(90deg, #b8860b, #d4af37, #f1c40f)',
+                  borderRadius: 99, transition: 'width 0.5s',
+                }} />
+              </div>
+              <span style={{ fontWeight: 700, color: '#d4af37', whiteSpace: 'nowrap', fontSize: '0.9rem' }}>
+                {completadas}/{totalCasillas} ({pct}%)
+              </span>
+            </div>
+            {proximaLinea && proximaLinea.count < 5 && (
+              <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', marginTop: '0.4rem' }}>
+                Mejor línea en progreso: {proximaLinea.count}/5 casillas completadas
+              </p>
+            )}
           </div>
-          <div className="text-muted small">casillas completadas</div>
-        </div>
-      </div>
 
-      {/* Progreso bar */}
-      <div className="d-flex align-items-center gap-3 mb-5">
-        <div className="flex-grow-1" style={{ height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
-          <div style={{
-            height: '100%', width: `${pct}%`,
-            background: 'linear-gradient(90deg, #b8860b, #d4af37, #f1c40f)',
-            borderRadius: 99, transition: 'width 0.5s',
-          }} />
+          {/* Premios */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', minWidth: 200 }}>
+            {[
+              { icon: '✅', label: 'Casilla completada', pts: '+10 pts', color: '#4cd137' },
+              { icon: '🔥', label: 'Línea completa (fila/col)', pts: '+30 pts', color: '#f39c12' },
+              { icon: '👑', label: 'Tablero completo', pts: '+100 pts + logro', color: '#d4af37' },
+            ].map(p => (
+              <div key={p.label} style={{
+                display: 'flex', alignItems: 'center', gap: '0.6rem',
+                background: 'rgba(255,255,255,0.04)',
+                borderRadius: 10, padding: '0.5rem 0.75rem',
+                border: `1px solid ${p.color}25`,
+              }}>
+                <span style={{ fontSize: '1.1rem' }}>{p.icon}</span>
+                <span style={{ flex: 1, fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>{p.label}</span>
+                <span style={{ fontWeight: 800, fontSize: '0.8rem', color: p.color, whiteSpace: 'nowrap' }}>{p.pts}</span>
+              </div>
+            ))}
+            {lineasCompletas > 0 && (
+              <div style={{ textAlign: 'center', fontSize: '0.75rem', color: '#d4af37', marginTop: '0.25rem' }}>
+                🎉 {lineasCompletas} línea{lineasCompletas !== 1 ? 's' : ''} completada{lineasCompletas !== 1 ? 's' : ''}
+              </div>
+            )}
+          </div>
         </div>
-        <span className="fw-bold" style={{ color: 'var(--accent-gold)', whiteSpace: 'nowrap' }}>
-          {pct}%
-        </span>
       </div>
 
       {/* ── Grilla 5×5 ── */}
