@@ -1,8 +1,8 @@
 import React from 'react'
 import Header from '@/components/Header'
 
-function S({ w = '100%', h = 16, r = 8 }: { w?: string | number; h?: number; r?: number }) {
-  return <div className="skel" style={{ width: w, height: h, borderRadius: r, flexShrink: 0 }} />
+function S({ w = '100%', h = 16, r = 8, className = '' }: { w?: string | number; h?: number; r?: number; className?: string }) {
+  return <div className={`skel ${className}`} style={{ width: w, height: h, borderRadius: r, flexShrink: 0 }} />
 }
 function SD({ w = '100%', h = 16, r = 8, className = '', style }: { w?: string | number; h?: number; r?: number; className?: string; style?: React.CSSProperties }) {
   return <div className={`skel-dark ${className}`} style={{ width: w, height: h, borderRadius: r, flexShrink: 0, ...style }} />
