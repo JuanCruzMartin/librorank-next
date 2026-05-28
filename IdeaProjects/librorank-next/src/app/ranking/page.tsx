@@ -5,6 +5,12 @@ import { obtenerIdsAmigos } from '@/lib/dao/amigoDAO'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import RankingClient from './RankingClient'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Ranking de Lectores',
+  description: 'Mirá quiénes son los lectores más activos de LibroRank. Competí, subí de nivel y alcanzá la cima del ranking literario.',
+}
 
 export default async function RankingPage() {
   const authUser = await getAuthUser()
