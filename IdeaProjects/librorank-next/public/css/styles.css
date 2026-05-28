@@ -854,7 +854,7 @@ textarea.form-control {
     background-attachment: fixed;
     display: flex !important;
     align-items: center;
-    justify-content: flex-end; /* Lo mueve a la derecha */
+    justify-content: center;
     min-height: 100vh;
     padding: 2rem;
 }
@@ -873,7 +873,6 @@ textarea.form-control {
     border-radius: 24px;
     padding: 3.5rem;
     box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-    margin-right: 5%; /* Margen desde la derecha */
 }
 
 @media (max-width: 800px) {
