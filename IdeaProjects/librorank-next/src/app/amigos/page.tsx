@@ -92,7 +92,7 @@ function UserCardComp({ user, esAmigo, onAgregar, onEliminar }: {
           >
             {esAmigo ? 'Dejar de seguir' : '+ Seguir'}
           </button>
-          <Link href={`/perfil?id=${user.id}`} className="btn btn-sm btn-outline-secondary" style={{ fontSize: '0.78rem' }}>
+          <Link href={`/perfil/${user.username}`} className="btn btn-sm btn-outline-secondary" style={{ fontSize: '0.78rem' }}>
             Ver
           </Link>
         </div>

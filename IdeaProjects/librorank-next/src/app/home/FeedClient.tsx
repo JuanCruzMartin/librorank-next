@@ -72,7 +72,7 @@ export default function FeedClient({ feedInicial, usuarioId }: Props) {
             </div>
             <div className="flex-grow-1">
               <div className="feed-header d-flex justify-content-between">
-                <Link href={`/perfil?id=${act.usuario_id}`} className="fw-bold text-white text-decoration-none">
+                <Link href={`/perfil/${act.username}`} className="fw-bold text-white text-decoration-none">
                   @{act.username}
                 </Link>
                 <span className="text-muted small">

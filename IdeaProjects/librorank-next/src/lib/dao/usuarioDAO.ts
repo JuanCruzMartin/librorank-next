@@ -37,6 +37,15 @@ export async function buscarPorEmailOUsername(identificador: string): Promise<Us
   )
 }
 
+export async function buscarPorUsername(username: string): Promise<Usuario | null> {
+  return queryOne<Usuario>(
+    `SELECT id, nombre, username, email, bio, avatar_url, monedas AS puntos,
+            nivel_id, objetivo_anual, generos_favoritos, racha_actual
+     FROM usuarios WHERE username = ? LIMIT 1`,
+    [username]
+  )
+}
+
 export async function buscarPorId(id: number): Promise<Usuario | null> {
   return queryOne<Usuario>(
     `SELECT id, nombre, username, email, bio, avatar_url, monedas AS puntos,

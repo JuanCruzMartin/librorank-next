@@ -334,7 +334,7 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                       <Link
-                        href={`/perfil?id=${u.id}`}
+                        href={`/perfil/${u.username}`}
                         style={{ fontWeight: 700, color: '#fff', textDecoration: 'none', fontSize: '0.88rem' }}
                       >
                         @{u.username}
