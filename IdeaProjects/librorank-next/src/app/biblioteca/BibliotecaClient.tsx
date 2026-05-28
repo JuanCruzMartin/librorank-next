@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import type { Libro, PerfilStats } from '@/lib/dao/libroDAO'
 import type { Usuario } from '@/lib/dao/usuarioDAO'
@@ -43,6 +43,23 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   const [toast, setToast] = useState<{ puntos: number; mensaje: string } | null>(null)
   const [libroAEliminar, setLibroAEliminar] = useState<Libro | null>(null)
   const [eliminando, setEliminando] = useState(false)
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  // Atajo "/" enfoca el buscador de la biblioteca
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault()
+        searchRef.current?.focus()
+      }
+      if (e.key === 'Escape') {
+        setBusqueda('')
+        searchRef.current?.blur()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
 
   function mostrarToast(puntos: number, mensaje: string) {
     if (puntos > 0) setToast({ puntos, mensaje })
@@ -442,26 +459,31 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
               <option value="paginas"   style={{ background: '#1a1a1a' }}>📄 Más páginas</option>
             </select>
 
-            {/* Búsqueda de texto */}
-            <div style={{ position: 'relative', marginLeft: 'auto' }}>
+            {/* Búsqueda dentro de la biblioteca */}
+            <div style={{ position: 'relative', marginLeft: 'auto', flex: '1 1 180px', maxWidth: 280 }}>
               <input
+                ref={searchRef}
                 type="text"
-                placeholder="🔍 Buscar en mi biblioteca..."
+                placeholder={soloLectura ? '🔍 Buscar en esta biblioteca...' : '🔍 Buscar  (/)'}
                 value={busqueda}
                 onChange={e => setBusqueda(e.target.value)}
                 style={{
                   background: busqueda ? 'rgba(212,175,55,0.08)' : 'rgba(255,255,255,0.05)',
-                  border: busqueda ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 20, padding: '0.35rem 1rem',
+                  border: busqueda ? '1px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 20, padding: '0.35rem 2rem 0.35rem 1rem',
                   fontSize: '0.75rem', color: '#fff', outline: 'none',
-                  width: 220,
+                  width: '100%', transition: 'border-color 0.15s',
                 }}
               />
-              {busqueda && (
+              {busqueda ? (
                 <button onClick={() => setBusqueda('')}
-                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}>
+                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}>
                   ✕
                 </button>
+              ) : (
+                <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: '0.6rem', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none', fontWeight: 700 }}>
+                  /
+                </span>
               )}
             </div>
           </div>
@@ -486,11 +508,28 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
 
         {/* Grid */}
         {librosFiltrados.length === 0 ? (
-          <div className="text-center text-muted py-5">
-            <i className="bi bi-book display-1 mb-3 d-block opacity-25"></i>
-            <p>No hay libros en esta categoría.</p>
-            {!soloLectura && (
-              <button onClick={() => setShowModal(true)} className="btn btn-gold btn-sm mt-2">Agregar mi primer libro</button>
+          <div className="text-center py-5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            {busqueda ? (
+              <>
+                <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🔍</div>
+                <p style={{ fontWeight: 700, color: '#fff', marginBottom: '0.25rem' }}>
+                  Sin resultados para &ldquo;{busqueda}&rdquo;
+                </p>
+                <p style={{ fontSize: '0.85rem', marginBottom: '1.25rem' }}>
+                  Probá con el título, autor o parte del nombre.
+                </p>
+                <button onClick={() => setBusqueda('')} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', padding: '0.5rem 1.25rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 700 }}>
+                  Limpiar búsqueda
+                </button>
+              </>
+            ) : (
+              <>
+                <i className="bi bi-book display-1 mb-3 d-block opacity-25"></i>
+                <p>No hay libros en esta categoría.</p>
+                {!soloLectura && (
+                  <button onClick={() => setShowModal(true)} className="btn btn-gold btn-sm mt-2">Agregar mi primer libro</button>
+                )}
+              </>
             )}
           </div>
         ) : (
