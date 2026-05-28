@@ -146,7 +146,7 @@ export default function BingoClient({ bingo: bingoIni, misLibros }: Props) {
       </div>
 
       {/* ── Grilla 5×5 ── */}
-      <div style={{
+      <div className="bingo-grid" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(5, 1fr)',
         gap: '0.75rem',

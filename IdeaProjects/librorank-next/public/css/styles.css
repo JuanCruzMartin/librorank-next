@@ -1521,3 +1521,112 @@ textarea.form-control {
     transform: scale(1.04);
 }
 
+/* =========================================
+   16. RESPONSIVE MOBILE
+   ========================================= */
+
+/* --- Header: estado base (desktop) --- */
+.header-nav-desktop  { display: block; }
+.header-hamburger    { display: none !important; }
+.header-badge-hide-sm { display: inline-flex; }
+.header-perfil-desktop { display: inline-flex !important; }
+.header-salir-desktop  { display: inline-block !important; }
+
+/* Tablet / mobile: ≤ 768px */
+@media (max-width: 768px) {
+    /* Menú hamburguesa */
+    .header-nav-desktop    { display: none !important; }
+    .header-hamburger      { display: block !important; }
+    .header-badge-hide-sm  { display: none !important; }
+    .header-perfil-desktop { display: none !important; }
+    .header-salir-desktop  { display: none !important; }
+
+    /* Hero landing */
+    .hero-section {
+        padding: 80px 0 60px;
+        min-height: auto;
+        background-attachment: scroll !important;
+    }
+    .hero-content h1 { font-size: 2.8rem; }
+    .hero-content p  { font-size: 1.1rem; margin-bottom: 2rem; }
+    .hero-btns {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    .btn-main,
+    .btn-secondary {
+        width: 100%;
+        text-align: center;
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+    }
+
+    /* Auth pages — fix iOS fixed background */
+    .auth-page {
+        background-attachment: scroll !important;
+        padding: 1.5rem 1rem;
+    }
+    .auth-content {
+        padding: 2rem 1.5rem;
+    }
+    .auth-form-container h1 { font-size: 1.9rem; }
+    .auth-header { margin-bottom: 1.5rem; }
+
+    /* Perfil */
+    .perfil-layout { grid-template-columns: 1fr; }
+    .user-name     { font-size: 1.4rem; }
+
+    /* Library header */
+    .library-header { padding: 36px 0; }
+
+    /* Cards y modales */
+    .card { padding: 1.2rem; }
+    .modal-content-custom { padding: 1.5rem; }
+
+    /* Contenedor global */
+    .container {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+}
+
+/* Pantallas muy pequeñas: ≤ 480px */
+@media (max-width: 480px) {
+    /* Hero */
+    .hero-section { padding: 60px 0 40px; }
+    .hero-content h1 { font-size: 1.9rem; line-height: 1.1; }
+    .hero-content p  { font-size: 0.95rem; }
+
+    /* Auth */
+    .auth-content { padding: 1.5rem 1.2rem; }
+    .auth-form-container h1 { font-size: 1.5rem; }
+    .btn-auth { padding: 1rem; font-size: 1rem; }
+
+    /* Bingo: casillas más compactas */
+    .bingo-grid { gap: 0.4rem !important; }
+    .bingo-square {
+        min-height: 56px;
+        padding: 0.25rem;
+        border-radius: 8px;
+    }
+    .bingo-square .bingo-text { font-size: 0.52rem; }
+
+    /* Stat cards (home) */
+    .stat-card  { padding: 12px; gap: 10px; }
+    .stat-value { font-size: 1.3rem; }
+    .stat-icon  { width: 36px; height: 36px; font-size: 1rem; }
+
+    /* Contenedor */
+    .container {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+
+    /* Tabs de perfil/bingo */
+    .tab-btn { padding: 10px 6px; font-size: 0.78rem; }
+
+    /* Modal */
+    .modal-content-custom { padding: 1.25rem; border-radius: 16px; }
+}
+
