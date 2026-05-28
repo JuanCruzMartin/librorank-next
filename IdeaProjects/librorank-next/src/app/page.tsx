@@ -85,6 +85,10 @@ export default async function LandingPage() {
               gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
               gap: '1.25rem',
             }}>
+              <style>{`
+                .feature-tile { transition: transform 0.2s, border-color 0.2s; }
+                .feature-tile:hover { transform: translateY(-4px); }
+              `}</style>
               {[
                 {
                   icon: '📚',
@@ -141,22 +145,12 @@ export default async function LandingPage() {
                   color: '#8e44ad',
                 },
               ].map(f => (
-                <div key={f.titulo} style={{
+                <div key={f.titulo} className="feature-tile" style={{
                   background: 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${f.color}25`,
+                  border: `1px solid ${f.color}30`,
                   borderRadius: 14,
                   padding: '1.4rem',
-                  transition: 'transform 0.2s, border-color 0.2s',
-                }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.borderColor = `${f.color}60`
-                    ;(e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.borderColor = `${f.color}25`
-                    ;(e.currentTarget as HTMLElement).style.transform = 'none'
-                  }}
-                >
+                }}>
                   <div style={{ fontSize: '1.8rem', marginBottom: '0.6rem' }}>{f.icon}</div>
                   <h4 style={{ color: '#fff', fontWeight: 700, fontSize: '1rem', marginBottom: '0.4rem' }}>{f.titulo}</h4>
                   <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem', lineHeight: 1.55, margin: 0 }}>{f.desc}</p>
