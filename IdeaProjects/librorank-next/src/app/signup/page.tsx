@@ -34,7 +34,7 @@ export default function SignupPage() {
   return (
     <div className="auth-page">
       <aside className="auth-visual" />
-      <main className="auth-content" style={{ width: 580 }}>
+      <main className="auth-content" style={{ maxWidth: 420 }}>
         <header className="auth-header">
           <Link href="/" className="logo text-decoration-none">Libro<span>Rank</span></Link>
         </header>
