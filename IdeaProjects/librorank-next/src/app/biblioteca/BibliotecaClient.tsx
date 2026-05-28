@@ -7,9 +7,9 @@ import type { Libro, PerfilStats } from '@/lib/dao/libroDAO'
 import type { Usuario } from '@/lib/dao/usuarioDAO'
 import BannerExplicativo from '@/components/BannerExplicativo'
 import Toast from '@/components/Toast'
+import { GENEROS } from '@/lib/generos'
 
 const ESTADOS = ['PENDIENTE', 'LEYENDO', 'LEIDO', 'PAUSA']
-const GENEROS = ['Fantasía', 'Ciencia Ficción', 'Romance', 'Terror', 'Misterio', 'Historia', 'Biografía', 'Autoayuda', 'Poesía', 'Otro']
 const MOODS = ['Relajado', 'Aventurero', 'Emotivo', 'Intelectual', 'Nostálgico', 'Inspirador', 'Oscuro', 'Divertido']
 
 interface Sugerencia { titulo: string; autor: string; anio: string; paginas: string; portada: string; genero: string }
