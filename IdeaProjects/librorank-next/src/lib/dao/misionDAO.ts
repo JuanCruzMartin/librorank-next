@@ -103,15 +103,15 @@ async function calcularProgreso(usuarioId: number): Promise<Map<string, number>>
     generos_distintos, total_biblioteca,
     leidos_total, resenas_total, racha,
   ] = await Promise.all([
-    // leídos este mes
-    queryOne<{ c: number }>(`SELECT COUNT(*) AS c FROM libros_usuario WHERE usuario_id=? AND UPPER(estado) IN ('LEIDO','LEÍDO') AND MONTH(fecha_registro)=? AND YEAR(fecha_registro)=?`, [usuarioId, mes, anio]),
-    // calificados este mes (estrellas > 0)
+    // leídos este mes (usa fecha_leido — cuándo se marcó como leído, no cuándo se agregó)
+    queryOne<{ c: number }>(`SELECT COUNT(*) AS c FROM libros_usuario WHERE usuario_id=? AND UPPER(estado) IN ('LEIDO','LEÍDO') AND MONTH(fecha_leido)=? AND YEAR(fecha_leido)=?`, [usuarioId, mes, anio]),
+    // calificados este mes (estrellas > 0, usa fecha_registro porque las estrellas no tienen fecha propia)
     queryOne<{ c: number }>(`SELECT COUNT(*) AS c FROM libros_usuario WHERE usuario_id=? AND estrellas > 0 AND MONTH(fecha_registro)=? AND YEAR(fecha_registro)=?`, [usuarioId, mes, anio]),
-    // reseñas este mes
+    // reseñas este mes (usa fecha_registro porque las reseñas no tienen fecha propia)
     queryOne<{ c: number }>(`SELECT COUNT(*) AS c FROM libros_usuario WHERE usuario_id=? AND resena IS NOT NULL AND resena != '' AND MONTH(fecha_registro)=? AND YEAR(fecha_registro)=?`, [usuarioId, mes, anio]),
-    // leídos esta semana
-    queryOne<{ c: number }>(`SELECT COUNT(*) AS c FROM libros_usuario WHERE usuario_id=? AND UPPER(estado) IN ('LEIDO','LEÍDO') AND YEARWEEK(fecha_registro, 1)=YEARWEEK(NOW(), 1)`, [usuarioId]),
-    // agregados esta semana
+    // leídos esta semana (usa fecha_leido)
+    queryOne<{ c: number }>(`SELECT COUNT(*) AS c FROM libros_usuario WHERE usuario_id=? AND UPPER(estado) IN ('LEIDO','LEÍDO') AND YEARWEEK(fecha_leido, 1)=YEARWEEK(NOW(), 1)`, [usuarioId]),
+    // agregados esta semana (usa fecha_registro — cuándo se agregó a la biblioteca)
     queryOne<{ c: number }>(`SELECT COUNT(*) AS c FROM libros_usuario WHERE usuario_id=? AND YEARWEEK(fecha_registro, 1)=YEARWEEK(NOW(), 1)`, [usuarioId]),
     // géneros distintos (leídos total)
     queryOne<{ c: number }>(`SELECT COUNT(DISTINCT genero) AS c FROM libros_usuario WHERE usuario_id=? AND UPPER(estado) IN ('LEIDO','LEÍDO') AND genero IS NOT NULL AND genero != ''`, [usuarioId]),

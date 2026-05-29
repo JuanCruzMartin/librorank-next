@@ -32,11 +32,14 @@ export async function agregar(libro: Omit<Libro, 'id'>): Promise<number | false>
     portada_url: libro.portada_url, anio: libro.anio, paginas: libro.paginas,
   })
 
+  const estadoUp = libro.estado.toUpperCase()
+  const esLeido = estadoUp === 'LEIDO' || estadoUp === 'LEÍDO'
   const res = await execute(
-    `INSERT INTO libros_usuario (usuario_id, libro_global_id, titulo, autor, anio, paginas, estado, portada_url, genero, mood)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO libros_usuario (usuario_id, libro_global_id, titulo, autor, anio, paginas, estado, portada_url, genero, mood, fecha_leido)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [libro.usuario_id, globalId, libro.titulo, libro.autor, libro.anio ?? null,
-     libro.paginas ?? null, libro.estado, libro.portada_url ?? null, libro.genero ?? null, libro.mood ?? null]
+     libro.paginas ?? null, estadoUp, libro.portada_url ?? null, libro.genero ?? null, libro.mood ?? null,
+     esLeido ? new Date() : null]
   )
   return res.affectedRows > 0 ? res.insertId : false
 }
@@ -53,9 +56,15 @@ export async function buscarPorId(id: number, usuarioId: number): Promise<Libro 
 }
 
 export async function actualizar(libro: Pick<Libro, 'id' | 'usuario_id' | 'estado' | 'estrellas' | 'resena' | 'genero' | 'mood'>): Promise<boolean> {
+  const estadoUp = libro.estado.toUpperCase()
+  const esLeido = estadoUp === 'LEIDO' || estadoUp === 'LEÍDO'
   const res = await execute(
-    `UPDATE libros_usuario SET estado=?, estrellas=?, resena=?, genero=?, mood=? WHERE id=? AND usuario_id=?`,
-    [libro.estado.toUpperCase(), libro.estrellas ?? 0, libro.resena ?? null, libro.genero ?? null, libro.mood ?? null, libro.id, libro.usuario_id]
+    `UPDATE libros_usuario
+     SET estado=?, estrellas=?, resena=?, genero=?, mood=?,
+         fecha_leido = CASE WHEN ? AND fecha_leido IS NULL THEN NOW() ELSE fecha_leido END
+     WHERE id=? AND usuario_id=?`,
+    [estadoUp, libro.estrellas ?? 0, libro.resena ?? null, libro.genero ?? null, libro.mood ?? null,
+     esLeido, libro.id, libro.usuario_id]
   )
   return res.affectedRows > 0
 }
