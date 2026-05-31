@@ -45,11 +45,12 @@ interface Props {
   nivelInfo: NivelInfo
   esMiPerfil: boolean
   topGeneros: string[]
+  resenasPublicas: Libro[]
 }
 
 export default function PerfilClient({
   usuario, stats, ultimasLecturas, logros,
-  leidosEsteAnio, totalLeidos, nivelInfo, esMiPerfil, topGeneros,
+  leidosEsteAnio, totalLeidos, nivelInfo, esMiPerfil, topGeneros, resenasPublicas,
 }: Props) {
   const router = useRouter()
   const [tab, setTab] = useState<'resumen' | 'anio' | 'config'>('resumen')
@@ -365,6 +366,49 @@ export default function PerfilClient({
                   </div>
                 )}
               </div>
+
+              {/* Reseñas públicas */}
+              {resenasPublicas.length > 0 && (
+                <div className="card p-4 mb-4">
+                  <h5 className="font-title mb-4" style={{ color: 'var(--accent-gold)' }}>
+                    ✍️ Reseñas
+                    <span className="ms-2" style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', fontWeight: 400 }}>
+                      {resenasPublicas.length} reseña{resenasPublicas.length !== 1 ? 's' : ''}
+                    </span>
+                  </h5>
+                  <div className="d-flex flex-column gap-4">
+                    {resenasPublicas.map(l => (
+                      <div key={l.id} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                        {/* Portada */}
+                        {l.portada_url ? (
+                          <img src={l.portada_url.replace('http://', 'https://')} alt={l.titulo}
+                            style={{ width: 48, height: 68, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }}
+                            onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                          />
+                        ) : (
+                          <div style={{ width: 48, height: 68, background: 'rgba(212,175,55,0.1)', borderRadius: 6, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>📚</div>
+                        )}
+                        {/* Texto */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.88rem', marginBottom: 2 }}>{l.titulo}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>{l.autor}</div>
+                          {(l.estrellas ?? 0) > 0 && (
+                            <div style={{ fontSize: '0.75rem', marginBottom: 6 }}>{'⭐'.repeat(l.estrellas ?? 0)}</div>
+                          )}
+                          <p style={{
+                            margin: 0, fontSize: '0.82rem', color: 'rgba(255,255,255,0.65)',
+                            fontStyle: 'italic', lineHeight: 1.6,
+                            borderLeft: '2px solid rgba(212,175,55,0.3)',
+                            paddingLeft: '0.6rem',
+                          }}>
+                            &ldquo;{l.resena}&rdquo;
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Muro de Trofeos */}
               <div className="card p-4">

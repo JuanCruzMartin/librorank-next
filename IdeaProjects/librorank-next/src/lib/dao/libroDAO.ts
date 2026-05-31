@@ -145,6 +145,16 @@ export async function obtenerMejorCalificado(usuarioId: number): Promise<string>
   return row?.titulo ?? 'N/A'
 }
 
+export async function obtenerResenasPublicas(usuarioId: number, limite = 10): Promise<Libro[]> {
+  return query<Libro>(
+    `SELECT * FROM libros_usuario
+     WHERE usuario_id=? AND resena IS NOT NULL AND resena != ''
+       AND UPPER(estado) IN ('LEIDO','LEÍDO')
+     ORDER BY id DESC LIMIT ?`,
+    [usuarioId, limite]
+  )
+}
+
 export async function obtenerTopGeneros(usuarioId: number, limite = 3): Promise<string[]> {
   const rows = await query<{ genero: string }>(
     `SELECT genero FROM libros_usuario

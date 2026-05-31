@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      return NextResponse.json({ ok: !!nuevoId, puntosGanados, toastMsg })
+      return NextResponse.json({ ok: !!nuevoId, id: nuevoId, puntosGanados, toastMsg })
     }
 
     if (accion === 'editar') {
@@ -99,7 +99,8 @@ export async function POST(req: NextRequest) {
           }
           if (resena && resena.trim().length > 0 && !libroAnterior?.resena) {
             await libroDAO.otorgarPuntos(user.id, 20, 'Reseña escrita')
-            await actividadDAO.registrar(user.id, 'RESENA', Number(id), `Ha escrito una reseña de "${libroAnterior?.titulo}"`)
+            // Guardamos el texto de la reseña en detalle para mostrarlo en el feed
+            await actividadDAO.registrar(user.id, 'RESENA', Number(id), resena.trim())
             puntosGanados += 20
             toastParts.push('✍️ Reseña escrita')
           }

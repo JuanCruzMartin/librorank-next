@@ -103,12 +103,29 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
     const json = await res.json()
     if (!res.ok) { setMensaje(json.error); return }
     setShowModal(false)
-    if (json.puntosGanados > 0) {
-      mostrarToast(json.puntosGanados, json.toastMsg)
-      setTimeout(() => window.location.reload(), 2000)
-    } else {
-      window.location.reload()
+    setBusquedaModal('')
+    setBusquedaHeader('')
+    setSugerencias([])
+    setSugerenciasHeader([])
+    // Agregar el libro al estado local sin recargar
+    const nuevoLibro: Libro = {
+      id: json.id,
+      usuario_id: usuario.id,
+      libro_global_id: null,
+      titulo: String(fd.get('titulo') || ''),
+      autor: String(fd.get('autor') || ''),
+      anio: fd.get('anio') ? Number(fd.get('anio')) : null,
+      paginas: fd.get('paginas') ? Number(fd.get('paginas')) : null,
+      estado: String(fd.get('estado') || 'PENDIENTE'),
+      portada_url: String(fd.get('portada_url') || '') || null,
+      genero: String(fd.get('genero') || '') || null,
+      mood: String(fd.get('mood') || '') || null,
+      estrellas: 0,
+      resena: null,
     }
+    setLibros(prev => [nuevoLibro, ...prev])
+    setFormNuevo({ titulo: '', autor: '', anio: '', paginas: '', portada_url: '', genero: '' })
+    if (json.puntosGanados > 0) mostrarToast(json.puntosGanados, json.toastMsg)
   }
 
   async function editarLibro(e: React.FormEvent<HTMLFormElement>) {
@@ -137,13 +154,18 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
         setMensajeEdit(json.error || 'No se pudo guardar. Intentá de nuevo.')
         return
       }
+      // Actualizar el libro en el estado local sin recargar
+      const estadoNuevo = (payload.estado as string).toUpperCase()
+      setLibros(prev => prev.map(l => l.id === editando.id ? {
+        ...l,
+        estado: estadoNuevo,
+        estrellas: Number(payload.estrellas) || 0,
+        resena: (payload.resena as string) || null,
+        genero: (payload.genero as string) || null,
+        mood: (payload.mood as string) || null,
+      } : l))
       setEditando(null)
-      if (json.puntosGanados > 0) {
-        mostrarToast(json.puntosGanados, json.toastMsg)
-        setTimeout(() => window.location.reload(), 2000)
-      } else {
-        window.location.reload()
-      }
+      if (json.puntosGanados > 0) mostrarToast(json.puntosGanados, json.toastMsg)
     } catch {
       setMensajeEdit('Error de conexión. Intentá de nuevo.')
     } finally {
@@ -580,20 +602,33 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                     <p style={{ margin: '0 0 2px', fontWeight: 700, fontSize: '0.75rem', color: '#fff', lineHeight: 1.25, overflow: 'hidden', maxHeight: '2.5rem' } as React.CSSProperties}>{libro.titulo}</p>
                     <p style={{ margin: '0 0 6px', fontSize: '0.65rem', color: 'rgba(255,255,255,0.55)' }}>{libro.autor}</p>
                     {(libro.estrellas ?? 0) > 0 && (
-                      <p style={{ margin: '0 0 7px', fontSize: '0.65rem', letterSpacing: 1 }}>{'⭐'.repeat(libro.estrellas ?? 0)}</p>
+                      <p style={{ margin: '0 0 4px', fontSize: '0.65rem', letterSpacing: 1 }}>{'⭐'.repeat(libro.estrellas ?? 0)}</p>
                     )}
-                    {!soloLectura && (
-                      <div style={{ display: 'flex', gap: '0.35rem' }}>
-                        <Link href={`/diario?libroId=${libro.id}`}
-                          style={{ flex: 1, background: '#d4af37', borderRadius: 6, padding: '0.3rem 0.25rem', fontSize: '0.6rem', fontWeight: 700, color: '#000', textDecoration: 'none', textAlign: 'center' }}>
-                          📖 Diario
+                    {libro.resena && (
+                      <p style={{ margin: '0 0 7px', fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        &ldquo;{libro.resena}&rdquo;
+                      </p>
+                    )}
+                    <div style={{ display: 'flex', gap: '0.35rem' }}>
+                      {libro.libro_global_id && (
+                        <Link href={`/libro/${libro.libro_global_id}`}
+                          style={{ flex: 1, background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 6, padding: '0.3rem 0.25rem', fontSize: '0.6rem', fontWeight: 700, color: '#d4af37', textDecoration: 'none', textAlign: 'center' }}>
+                          🌐 Ver
                         </Link>
-                        <button onClick={() => setEditando(libro)}
-                          style={{ flex: 1, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '0.3rem 0.25rem', fontSize: '0.6rem', fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
-                          ✏️ Editar
-                        </button>
-                      </div>
-                    )}
+                      )}
+                      {!soloLectura && (
+                        <>
+                          <Link href={`/diario?libroId=${libro.id}`}
+                            style={{ flex: 1, background: '#d4af37', borderRadius: 6, padding: '0.3rem 0.25rem', fontSize: '0.6rem', fontWeight: 700, color: '#000', textDecoration: 'none', textAlign: 'center' }}>
+                            📖 Diario
+                          </Link>
+                          <button onClick={() => setEditando(libro)}
+                            style={{ flex: 1, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '0.3rem 0.25rem', fontSize: '0.6rem', fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
+                            ✏️ Editar
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               )
