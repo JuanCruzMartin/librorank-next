@@ -469,6 +469,28 @@ export default function PerfilClient({
                     <p style={{ fontSize: '0.75rem', letterSpacing: 3, textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: '0.5rem' }}>Tu año en libros</p>
                     <h2 className="font-title" style={{ fontSize: '3.5rem', color: '#d4af37', margin: 0, lineHeight: 1 }}>{wrapped.anio}</h2>
                     <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', marginTop: '0.5rem' }}>Un recorrido por tu año lector</p>
+
+                    {/* Botón compartir */}
+                    <a
+                      href="/api/wrapped-image"
+                      download={`mi-wrapped-${wrapped.anio}.png`}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                        marginTop: '1.25rem',
+                        background: 'linear-gradient(135deg,#d4af37,#f1c40f)',
+                        color: '#000', fontWeight: 800, fontSize: '0.85rem',
+                        padding: '0.6rem 1.5rem', borderRadius: 10,
+                        textDecoration: 'none',
+                        transition: 'opacity 0.2s',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                      onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                    >
+                      📤 Descargar imagen para compartir
+                    </a>
+                    <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', marginTop: '0.5rem', marginBottom: 0 }}>
+                      1080×1080 · lista para Instagram y Twitter
+                    </p>
                   </div>
 
                   {/* Stats grandes */}
