@@ -11,7 +11,10 @@ export async function GET() {
   const uid = user.id
   const anio = new Date().getFullYear()
 
-  const [resumen, generos, autores, meses, mejorLibro, librosRecientes] = await Promise.all([
+  const [
+    resumen, generos, autores, meses, mejorLibro, librosRecientes,
+    libroMasLargo, primerLibro, rachaUsuario,
+  ] = await Promise.all([
     // Totales del año
     queryOne<{ total: number; paginas: number; promedio: number }>(`
       SELECT
@@ -60,7 +63,7 @@ export async function GET() {
       ORDER BY fecha_registro DESC LIMIT 1
     `, [uid, anio]),
 
-    // Últimos 5 leídos del año
+    // Últimos 6 leídos del año
     query<{ titulo: string; portada_url: string; autor: string }>(`
       SELECT titulo, portada_url, autor
       FROM libros_usuario
@@ -68,6 +71,30 @@ export async function GET() {
         AND YEAR(fecha_registro) = ?
       ORDER BY fecha_registro DESC LIMIT 6
     `, [uid, anio]),
+
+    // Libro más largo leído este año
+    queryOne<{ titulo: string; autor: string; paginas: number }>(`
+      SELECT titulo, autor, paginas
+      FROM libros_usuario
+      WHERE usuario_id = ? AND UPPER(estado) IN ('LEIDO','LEÍDO')
+        AND paginas IS NOT NULL AND paginas > 0
+        AND YEAR(fecha_registro) = ?
+      ORDER BY paginas DESC LIMIT 1
+    `, [uid, anio]),
+
+    // Primer libro leído del año
+    queryOne<{ titulo: string; autor: string; portada_url: string }>(`
+      SELECT titulo, autor, portada_url
+      FROM libros_usuario
+      WHERE usuario_id = ? AND UPPER(estado) IN ('LEIDO','LEÍDO')
+        AND YEAR(fecha_registro) = ?
+      ORDER BY fecha_registro ASC LIMIT 1
+    `, [uid, anio]),
+
+    // Racha actual del usuario
+    queryOne<{ racha_actual: number }>(`
+      SELECT racha_actual FROM usuarios WHERE id = ?
+    `, [uid]),
   ])
 
   // Mes más activo
@@ -81,6 +108,14 @@ export async function GET() {
     total: meses.find(m => m.mes === i + 1)?.total ?? 0,
   }))
 
+  // Páginas por día (días del año transcurridos hasta hoy)
+  const hoy = new Date()
+  const inicioAnio = new Date(anio, 0, 1)
+  const diasTranscurridos = Math.max(1, Math.floor((hoy.getTime() - inicioAnio.getTime()) / 86400000))
+  const paginasPorDia = resumen && resumen.paginas > 0
+    ? Math.round(resumen.paginas / diasTranscurridos)
+    : 0
+
   return NextResponse.json({
     anio,
     resumen: resumen ?? { total: 0, paginas: 0, promedio: 0 },
@@ -90,5 +125,9 @@ export async function GET() {
     mesMasActivo: mesMasActivo ? { ...mesMasActivo, nombre: MESES[mesMasActivo.mes - 1] } : null,
     mejorLibro,
     librosRecientes,
+    libroMasLargo: libroMasLargo ?? null,
+    primerLibro: primerLibro ?? null,
+    rachaActual: rachaUsuario?.racha_actual ?? 0,
+    paginasPorDia,
   })
 }

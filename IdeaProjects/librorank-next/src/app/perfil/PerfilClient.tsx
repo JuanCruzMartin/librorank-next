@@ -17,6 +17,10 @@ interface WrappedData {
   mesMasActivo: { mes: number; nombre: string; total: number } | null
   mejorLibro: { titulo: string; autor: string; estrellas: number; portada_url: string } | null
   librosRecientes: { titulo: string; portada_url: string; autor: string }[]
+  libroMasLargo: { titulo: string; autor: string; paginas: number } | null
+  primerLibro: { titulo: string; autor: string; portada_url: string } | null
+  rachaActual: number
+  paginasPorDia: number
 }
 
 const AVATARES = [
@@ -535,6 +539,56 @@ export default function PerfilClient({
                         ))
                       })()}
                     </div>
+                  </div>
+
+                  {/* Datos curiosos: racha, páginas/día, libro más largo, primer libro */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+
+                    {/* Racha actual */}
+                    <div className="card p-4" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,107,53,0.8)', margin: 0 }}>🔥 Racha actual</p>
+                      <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#ff6b35', lineHeight: 1 }}>
+                        {wrapped.rachaActual}
+                      </div>
+                      <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+                        {wrapped.rachaActual === 0 ? 'Marcá un libro hoy para arrancar' : wrapped.rachaActual === 1 ? 'día seguido leyendo' : 'días seguidos leyendo'}
+                      </p>
+                    </div>
+
+                    {/* Páginas por día */}
+                    <div className="card p-4" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(76,209,55,0.8)', margin: 0 }}>⚡ Páginas / día</p>
+                      <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#4cd137', lineHeight: 1 }}>
+                        {wrapped.paginasPorDia > 0 ? wrapped.paginasPorDia : '—'}
+                      </div>
+                      <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+                        {wrapped.paginasPorDia > 0 ? `promedio en lo que va del ${wrapped.anio}` : 'Leé libros con páginas para ver este dato'}
+                      </p>
+                    </div>
+
+                    {/* Libro más largo */}
+                    {wrapped.libroMasLargo && (
+                      <div className="card p-4" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(93,173,226,0.8)', margin: 0 }}>📏 Libro más largo</p>
+                        <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.9rem', lineHeight: 1.3 }}>
+                          {wrapped.libroMasLargo.titulo}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>{wrapped.libroMasLargo.autor}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#5dade2', fontWeight: 700 }}>{wrapped.libroMasLargo.paginas.toLocaleString()} páginas</div>
+                      </div>
+                    )}
+
+                    {/* Primer libro del año */}
+                    {wrapped.primerLibro && (
+                      <div className="card p-4" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(175,122,197,0.8)', margin: 0 }}>🌅 Primer libro del año</p>
+                        <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.9rem', lineHeight: 1.3 }}>
+                          {wrapped.primerLibro.titulo}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>{wrapped.primerLibro.autor}</div>
+                        <div style={{ fontSize: '0.72rem', color: '#af7ac5' }}>Con el que arrancaste {wrapped.anio} 🎉</div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Géneros y Autores */}
