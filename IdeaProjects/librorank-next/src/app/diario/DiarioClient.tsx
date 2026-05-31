@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import type { Libro } from '@/lib/dao/libroDAO'
 import type { DiarioLectura } from '@/lib/dao/diarioDAO'
 import type { Cita } from '@/lib/dao/citaDAO'
@@ -14,30 +14,73 @@ interface Props {
 }
 
 export default function DiarioClient({ libro, entradas: entradasIni, citas: citasIni, misLibros, libroIdActual }: Props) {
-  const [entradas] = useState(entradasIni)
-  const [citas] = useState(citasIni)
+  const [entradas, setEntradas] = useState(entradasIni)
+  const [citas, setCitas] = useState(citasIni)
   const [tab, setTab] = useState<'entradas' | 'citas'>('entradas')
+  const [guardando, setGuardando] = useState(false)
+  const [eliminando, setEliminando] = useState<number | null>(null)
+  const formEntradaRef = useRef<HTMLFormElement>(null)
+  const formCitaRef = useRef<HTMLFormElement>(null)
 
   async function agregarEntrada(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (guardando) return
+    setGuardando(true)
     const fd = new FormData(e.currentTarget)
-    const res = await fetch('/api/diario', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ libroId: libroIdActual, capitulo: fd.get('capitulo'), comentario: fd.get('comentario') }),
-    })
-    if (res.ok) { e.currentTarget.reset(); window.location.reload() }
+    try {
+      const res = await fetch('/api/diario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ libroId: libroIdActual, capitulo: fd.get('capitulo'), comentario: fd.get('comentario') }),
+      })
+      const json = await res.json()
+      if (json.ok && json.entrada) {
+        setEntradas(prev => [json.entrada, ...prev])
+        formEntradaRef.current?.reset()
+      }
+    } finally {
+      setGuardando(false)
+    }
   }
 
   async function agregarCita(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (guardando) return
+    setGuardando(true)
     const fd = new FormData(e.currentTarget)
-    const res = await fetch('/api/diario', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accion: 'cita', libroId: libroIdActual, texto: fd.get('texto'), pagina: fd.get('pagina') }),
-    })
-    if (res.ok) { e.currentTarget.reset(); window.location.reload() }
+    try {
+      const res = await fetch('/api/diario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'cita', libroId: libroIdActual, texto: fd.get('texto'), pagina: fd.get('pagina') }),
+      })
+      const json = await res.json()
+      if (json.ok && json.cita) {
+        setCitas(prev => [json.cita, ...prev])
+        formCitaRef.current?.reset()
+      }
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  async function eliminar(id: number, tipo: 'entrada' | 'cita') {
+    if (eliminando !== null) return
+    setEliminando(id)
+    try {
+      const res = await fetch('/api/diario', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, tipo }),
+      })
+      const json = await res.json()
+      if (json.ok) {
+        if (tipo === 'entrada') setEntradas(prev => prev.filter(e => e.id !== id))
+        else setCitas(prev => prev.filter(c => c.id !== id))
+      }
+    } finally {
+      setEliminando(null)
+    }
   }
 
   /* ── Sin libro seleccionado ── */
@@ -83,34 +126,23 @@ export default function DiarioClient({ libro, entradas: entradasIni, citas: cita
         <span className="text-muted small ms-2">— {libro.autor}</span>
       </div>
 
-      {/* ── FORMULARIOS (2 columnas en la parte de arriba) ── */}
+      {/* ── FORMULARIOS ── */}
       <div className="row g-4 mb-5">
         <div className="col-md-6">
           <div className="card p-4 h-100">
             <h6 className="font-title mb-3" style={{ color: 'var(--accent-gold)' }}>📝 Nueva entrada</h6>
-            <form onSubmit={agregarEntrada} className="d-flex flex-column gap-3">
+            <form ref={formEntradaRef} onSubmit={agregarEntrada} className="d-flex flex-column gap-3">
               <div>
                 <label className="form-label text-muted small">Capítulo / Sección</label>
-                <input
-                  name="capitulo"
-                  type="text"
-                  className="form-control"
-                  style={{ background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
-                  placeholder="Ej: Cap. 5"
-                />
+                <input name="capitulo" type="text" className="form-control" placeholder="Ej: Cap. 5" />
               </div>
               <div>
                 <label className="form-label text-muted small">Comentario *</label>
-                <textarea
-                  name="comentario"
-                  rows={4}
-                  className="form-control"
-                  style={{ background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
-                  required
-                  placeholder="¿Qué te pareció esta parte?..."
-                />
+                <textarea name="comentario" rows={4} className="form-control" required placeholder="¿Qué te pareció esta parte?..." />
               </div>
-              <button type="submit" className="btn-gold w-100 mt-auto">Guardar entrada</button>
+              <button type="submit" className="btn-gold w-100 mt-auto" disabled={guardando}>
+                {guardando ? 'Guardando...' : 'Guardar entrada'}
+              </button>
             </form>
           </div>
         </div>
@@ -118,35 +150,24 @@ export default function DiarioClient({ libro, entradas: entradasIni, citas: cita
         <div className="col-md-6">
           <div className="card p-4 h-100">
             <h6 className="font-title mb-3" style={{ color: 'var(--accent-gold)' }}>💬 Nueva cita</h6>
-            <form onSubmit={agregarCita} className="d-flex flex-column gap-3">
+            <form ref={formCitaRef} onSubmit={agregarCita} className="d-flex flex-column gap-3">
               <div>
                 <label className="form-label text-muted small">Cita *</label>
-                <textarea
-                  name="texto"
-                  rows={5}
-                  className="form-control"
-                  style={{ background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
-                  required
-                  placeholder="Escribí la frase o párrafo que querés guardar..."
-                />
+                <textarea name="texto" rows={5} className="form-control" required placeholder="Escribí la frase o párrafo que querés guardar..." />
               </div>
               <div>
                 <label className="form-label text-muted small">Página (opcional)</label>
-                <input
-                  name="pagina"
-                  type="text"
-                  className="form-control"
-                  style={{ background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
-                  placeholder="Ej: 142"
-                />
+                <input name="pagina" type="text" className="form-control" placeholder="Ej: 142" />
               </div>
-              <button type="submit" className="btn-gold w-100 mt-auto">Guardar cita</button>
+              <button type="submit" className="btn-gold w-100 mt-auto" disabled={guardando}>
+                {guardando ? 'Guardando...' : 'Guardar cita'}
+              </button>
             </form>
           </div>
         </div>
       </div>
 
-      {/* ── CONTENIDO (timeline + citas) ── */}
+      {/* ── TABS ── */}
       <div className="inventory-tabs mb-4">
         <button onClick={() => setTab('entradas')} className={`tab-btn ${tab === 'entradas' ? 'active' : ''}`}>
           📝 Entradas ({entradas.length})
@@ -165,44 +186,47 @@ export default function DiarioClient({ libro, entradas: entradasIni, citas: cita
             </div>
           ) : (
             <div style={{ position: 'relative', paddingLeft: '2rem' }}>
-              {/* Línea vertical del timeline */}
               <div style={{
-                position: 'absolute',
-                left: '0.45rem',
-                top: 0,
-                bottom: 0,
-                width: 3,
-                background: 'linear-gradient(to bottom, var(--accent-gold), transparent)',
-                borderRadius: 4,
+                position: 'absolute', left: '0.45rem', top: 0, bottom: 0, width: 3,
+                background: 'linear-gradient(to bottom, var(--accent-gold), transparent)', borderRadius: 4,
               }} />
-
               {entradas.map((e, idx) => (
                 <div key={e.id} style={{ position: 'relative', marginBottom: '1.5rem' }}>
-                  {/* Bullet point */}
                   <div style={{
-                    position: 'absolute',
-                    left: '-1.55rem',
-                    top: '1.1rem',
-                    width: 12,
-                    height: 12,
-                    borderRadius: '50%',
+                    position: 'absolute', left: '-1.55rem', top: '1.1rem',
+                    width: 12, height: 12, borderRadius: '50%',
                     background: idx === 0 ? 'var(--accent-gold)' : 'var(--bg-card)',
                     border: '2px solid var(--accent-gold)',
                     boxShadow: idx === 0 ? '0 0 8px var(--accent-gold)' : 'none',
                   }} />
-
                   <div className="card p-4" style={{ borderLeft: '4px solid var(--accent-gold)' }}>
                     <div className="d-flex justify-content-between align-items-start mb-2">
-                      {e.capitulo && (
-                        <span className="fw-bold small" style={{ color: 'var(--accent-gold)' }}>
-                          Cap. {e.capitulo}
+                      <div className="d-flex align-items-center gap-2">
+                        {e.capitulo && (
+                          <span className="fw-bold small" style={{ color: 'var(--accent-gold)' }}>
+                            Cap. {e.capitulo}
+                          </span>
+                        )}
+                        <span className="text-muted small">
+                          {e.fecha_creacion
+                            ? new Date(e.fecha_creacion).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
+                            : ''}
                         </span>
-                      )}
-                      <span className="text-muted small ms-auto">
-                        {e.fecha_creacion
-                          ? new Date(e.fecha_creacion).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
-                          : ''}
-                      </span>
+                      </div>
+                      <button
+                        onClick={() => eliminar(e.id!, 'entrada')}
+                        disabled={eliminando === e.id}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          color: 'rgba(255,255,255,0.2)', fontSize: '0.85rem', padding: '2px 6px',
+                          borderRadius: 6, transition: 'color 0.15s',
+                        }}
+                        onMouseEnter={el => (el.currentTarget.style.color = '#e74c3c')}
+                        onMouseLeave={el => (el.currentTarget.style.color = 'rgba(255,255,255,0.2)')}
+                        title="Eliminar entrada"
+                      >
+                        {eliminando === e.id ? '...' : '✕'}
+                      </button>
                     </div>
                     <p className="text-white mb-0" style={{ lineHeight: 1.7 }}>{e.comentario}</p>
                   </div>
@@ -227,15 +251,30 @@ export default function DiarioClient({ libro, entradas: entradasIni, citas: cita
                   <div className="p-4 h-100" style={{
                     background: 'rgba(212,175,55,0.03)',
                     border: '1px dashed var(--accent-gold)',
-                    borderRadius: 16,
+                    borderRadius: 16, position: 'relative',
                   }}>
-                    <p className="text-white mb-3" style={{ fontStyle: 'italic', lineHeight: 1.8, fontSize: '1.05rem' }}>
+                    {/* Botón eliminar */}
+                    <button
+                      onClick={() => eliminar(c.id!, 'cita')}
+                      disabled={eliminando === c.id}
+                      style={{
+                        position: 'absolute', top: 10, right: 10,
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        color: 'rgba(255,255,255,0.2)', fontSize: '0.85rem', padding: '2px 6px',
+                        borderRadius: 6, transition: 'color 0.15s',
+                      }}
+                      onMouseEnter={el => (el.currentTarget.style.color = '#e74c3c')}
+                      onMouseLeave={el => (el.currentTarget.style.color = 'rgba(255,255,255,0.2)')}
+                      title="Eliminar cita"
+                    >
+                      {eliminando === c.id ? '...' : '✕'}
+                    </button>
+
+                    <p className="text-white mb-3" style={{ fontStyle: 'italic', lineHeight: 1.8, fontSize: '1.05rem', paddingRight: '1.5rem' }}>
                       &ldquo;{c.texto}&rdquo;
                     </p>
                     {c.pagina && (
-                      <div className="text-muted small" style={{ color: 'var(--accent-gold) !important' }}>
-                        — Página {c.pagina}
-                      </div>
+                      <div className="text-muted small">— Página {c.pagina}</div>
                     )}
                   </div>
                 </div>

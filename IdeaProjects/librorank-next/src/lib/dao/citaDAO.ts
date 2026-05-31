@@ -9,10 +9,18 @@ export interface Cita {
   titulo_libro?: string
 }
 
-export async function guardar(c: Cita): Promise<boolean> {
+export async function guardar(c: Cita): Promise<number | false> {
   const res = await execute(
     'INSERT INTO citas (usuario_id, libro_id, texto, pagina) VALUES (?, ?, ?, ?)',
     [c.usuario_id, c.libro_id, c.texto, c.pagina ?? null]
+  )
+  return res.affectedRows > 0 ? res.insertId : false
+}
+
+export async function eliminar(id: number, usuarioId: number): Promise<boolean> {
+  const res = await execute(
+    'DELETE FROM citas WHERE id=? AND usuario_id=?',
+    [id, usuarioId]
   )
   return res.affectedRows > 0
 }

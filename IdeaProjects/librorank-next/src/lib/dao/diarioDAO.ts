@@ -9,10 +9,18 @@ export interface DiarioLectura {
   fecha_creacion?: string
 }
 
-export async function guardar(d: DiarioLectura): Promise<boolean> {
+export async function guardar(d: DiarioLectura): Promise<number | false> {
   const res = await execute(
     'INSERT INTO diario_lectura (libro_id, usuario_id, capitulo, comentario) VALUES (?, ?, ?, ?)',
     [d.libro_id, d.usuario_id, d.capitulo, d.comentario]
+  )
+  return res.affectedRows > 0 ? res.insertId : false
+}
+
+export async function eliminar(id: number, usuarioId: number): Promise<boolean> {
+  const res = await execute(
+    'DELETE FROM diario_lectura WHERE id=? AND usuario_id=?',
+    [id, usuarioId]
   )
   return res.affectedRows > 0
 }
