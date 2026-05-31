@@ -34,13 +34,14 @@ export default async function PerfilUsernamePage({ params }: Props) {
   const usuarioTarget = await usuarioDAO.buscarPorUsername(username)
   if (!usuarioTarget) notFound()
 
-  const [authUsuario, stats, ultimasLecturas, logros, leidosEsteAnio, totalLeidos] = await Promise.all([
+  const [authUsuario, stats, ultimasLecturas, logros, leidosEsteAnio, totalLeidos, topGeneros] = await Promise.all([
     authUser ? usuarioDAO.buscarPorId(authUser.id) : Promise.resolve(null),
     libroDAO.obtenerStatsPorUsuario(usuarioTarget.id),
     libroDAO.obtenerUltimasLecturas(usuarioTarget.id, 5),
     logroDAO.obtenerLogrosUsuario(usuarioTarget.id),
     libroDAO.contarLeidosEsteAnio(usuarioTarget.id),
     libroDAO.contarLeidosTotal(usuarioTarget.id),
+    libroDAO.obtenerTopGeneros(usuarioTarget.id, 3),
   ])
 
   return (
@@ -56,6 +57,7 @@ export default async function PerfilUsernamePage({ params }: Props) {
           totalLeidos={totalLeidos}
           nivelInfo={usuarioDAO.getNivelLector(usuarioTarget.puntos ?? 0)}
           esMiPerfil={false}
+          topGeneros={topGeneros}
         />
       </main>
       <Footer />

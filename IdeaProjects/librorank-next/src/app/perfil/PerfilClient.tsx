@@ -44,11 +44,12 @@ interface Props {
   totalLeidos: number
   nivelInfo: NivelInfo
   esMiPerfil: boolean
+  topGeneros: string[]
 }
 
 export default function PerfilClient({
   usuario, stats, ultimasLecturas, logros,
-  leidosEsteAnio, totalLeidos, nivelInfo, esMiPerfil,
+  leidosEsteAnio, totalLeidos, nivelInfo, esMiPerfil, topGeneros,
 }: Props) {
   const router = useRouter()
   const [tab, setTab] = useState<'resumen' | 'anio' | 'config'>('resumen')
@@ -213,9 +214,12 @@ export default function PerfilClient({
               </p>
             )}
 
-            {usuario.generos_favoritos && (
+            {topGeneros.length > 0 && (
               <div className="mt-3">
-                {usuario.generos_favoritos.split(',').map(g => g.trim()).filter(Boolean).map(g => (
+                <p style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: '0.4rem' }}>
+                  📚 Géneros más leídos
+                </p>
+                {topGeneros.map(g => (
                   <span key={g} className="badge-cozy me-1 mb-1" style={{ display: 'inline-block' }}>{g}</span>
                 ))}
               </div>
@@ -737,7 +741,22 @@ export default function PerfilClient({
                   </div>
                   <div className="field">
                     <label>Géneros favoritos</label>
-                    <input name="generos_favoritos" defaultValue={usuario.generos_favoritos || ''} placeholder="Ej: Fantasía, Thriller" />
+                    <div style={{ padding: '0.5rem 0.75rem', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 }}>
+                      {topGeneros.length > 0 ? (
+                        <>
+                          {topGeneros.map(g => (
+                            <span key={g} className="badge-cozy me-1" style={{ display: 'inline-block' }}>{g}</span>
+                          ))}
+                          <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', margin: '0.4rem 0 0' }}>
+                            Se calculan automáticamente según tus libros leídos
+                          </p>
+                        </>
+                      ) : (
+                        <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', margin: 0 }}>
+                          Marcá libros como leídos con género para que aparezcan acá
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <button type="submit" disabled={guardando} className="btn--brand" style={{ alignSelf: 'flex-start' }}>
