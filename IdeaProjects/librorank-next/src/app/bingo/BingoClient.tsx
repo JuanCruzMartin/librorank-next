@@ -146,17 +146,18 @@ export default function BingoClient({ bingo: bingoIni, misLibros }: Props) {
       </div>
 
       {/* ── Grilla 5×5 ── */}
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', margin: '0 auto', maxWidth: 750 }}>
       <div className="bingo-grid" style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(5, 1fr)',
-        gap: '0.75rem',
-        maxWidth: 750,
+        gridTemplateColumns: 'repeat(5, minmax(62px, 1fr))',
+        gap: '0.5rem',
+        minWidth: 340,
         margin: '0 auto',
       }}>
         {grid.map((casilla, i) => {
           if (!casilla) return (
             <div key={i} style={{
-              aspectRatio: '1', minHeight: 90,
+              aspectRatio: '1', minHeight: 62,
               background: 'rgba(255,255,255,0.02)',
               borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)',
             }} />
@@ -169,7 +170,7 @@ export default function BingoClient({ bingo: bingoIni, misLibros }: Props) {
               key={casilla.id}
               onClick={() => done ? setDetalle(casilla) : setSeleccionada(casilla)}
               style={{
-                aspectRatio: '1', minHeight: 90,
+                aspectRatio: '1', minHeight: 62,
                 background: done ? 'rgba(212,175,55,0.1)' : 'var(--bg-card)',
                 border: done ? '2px solid var(--accent-gold)' : '1px solid rgba(212,175,55,0.2)',
                 borderRadius: 12,
@@ -234,6 +235,7 @@ export default function BingoClient({ bingo: bingoIni, misLibros }: Props) {
             </button>
           )
         })}
+      </div>
       </div>
 
       {/* ── Modal: completar casilla ── */}
@@ -400,6 +402,10 @@ export default function BingoClient({ bingo: bingoIni, misLibros }: Props) {
       <style>{`
         .bingo-done:hover .bingo-done-hover { opacity: 1 !important; }
         .bingo-hover:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212,175,55,0.15); }
+        @media (max-width: 480px) {
+          .bingo-grid button, .bingo-grid div { min-height: 62px !important; }
+          .bingo-grid { gap: 0.35rem !important; min-width: 320px !important; }
+        }
       `}</style>
     </div>
   )
