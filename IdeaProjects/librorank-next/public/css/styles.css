@@ -41,6 +41,11 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
+}
+
+html {
+    overflow-x: hidden;
 }
 
 main {
