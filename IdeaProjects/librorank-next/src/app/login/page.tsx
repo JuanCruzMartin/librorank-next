@@ -73,6 +73,13 @@ export default function LoginPage() {
                 required
               />
             </div>
+            <div style={{ textAlign: 'right', marginBottom: '0.5rem' }}>
+              <Link href="/forgot-password" style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#d4af37')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}>
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
             <button className="btn-auth" type="submit" disabled={loading}>
               {loading ? 'Ingresando...' : 'Entrar a mi biblioteca'}
             </button>
