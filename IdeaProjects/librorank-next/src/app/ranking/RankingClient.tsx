@@ -33,8 +33,20 @@ interface UsuarioRanking {
   es_yo: boolean
 }
 
+interface UsuarioSemanal {
+  id: number
+  nombre: string
+  username: string
+  avatar_url: string | null
+  puntos: number
+  libros_semana: number
+  es_yo: boolean
+  es_amigo: boolean
+}
+
 interface Props {
   ranking: UsuarioRanking[]
+  rankingSemanal: UsuarioSemanal[]
   usuarioId: number
   puntosUsuario: number
 }
@@ -50,14 +62,21 @@ function Medal({ pos }: { pos: number }) {
 
 // ── Componente principal ─────────────────────────────────────────────────────
 
-export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Props) {
+// Calcula días hasta el próximo lunes (reset semanal)
+function diasParaReset(): number {
+  const hoy = new Date().getDay() // 0=Dom, 1=Lun, ...
+  return ((1 - hoy + 7) % 7) || 7
+}
+
+export default function RankingClient({ ranking, rankingSemanal, usuarioId, puntosUsuario }: Props) {
   const ligaActual = getLigaActual(puntosUsuario)
   const ligaSiguiente = LIGAS[LIGAS.indexOf(ligaActual) + 1] ?? null
 
   const [ligaTab, setLigaTab] = useState<string>('general')
 
-  const esGeneral = ligaTab === 'general'
-  const esLibros  = ligaTab === 'libros'
+  const esGeneral  = ligaTab === 'general'
+  const esLibros   = ligaTab === 'libros'
+  const esSemanal  = ligaTab === 'semanal'
   const ligaSeleccionada = LIGAS.find(l => l.key === ligaTab)
 
   // Usuarios a mostrar según tab
@@ -65,9 +84,11 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
     ? [...ranking].sort((a, b) => b.puntos - a.puntos)
     : esLibros
       ? [...ranking].sort((a, b) => b.total_leidos - a.total_leidos)
-      : ranking
-          .filter(u => ligaSeleccionada && u.puntos >= ligaSeleccionada.min && u.puntos <= ligaSeleccionada.max)
-          .sort((a, b) => b.puntos - a.puntos)
+      : esSemanal
+        ? rankingSemanal
+        : ranking
+            .filter(u => ligaSeleccionada && u.puntos >= ligaSeleccionada.min && u.puntos <= ligaSeleccionada.max)
+            .sort((a, b) => b.puntos - a.puntos)
 
   // Posición del usuario en su propia liga
   const posEnLiga = ranking
@@ -228,6 +249,29 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
             </span>
           </button>
 
+          {/* Tab Esta semana */}
+          <button
+            onClick={() => setLigaTab('semanal')}
+            style={{
+              background: esSemanal ? 'rgba(233,30,140,0.12)' : 'rgba(255,255,255,0.04)',
+              border: esSemanal ? '2px solid rgba(233,30,140,0.45)' : '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 20, padding: '0.45rem 1.1rem',
+              fontSize: '0.82rem', fontWeight: 700,
+              color: esSemanal ? '#e91e8c' : 'rgba(255,255,255,0.5)',
+              cursor: 'pointer', transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+            }}
+          >
+            🔥 Esta semana
+            <span style={{
+              background: esSemanal ? 'rgba(233,30,140,0.25)' : 'rgba(255,255,255,0.08)',
+              color: esSemanal ? '#e91e8c' : 'rgba(255,255,255,0.4)',
+              borderRadius: 20, padding: '1px 7px', fontSize: '0.68rem',
+            }}>
+              {rankingSemanal.length}
+            </span>
+          </button>
+
           {/* Tabs de ligas */}
           {LIGAS.map(liga => {
             const activa = liga.key === ligaTab
@@ -261,136 +305,249 @@ export default function RankingClient({ ranking, usuarioId, puntosUsuario }: Pro
 
         {/* Descripción del tab activo */}
         <div style={{
-          background: esGeneral ? 'rgba(212,175,55,0.06)' : ligaSeleccionada?.colorBg,
-          border: `1px solid ${esGeneral ? 'rgba(212,175,55,0.2)' : ligaSeleccionada?.border}`,
+          background: esGeneral ? 'rgba(212,175,55,0.06)' : esSemanal ? 'rgba(233,30,140,0.06)' : ligaSeleccionada?.colorBg,
+          border: `1px solid ${esGeneral ? 'rgba(212,175,55,0.2)' : esSemanal ? 'rgba(233,30,140,0.25)' : ligaSeleccionada?.border}`,
           borderRadius: 12, padding: '0.85rem 1.25rem',
           marginBottom: '1.5rem',
           display: 'flex', alignItems: 'center', gap: '0.75rem',
         }}>
           <span style={{ fontSize: '1.8rem' }}>
-            {esGeneral ? '🌍' : esLibros ? '📚' : ligaSeleccionada?.emoji}
+            {esGeneral ? '🌍' : esLibros ? '📚' : esSemanal ? '🔥' : ligaSeleccionada?.emoji}
           </span>
-          <div>
-            <div style={{ fontWeight: 700, color: esGeneral ? '#d4af37' : esLibros ? '#4a9e7a' : ligaSeleccionada?.color, fontSize: '0.9rem' }}>
-              {esGeneral ? 'Ranking General — Por puntos' : esLibros ? 'Ranking — Por libros leídos' : `Liga ${ligaSeleccionada?.nombre}`}
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, color: esGeneral ? '#d4af37' : esLibros ? '#4a9e7a' : esSemanal ? '#e91e8c' : ligaSeleccionada?.color, fontSize: '0.9rem' }}>
+              {esGeneral ? 'Ranking General — Por puntos' : esLibros ? 'Ranking — Por libros leídos' : esSemanal ? 'Ranking Semanal — Últimos 7 días' : `Liga ${ligaSeleccionada?.nombre}`}
             </div>
             <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
               {esGeneral || esLibros
                 ? `Todos los lectores · ${ranking.length} en total`
-                : ligaSeleccionada?.max === Infinity
-                  ? `${ligaSeleccionada?.min}+ puntos · ${usuariosLiga.length} lectores`
-                  : `${ligaSeleccionada?.min}–${ligaSeleccionada?.max} puntos · ${usuariosLiga.length} lectores`
+                : esSemanal
+                  ? `${rankingSemanal.length} lectores activos · reinicia en ${diasParaReset()} día${diasParaReset() !== 1 ? 's' : ''}`
+                  : ligaSeleccionada?.max === Infinity
+                    ? `${ligaSeleccionada?.min}+ puntos · ${usuariosLiga.length} lectores`
+                    : `${ligaSeleccionada?.min}–${ligaSeleccionada?.max} puntos · ${usuariosLiga.length} lectores`
               }
             </div>
           </div>
+          {esSemanal && (
+            <div style={{
+              background: 'rgba(233,30,140,0.12)',
+              border: '1px solid rgba(233,30,140,0.3)',
+              borderRadius: 8, padding: '0.35rem 0.75rem',
+              fontSize: '0.68rem', fontWeight: 700, color: '#e91e8c',
+              textAlign: 'center', flexShrink: 0,
+            }}>
+              🏆 Top 3 gana<br />
+              <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 400 }}>100 · 50 · 25 pts</span>
+            </div>
+          )}
         </div>
 
-        {/* Tabla de la liga */}
-        {usuariosLiga.length === 0 ? (
-          <div className="text-center py-5">
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{ligaSeleccionada?.emoji ?? '🏆'}</div>
-            <p className="text-muted">Todavía no hay lectores en esta liga.</p>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {usuariosLiga.map((u, i) => {
-              const pos = i + 1
-              const nivelInfo = getNivelLector(u.puntos)
-              const esYo = u.id === usuarioId
-              return (
-                <div
-                  key={u.id}
-                  style={{
-                    background: esYo
-                      ? `linear-gradient(135deg, ${(ligaSeleccionada ?? ligaActual).color}12, ${(ligaSeleccionada ?? ligaActual).color}06)`
-                      : pos <= 3 ? 'rgba(255,255,255,0.04)' : 'var(--bg-card)',
-                    border: esYo
-                      ? `1px solid ${(ligaSeleccionada ?? ligaActual).border}`
-                      : pos <= 3 ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.05)',
-                    borderRadius: 12, padding: '0.85rem 1.25rem',
-                    display: 'flex', alignItems: 'center', gap: '1rem',
-                    transition: 'transform 0.15s',
-                  }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateX(4px)'}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'none'}
-                >
-                  {/* Posición */}
-                  <div style={{ width: 32, textAlign: 'center', flexShrink: 0 }}>
-                    <Medal pos={pos} />
-                  </div>
-
-                  {/* Avatar */}
-                  <img
-                    src={u.avatar_url || '/img/personajes/personaje_1.png'}
-                    alt={u.username}
+        {/* ── Tabla Semanal ─────────────────────────────────────────────── */}
+        {esSemanal && (
+          rankingSemanal.length === 0 ? (
+            <div className="text-center py-5">
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔥</div>
+              <p className="text-muted">Nadie marcó libros esta semana aún. ¡Sé el primero!</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {rankingSemanal.map((u, i) => {
+                const pos = i + 1
+                const esYo = u.id === usuarioId
+                const medalColor = pos === 1 ? '#d4af37' : pos === 2 ? '#b0b8c1' : pos === 3 ? '#cd7f32' : 'rgba(255,255,255,0.1)'
+                return (
+                  <div
+                    key={u.id}
                     style={{
-                      width: 38, height: 38, borderRadius: '50%',
-                      objectFit: 'cover', flexShrink: 0,
-                      border: esYo ? `2px solid ${(ligaSeleccionada ?? ligaActual).color}` : '1px solid rgba(255,255,255,0.1)',
+                      background: esYo
+                        ? 'linear-gradient(135deg, rgba(233,30,140,0.1), rgba(233,30,140,0.04))'
+                        : pos <= 3 ? 'rgba(255,255,255,0.04)' : 'var(--bg-card)',
+                      border: esYo
+                        ? '1px solid rgba(233,30,140,0.35)'
+                        : pos <= 3 ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.05)',
+                      borderRadius: 12, padding: '0.85rem 1.25rem',
+                      display: 'flex', alignItems: 'center', gap: '1rem',
+                      transition: 'transform 0.15s',
                     }}
-                  />
-
-                  {/* Nombre */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                      <Link
-                        href={`/perfil/${u.username}`}
-                        style={{ fontWeight: 700, color: '#fff', textDecoration: 'none', fontSize: '0.88rem' }}
-                      >
-                        @{u.username}
-                      </Link>
-                      {esYo && (
-                        <span style={{
-                          fontSize: '0.62rem', fontWeight: 700, background: 'rgba(212,175,55,0.2)',
-                          color: '#d4af37', borderRadius: 20, padding: '1px 7px',
-                          border: '1px solid rgba(212,175,55,0.3)',
-                        }}>
-                          Vos
-                        </span>
-                      )}
-                      {u.es_amigo && (
-                        <span style={{
-                          fontSize: '0.62rem', fontWeight: 700, background: 'rgba(39,174,96,0.15)',
-                          color: '#27ae60', borderRadius: 20, padding: '1px 7px',
-                          border: '1px solid rgba(39,174,96,0.3)',
-                        }}>
-                          amigo
-                        </span>
-                      )}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateX(4px)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'none'}
+                  >
+                    <div style={{ width: 32, textAlign: 'center', flexShrink: 0 }}>
+                      <Medal pos={pos} />
                     </div>
-                    <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', marginTop: 2, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <span>{nivelInfo.emoji} {nivelInfo.titulo}</span>
-                      {esGeneral && (
-                        <span style={{
-                          fontSize: '0.6rem', fontWeight: 700,
-                          color: getLigaActual(u.puntos).color,
-                          opacity: 0.8,
-                        }}>
+                    <img
+                      src={u.avatar_url || '/img/personajes/personaje_1.png'}
+                      alt={u.username}
+                      style={{
+                        width: 38, height: 38, borderRadius: '50%',
+                        objectFit: 'cover', flexShrink: 0,
+                        border: `2px solid ${esYo ? '#e91e8c' : medalColor}`,
+                      }}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                        <Link
+                          href={`/perfil/${u.username}`}
+                          style={{ fontWeight: 700, color: '#fff', textDecoration: 'none', fontSize: '0.88rem' }}
+                        >
+                          @{u.username}
+                        </Link>
+                        {esYo && (
+                          <span style={{
+                            fontSize: '0.62rem', fontWeight: 700, background: 'rgba(233,30,140,0.2)',
+                            color: '#e91e8c', borderRadius: 20, padding: '1px 7px',
+                            border: '1px solid rgba(233,30,140,0.3)',
+                          }}>
+                            Vos
+                          </span>
+                        )}
+                        {u.es_amigo && (
+                          <span style={{
+                            fontSize: '0.62rem', fontWeight: 700, background: 'rgba(39,174,96,0.15)',
+                            color: '#27ae60', borderRadius: 20, padding: '1px 7px',
+                            border: '1px solid rgba(39,174,96,0.3)',
+                          }}>
+                            amigo
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                        {getNivelLector(u.puntos).emoji} {getNivelLector(u.puntos).titulo}
+                        <span style={{ marginLeft: 6, color: getLigaActual(u.puntos).color, opacity: 0.8, fontWeight: 700, fontSize: '0.6rem' }}>
                           · {getLigaActual(u.puntos).emoji} {getLigaActual(u.puntos).nombre}
                         </span>
-                      )}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexShrink: 0 }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: 800, color: '#e91e8c', fontSize: '1.1rem' }}>
+                          📚 {u.libros_semana}
+                        </div>
+                        <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>esta semana</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: 600, color: 'rgba(212,175,55,0.55)', fontSize: '0.85rem' }}>
+                          ⭐ {u.puntos}
+                        </div>
+                        <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>puntos</div>
+                      </div>
                     </div>
                   </div>
+                )
+              })}
+            </div>
+          )
+        )}
 
-                  {/* Stats — orden cambia según tab */}
-                  <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexShrink: 0 }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontWeight: 800, color: esLibros ? '#4a9e7a' : '#fff', fontSize: esLibros ? '1rem' : '0.9rem' }}>
-                        📚 {u.total_leidos}
-                      </div>
-                      <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>leídos</div>
+        {/* ── Tabla Normal (general / libros / ligas) ───────────────────── */}
+        {!esSemanal && (
+          usuariosLiga.length === 0 ? (
+            <div className="text-center py-5">
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{ligaSeleccionada?.emoji ?? '🏆'}</div>
+              <p className="text-muted">Todavía no hay lectores en esta liga.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {(usuariosLiga as UsuarioRanking[]).map((u, i) => {
+                const pos = i + 1
+                const nivelInfo = getNivelLector(u.puntos)
+                const esYo = u.id === usuarioId
+                return (
+                  <div
+                    key={u.id}
+                    style={{
+                      background: esYo
+                        ? `linear-gradient(135deg, ${(ligaSeleccionada ?? ligaActual).color}12, ${(ligaSeleccionada ?? ligaActual).color}06)`
+                        : pos <= 3 ? 'rgba(255,255,255,0.04)' : 'var(--bg-card)',
+                      border: esYo
+                        ? `1px solid ${(ligaSeleccionada ?? ligaActual).border}`
+                        : pos <= 3 ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.05)',
+                      borderRadius: 12, padding: '0.85rem 1.25rem',
+                      display: 'flex', alignItems: 'center', gap: '1rem',
+                      transition: 'transform 0.15s',
+                    }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateX(4px)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'none'}
+                  >
+                    {/* Posición */}
+                    <div style={{ width: 32, textAlign: 'center', flexShrink: 0 }}>
+                      <Medal pos={pos} />
                     </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontWeight: esLibros ? 600 : 800, color: esLibros ? 'rgba(212,175,55,0.6)' : '#d4af37', fontSize: '0.9rem' }}>
-                        ⭐ {u.puntos}
+
+                    {/* Avatar */}
+                    <img
+                      src={u.avatar_url || '/img/personajes/personaje_1.png'}
+                      alt={u.username}
+                      style={{
+                        width: 38, height: 38, borderRadius: '50%',
+                        objectFit: 'cover', flexShrink: 0,
+                        border: esYo ? `2px solid ${(ligaSeleccionada ?? ligaActual).color}` : '1px solid rgba(255,255,255,0.1)',
+                      }}
+                    />
+
+                    {/* Nombre */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                        <Link
+                          href={`/perfil/${u.username}`}
+                          style={{ fontWeight: 700, color: '#fff', textDecoration: 'none', fontSize: '0.88rem' }}
+                        >
+                          @{u.username}
+                        </Link>
+                        {esYo && (
+                          <span style={{
+                            fontSize: '0.62rem', fontWeight: 700, background: 'rgba(212,175,55,0.2)',
+                            color: '#d4af37', borderRadius: 20, padding: '1px 7px',
+                            border: '1px solid rgba(212,175,55,0.3)',
+                          }}>
+                            Vos
+                          </span>
+                        )}
+                        {u.es_amigo && (
+                          <span style={{
+                            fontSize: '0.62rem', fontWeight: 700, background: 'rgba(39,174,96,0.15)',
+                            color: '#27ae60', borderRadius: 20, padding: '1px 7px',
+                            border: '1px solid rgba(39,174,96,0.3)',
+                          }}>
+                            amigo
+                          </span>
+                        )}
                       </div>
-                      <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>puntos</div>
+                      <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', marginTop: 2, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span>{nivelInfo.emoji} {nivelInfo.titulo}</span>
+                        {esGeneral && (
+                          <span style={{
+                            fontSize: '0.6rem', fontWeight: 700,
+                            color: getLigaActual(u.puntos).color,
+                            opacity: 0.8,
+                          }}>
+                            · {getLigaActual(u.puntos).emoji} {getLigaActual(u.puntos).nombre}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Stats — orden cambia según tab */}
+                    <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexShrink: 0 }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: 800, color: esLibros ? '#4a9e7a' : '#fff', fontSize: esLibros ? '1rem' : '0.9rem' }}>
+                          📚 {u.total_leidos}
+                        </div>
+                        <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>leídos</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: esLibros ? 600 : 800, color: esLibros ? 'rgba(212,175,55,0.6)' : '#d4af37', fontSize: '0.9rem' }}>
+                          ⭐ {u.puntos}
+                        </div>
+                        <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>puntos</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          )
         )}
       </div>
     </div>

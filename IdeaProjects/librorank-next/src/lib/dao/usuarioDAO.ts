@@ -14,7 +14,26 @@ export interface Usuario {
   generos_favoritos: string | null
   racha_actual: number
   ultima_fecha_lectura: string | null
+  escudos_racha: number
   total_leidos?: number
+}
+
+export interface RachaResult {
+  nuevaRacha: number
+  escudoUsado: boolean
+  escudosRestantes: number
+  escudoGanado: boolean
+  milestoneAlcanzado: number | null   // 7, 30 o 100 días
+  bonusPts: number
+}
+
+export interface UsuarioSemanal {
+  id: number
+  nombre: string
+  username: string
+  avatar_url: string | null
+  puntos: number
+  libros_semana: number
 }
 
 export async function registrar(u: {
@@ -31,7 +50,8 @@ export async function registrar(u: {
 export async function buscarPorEmailOUsername(identificador: string): Promise<Usuario | null> {
   return queryOne<Usuario>(
     `SELECT id, nombre, username, email, password_hash, bio, avatar_url,
-            nivel_id, objetivo_anual, monedas AS puntos, generos_favoritos, racha_actual, ultima_fecha_lectura
+            nivel_id, objetivo_anual, monedas AS puntos, generos_favoritos,
+            racha_actual, ultima_fecha_lectura, COALESCE(escudos_racha, 0) AS escudos_racha
      FROM usuarios WHERE email = ? OR username = ? LIMIT 1`,
     [identificador, identificador]
   )
@@ -49,7 +69,8 @@ export async function buscarPorUsername(username: string): Promise<Usuario | nul
 export async function buscarPorId(id: number): Promise<Usuario | null> {
   return queryOne<Usuario>(
     `SELECT id, nombre, username, email, bio, avatar_url, monedas AS puntos,
-            nivel_id, objetivo_anual, generos_favoritos, racha_actual
+            nivel_id, objetivo_anual, generos_favoritos, racha_actual,
+            COALESCE(escudos_racha, 0) AS escudos_racha
      FROM usuarios WHERE id = ?`,
     [id]
   )
@@ -88,25 +109,85 @@ export async function actualizarPasswordHash(id: number, hash: string): Promise<
   await execute('UPDATE usuarios SET password_hash=? WHERE id=?', [hash, id])
 }
 
-export async function actualizarRacha(usuarioId: number): Promise<boolean> {
-  const row = await queryOne<{ racha_actual: number; ultima_fecha_lectura: string | null }>(
-    'SELECT racha_actual, ultima_fecha_lectura FROM usuarios WHERE id=?', [usuarioId]
+export async function actualizarRacha(usuarioId: number): Promise<RachaResult | null> {
+  const row = await queryOne<{ racha_actual: number; ultima_fecha_lectura: string | null; escudos_racha: number }>(
+    'SELECT racha_actual, ultima_fecha_lectura, COALESCE(escudos_racha, 0) AS escudos_racha FROM usuarios WHERE id=?',
+    [usuarioId]
   )
-  if (!row) return false
+  if (!row) return null
 
   const hoy = new Date().toISOString().split('T')[0]
   const ultima = row.ultima_fecha_lectura?.split('T')[0] ?? null
 
-  if (ultima === hoy) return true
+  // Ya actualizamos hoy — devolver estado actual sin cambios
+  if (ultima === hoy) return {
+    nuevaRacha: row.racha_actual,
+    escudoUsado: false,
+    escudosRestantes: row.escudos_racha,
+    escudoGanado: false,
+    milestoneAlcanzado: null,
+    bonusPts: 0,
+  }
 
   const ayer = new Date(Date.now() - 86400000).toISOString().split('T')[0]
-  const nuevaRacha = ultima === ayer ? row.racha_actual + 1 : 1
+  const esContinuacion = ultima === ayer
 
-  const res = await execute(
-    'UPDATE usuarios SET racha_actual=?, ultima_fecha_lectura=? WHERE id=?',
-    [nuevaRacha, hoy, usuarioId]
+  let nuevaRacha: number
+  let escudoUsado = false
+  let escudosRestantes = row.escudos_racha
+
+  if (esContinuacion) {
+    // Día consecutivo — racha continúa
+    nuevaRacha = row.racha_actual + 1
+  } else if (row.escudos_racha > 0) {
+    // Se rompería la racha, pero hay escudos — usamos uno y mantenemos la racha
+    nuevaRacha = row.racha_actual + 1
+    escudoUsado = true
+    escudosRestantes = row.escudos_racha - 1
+  } else {
+    // Sin escudos — reset
+    nuevaRacha = 1
+  }
+
+  // Ganar escudo cada 7 días (máximo 2 escudos)
+  const escudoGanado = nuevaRacha % 7 === 0 && escudosRestantes < 2
+  if (escudoGanado) {
+    escudosRestantes = Math.min(2, escudosRestantes + 1)
+  }
+
+  // Bonus de puntos en milestones: 7, 30 y 100 días
+  const MILESTONES: Record<number, number> = { 7: 50, 30: 150, 100: 500 }
+  const milestoneAlcanzado = MILESTONES[nuevaRacha] !== undefined ? nuevaRacha : null
+  const bonusPts = milestoneAlcanzado ? MILESTONES[milestoneAlcanzado] : 0
+
+  // Una sola UPDATE que maneja todo
+  await execute(
+    `UPDATE usuarios
+     SET racha_actual = ?,
+         ultima_fecha_lectura = ?,
+         escudos_racha = ?,
+         monedas = monedas + ?
+     WHERE id = ?`,
+    [nuevaRacha, hoy, escudosRestantes, bonusPts, usuarioId]
   )
-  return res.affectedRows > 0
+
+  return { nuevaRacha, escudoUsado, escudosRestantes, escudoGanado, milestoneAlcanzado, bonusPts }
+}
+
+export async function obtenerRankingSemanal(limite = 50): Promise<UsuarioSemanal[]> {
+  return query<UsuarioSemanal>(
+    `SELECT u.id, u.nombre, u.username, u.avatar_url, u.monedas AS puntos,
+            COUNT(l.id) AS libros_semana
+     FROM usuarios u
+     JOIN libros_usuario l ON u.id = l.usuario_id
+       AND UPPER(l.estado) IN ('LEIDO','LEÍDO')
+       AND l.fecha_leido IS NOT NULL
+       AND l.fecha_leido >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+     GROUP BY u.id, u.nombre, u.username, u.avatar_url, u.monedas
+     ORDER BY libros_semana DESC, puntos DESC
+     LIMIT ?`,
+    [limite]
+  )
 }
 
 export function getTituloLector(totalLeidos: number): string {

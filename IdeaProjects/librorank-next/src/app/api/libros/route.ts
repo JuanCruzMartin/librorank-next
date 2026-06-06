@@ -3,6 +3,7 @@ import { getAuthUserFromRequest } from '@/lib/auth'
 import * as libroDAO from '@/lib/dao/libroDAO'
 import * as actividadDAO from '@/lib/dao/actividadDAO'
 import * as logroDAO from '@/lib/dao/logroDAO'
+import { actualizarRacha } from '@/lib/dao/usuarioDAO'
 
 export async function GET(req: NextRequest) {
   const user = await getAuthUserFromRequest(req)
@@ -55,7 +56,22 @@ export async function POST(req: NextRequest) {
             await libroDAO.otorgarPuntos(user.id, 30, 'Libro marcado como LEÍDO al agregar')
             puntosGanados += 30
             await actividadDAO.registrar(user.id, 'LIBRO_LEIDO', nuevoId, titulo)
-            toastMsg = `📚 Libro agregado como leído · +${puntosGanados} puntos`
+            // Actualizar racha
+            const rachaResult = await actualizarRacha(user.id)
+            if (rachaResult) {
+              puntosGanados += rachaResult.bonusPts
+              if (rachaResult.milestoneAlcanzado) {
+                toastMsg = `🔥 ¡${rachaResult.milestoneAlcanzado} días de racha! +${rachaResult.bonusPts} bonus · 📚 Libro leído`
+              } else if (rachaResult.escudoGanado) {
+                toastMsg = `📚 Libro leído · 🛡️ Nuevo escudo de racha +${puntosGanados} pts`
+              } else if (rachaResult.escudoUsado) {
+                toastMsg = `📚 Libro leído · 🛡️ Escudo activado (racha salvada!) +${puntosGanados} pts`
+              } else {
+                toastMsg = `📚 Libro agregado como leído · +${puntosGanados} puntos`
+              }
+            } else {
+              toastMsg = `📚 Libro agregado como leído · +${puntosGanados} puntos`
+            }
           } else {
             await actividadDAO.registrar(user.id, 'NUEVO_LIBRO', nuevoId, titulo)
             toastMsg = `📚 Libro agregado a tu biblioteca · +${puntosGanados} puntos`
@@ -96,6 +112,18 @@ export async function POST(req: NextRequest) {
             await actividadDAO.registrar(user.id, 'LIBRO_LEIDO', Number(id), `Ha terminado de leer "${libroAnterior?.titulo}"`)
             puntosGanados += 30
             toastParts.push('📖 ¡Libro terminado!')
+            // Actualizar racha con escudos y milestones
+            const rachaResult = await actualizarRacha(user.id)
+            if (rachaResult) {
+              puntosGanados += rachaResult.bonusPts
+              if (rachaResult.milestoneAlcanzado) {
+                toastParts.push(`🔥 ¡${rachaResult.milestoneAlcanzado} días de racha! +${rachaResult.bonusPts}`)
+              } else if (rachaResult.escudoGanado) {
+                toastParts.push(`🛡️ ¡Escudo de racha ganado! (${rachaResult.escudosRestantes}/2)`)
+              } else if (rachaResult.escudoUsado) {
+                toastParts.push(`🛡️ Escudo activado — racha salvada! (${rachaResult.escudosRestantes} restantes)`)
+              }
+            }
           }
           if (resena && resena.trim().length > 0 && !libroAnterior?.resena) {
             await libroDAO.otorgarPuntos(user.id, 20, 'Reseña escrita')

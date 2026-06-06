@@ -47,7 +47,17 @@ export default async function HomePage() {
 
                 <div className="d-flex justify-content-center gap-3 mt-2">
                   <div className="text-center">
-                    <div className="fw-bold text-gold">🔥 {usuario.racha_actual}</div>
+                    <div className="fw-bold text-gold">
+                      🔥 {usuario.racha_actual}
+                      {usuario.escudos_racha > 0 && (
+                        <span
+                          title={`${usuario.escudos_racha} escudo${usuario.escudos_racha > 1 ? 's' : ''} de racha`}
+                          style={{ marginLeft: 4, fontSize: '0.85em' }}
+                        >
+                          {'🛡️'.repeat(usuario.escudos_racha)}
+                        </span>
+                      )}
+                    </div>
                     <div className="small text-muted">Racha</div>
                   </div>
                   <div className="text-center">
