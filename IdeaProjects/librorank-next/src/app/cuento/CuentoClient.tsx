@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function CuentoClient({ fragmentos: fragmentosIni, yaEscribio: yaEscribioIni }: Props) {
-  const [fragmentos] = useState(fragmentosIni)
+  const [fragmentos, setFragmentos] = useState(fragmentosIni)
   const [yaEscribio, setYaEscribio] = useState(yaEscribioIni)
   const [contenido, setContenido] = useState('')
   const [error, setError] = useState('')
@@ -23,19 +23,30 @@ export default function CuentoClient({ fragmentos: fragmentosIni, yaEscribio: ya
     setEnviando(true)
     setError('')
 
-    const res = await fetch('/api/cuento', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contenido }),
-    })
-    const data = await res.json()
-    setEnviando(false)
+    try {
+      const res = await fetch('/api/cuento', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contenido }),
+      })
+      const data = await res.json()
 
-    if (!res.ok) {
-      setError(data.error)
-    } else {
-      setYaEscribio(true)
-      window.location.reload()
+      if (!res.ok) {
+        setError(data.error)
+      } else {
+        // Refrescar lista de fragmentos sin recargar la página
+        const refetch = await fetch('/api/cuento')
+        if (refetch.ok) {
+          const updated = await refetch.json()
+          setFragmentos(updated.fragmentos)
+        }
+        setYaEscribio(true)
+        setContenido('')
+      }
+    } catch {
+      setError('Error de conexión. Intentá de nuevo.')
+    } finally {
+      setEnviando(false)
     }
   }
 

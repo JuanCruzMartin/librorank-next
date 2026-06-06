@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Club, ClubMiembro, ClubPost } from '@/lib/dao/clubDAO'
 
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function ClubClient({ club, miembrosIniciales, postsIniciales, usuarioId }: Props) {
+  const router = useRouter()
   const [posts, setPosts] = useState(postsIniciales)
   const [capituloActivo, setCapituloActivo] = useState('General')
   const [contenido, setContenido] = useState('')
@@ -75,7 +77,7 @@ export default function ClubClient({ club, miembrosIniciales, postsIniciales, us
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accion: 'salir', clubId: club.id }),
     })
-    window.location.href = '/clubes'
+    router.push('/clubes')
   }
 
   return (

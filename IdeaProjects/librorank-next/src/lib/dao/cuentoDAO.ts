@@ -41,7 +41,7 @@ export async function guardarHoja(historiaId: number, usuarioId: number, conteni
     )
     return (res as { affectedRows: number }).affectedRows > 0
   } finally {
-    await conn.end()
+    conn.release()  // devolver la conexión al pool, no cerrarla
   }
 }
 

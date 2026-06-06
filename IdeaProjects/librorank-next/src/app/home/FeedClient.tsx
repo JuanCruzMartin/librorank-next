@@ -29,16 +29,21 @@ export default function FeedClient({ feedInicial, usuarioId }: Props) {
   const [feed, setFeed] = useState(feedInicial)
 
   async function toggleLike(actividadId: number) {
-    const res = await fetch('/api/actividad', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ actividadId }),
-    })
-    const data = await res.json()
-    setFeed(prev => prev.map(a => {
-      if (a.id !== actividadId) return a
-      return { ...a, le_gusta_al_usuario: data.liked, total_likes: a.total_likes + (data.liked ? 1 : -1) }
-    }))
+    try {
+      const res = await fetch('/api/actividad', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actividadId }),
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      setFeed(prev => prev.map(a => {
+        if (a.id !== actividadId) return a
+        return { ...a, le_gusta_al_usuario: data.liked, total_likes: a.total_likes + (data.liked ? 1 : -1) }
+      }))
+    } catch {
+      // Fallo silencioso en likes — no es crítico
+    }
   }
 
   if (feed.length === 0) {
