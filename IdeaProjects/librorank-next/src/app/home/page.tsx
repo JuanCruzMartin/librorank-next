@@ -1,9 +1,11 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { getAuthUser } from '@/lib/auth'
 import { buscarPorId } from '@/lib/dao/usuarioDAO'
 import { obtenerFeedAmigos } from '@/lib/dao/actividadDAO'
 import { obtenerCitaAleatoria } from '@/lib/dao/citaDAO'
+import { obtenerLeyendoAhora, contarLeidosEsteAnio } from '@/lib/dao/libroDAO'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import FeedClient from './FeedClient'
@@ -13,10 +15,12 @@ export default async function HomePage() {
   const authUser = await getAuthUser()
   if (!authUser) redirect('/login')
 
-  const [usuario, feed, citaDelDia] = await Promise.all([
+  const [usuario, feed, citaDelDia, librosLeyendo, leidosEsteAnio] = await Promise.all([
     buscarPorId(authUser.id),
     obtenerFeedAmigos(authUser.id),
     obtenerCitaAleatoria(authUser.id),
+    obtenerLeyendoAhora(authUser.id),
+    contarLeidosEsteAnio(authUser.id),
   ])
 
   if (!usuario) redirect('/login')
@@ -51,6 +55,60 @@ export default async function HomePage() {
                     <div className="small text-muted">Puntos</div>
                   </div>
                 </div>
+
+                {/* Objetivo anual */}
+                {usuario.objetivo_anual && usuario.objetivo_anual > 0 && (
+                  <div className="mt-3 text-start">
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <span className="small text-muted">Meta {new Date().getFullYear()}</span>
+                      <span className="small fw-bold" style={{ color: '#d4af37' }}>
+                        {leidosEsteAnio} / {usuario.objetivo_anual} 📚
+                      </span>
+                    </div>
+                    <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${Math.min((leidosEsteAnio / usuario.objetivo_anual) * 100, 100)}%`,
+                        background: 'linear-gradient(90deg, #b8860b, #d4af37, #f1c40f)',
+                        borderRadius: 99,
+                        transition: 'width 0.5s ease',
+                      }} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Leyendo ahora */}
+                {librosLeyendo.length > 0 && (
+                  <>
+                    <hr className="my-3 opacity-10" />
+                    <div className="text-start">
+                      <p className="small text-muted mb-2 fw-bold text-uppercase" style={{ letterSpacing: '0.8px', fontSize: '0.65rem' }}>
+                        📖 Leyendo ahora
+                      </p>
+                      <div className="d-flex flex-column gap-2">
+                        {librosLeyendo.map(libro => (
+                          <div key={libro.id} className="d-flex gap-2 align-items-center">
+                            {libro.portada_url ? (
+                              <Image
+                                src={libro.portada_url.replace('http://', 'https://')}
+                                alt={libro.titulo}
+                                width={32}
+                                height={46}
+                                style={{ objectFit: 'cover', borderRadius: 4, flexShrink: 0 }}
+                              />
+                            ) : (
+                              <div style={{ width: 32, height: 46, background: 'rgba(212,175,55,0.1)', borderRadius: 4, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem' }}>📚</div>
+                            )}
+                            <div className="text-start" style={{ minWidth: 0 }}>
+                              <div className="text-white fw-bold text-truncate" style={{ fontSize: '0.75rem' }}>{libro.titulo}</div>
+                              <div className="text-muted text-truncate" style={{ fontSize: '0.65rem' }}>{libro.autor}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {citaDelDia && (
                   <>

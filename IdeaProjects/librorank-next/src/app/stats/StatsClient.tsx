@@ -149,7 +149,7 @@ export default function StatsClient({ generos, moods, paginas, autorMasLeido, me
         <div className="col-md-6">
           <div className="card p-4 h-100">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h5 className="font-title mb-0" style={{ color: 'var(--accent-gold)' }}>🎭 Por mood</h5>
+              <h5 className="font-title mb-0" style={{ color: 'var(--accent-gold)' }}>🎨 Por mood</h5>
             </div>
             {Object.keys(moods).length === 0 ? (
               <p className="text-muted small">Aún no hay datos. Asigná moods a tus libros.</p>

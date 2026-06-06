@@ -100,7 +100,7 @@ export default function FeedClient({ feedInicial, usuarioId }: Props) {
                 )}
 
                 {act.portada_url && (
-                  <Image src={act.portada_url} alt={act.titulo || ''} width={40} height={60} style={{ borderRadius: 6 }} className="mb-2" />
+                  <Image src={act.portada_url} alt={act.titulo || ''} width={80} height={116} style={{ borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }} className="mb-2" />
                 )}
 
                 <div className="feed-actions mt-2 pt-2 border-top border-secondary d-flex gap-4" style={{ opacity: 0.7 }}>

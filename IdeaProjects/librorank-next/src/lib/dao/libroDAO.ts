@@ -85,6 +85,13 @@ export async function existeRegistroPrevio(usuarioId: number, titulo: string, au
   return (rows[0]?.total ?? 0) > 0
 }
 
+export async function obtenerLeyendoAhora(usuarioId: number): Promise<Libro[]> {
+  return query<Libro>(
+    `SELECT * FROM libros_usuario WHERE usuario_id=? AND UPPER(estado)='LEYENDO' ORDER BY id DESC LIMIT 3`,
+    [usuarioId]
+  )
+}
+
 export async function obtenerUltimasLecturas(usuarioId: number, limite = 5): Promise<Libro[]> {
   return query<Libro>(
     `SELECT * FROM libros_usuario WHERE usuario_id=? AND UPPER(estado) IN ('LEIDO','LEÍDO') ORDER BY id DESC LIMIT ?`,

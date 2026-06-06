@@ -13,9 +13,17 @@ interface Props {
 export default function RetosClient({ retos: retosIni, misLibros, usuarioId }: Props) {
   const [retos, setRetos] = useState(retosIni)
   const [showModal, setShowModal] = useState(false)
+  const [cargando, setCargando] = useState(false)
+
+  async function refrescarRetos() {
+    const res = await fetch('/api/retos')
+    if (res.ok) setRetos(await res.json())
+  }
 
   async function crearReto(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (cargando) return
+    setCargando(true)
     const fd = new FormData(e.currentTarget)
     const res = await fetch('/api/retos', {
       method: 'POST',
@@ -27,7 +35,8 @@ export default function RetosClient({ retos: retosIni, misLibros, usuarioId }: P
         fechaFin: fd.get('fechaFin'),
       }),
     })
-    if (res.ok) { setShowModal(false); window.location.reload() }
+    if (res.ok) { setShowModal(false); await refrescarRetos() }
+    setCargando(false)
   }
 
   async function unirse(retoId: number) {
@@ -36,7 +45,7 @@ export default function RetosClient({ retos: retosIni, misLibros, usuarioId }: P
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accion: 'unirse', retoId }),
     })
-    window.location.reload()
+    await refrescarRetos()
   }
 
   async function actualizarProgreso(retoId: number, progreso: number) {
@@ -45,7 +54,16 @@ export default function RetosClient({ retos: retosIni, misLibros, usuarioId }: P
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accion: 'actualizar', retoId, progreso }),
     })
-    window.location.reload()
+    // Actualizar estado local directamente, sin recargar
+    setRetos(prev => prev.map(r => {
+      if (r.id !== retoId) return r
+      return {
+        ...r,
+        participantes: r.participantes.map(p =>
+          p.usuario_id === usuarioId ? { ...p, progreso } : p
+        ),
+      }
+    }))
   }
 
   return (
@@ -273,8 +291,8 @@ export default function RetosClient({ retos: retosIni, misLibros, usuarioId }: P
                 />
               </div>
 
-              <button type="submit" className="btn-gold w-100 mt-2">
-                Crear reto
+              <button type="submit" className="btn-gold w-100 mt-2" disabled={cargando}>
+                {cargando ? 'Creando...' : 'Crear reto'}
               </button>
             </form>
           </div>

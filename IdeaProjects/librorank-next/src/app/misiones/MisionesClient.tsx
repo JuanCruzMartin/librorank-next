@@ -22,6 +22,7 @@ export default function MisionesClient({ misionesIniciales, puntos: puntosIni }:
   const [tab, setTab] = useState<TipoMision | 'todas'>('todas')
   const [reclamando, setReclamando] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; tipo: 'ok' | 'err' } | null>(null)
+  const [bannerAbierto, setBannerAbierto] = useState(false)
 
   const misionesFiltradas = tab === 'todas' ? misiones : misiones.filter(m => m.tipo === tab)
   const completadasSinReclamar = misiones.filter(m => m.completada && !m.reclamada).length
@@ -119,18 +120,35 @@ export default function MisionesClient({ misionesIniciales, puntos: puntosIni }:
       {/* ── CONTENIDO ── */}
       <div className="container py-5">
 
-        <BannerExplicativo
-          icon="🎯"
-          titulo="¿Cómo funcionan las misiones?"
-          descripcion="Completá objetivos de lectura y reclamá tus recompensas"
-          pasos={[
-            { icon: '📅', texto: 'Mensuales y semanales se renuevan cada período' },
-            { icon: '🏆', texto: 'Las permanentes son logros únicos para siempre' },
-            { icon: '🎁', texto: 'Cuando completás una, hacé clic en Reclamar' },
-            { icon: '⭐', texto: 'Cada misión suma puntos para subir de nivel' },
-          ]}
-          color="#27ae60"
-        />
+        {/* Banner colapsable */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <button
+            onClick={() => setBannerAbierto(p => !p)}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '0.5rem',
+              color: 'rgba(255,255,255,0.35)', fontSize: '0.72rem',
+              fontWeight: 700, padding: 0, marginBottom: bannerAbierto ? '0.6rem' : 0,
+            }}
+          >
+            <span style={{ transition: 'transform 0.2s', display: 'inline-block', transform: bannerAbierto ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
+            {bannerAbierto ? 'Ocultar ayuda' : '¿Cómo funcionan las misiones?'}
+          </button>
+          {bannerAbierto && (
+            <BannerExplicativo
+              icon="🎯"
+              titulo="¿Cómo funcionan las misiones?"
+              descripcion="Completá objetivos de lectura y reclamá tus recompensas"
+              pasos={[
+                { icon: '📅', texto: 'Mensuales y semanales se renuevan cada período' },
+                { icon: '🏆', texto: 'Las permanentes son logros únicos para siempre' },
+                { icon: '🎁', texto: 'Cuando completás una, hacé clic en Reclamar' },
+                { icon: '⭐', texto: 'Cada misión suma puntos para subir de nivel' },
+              ]}
+              color="#27ae60"
+            />
+          )}
+        </div>
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
