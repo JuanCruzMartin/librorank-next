@@ -4,6 +4,7 @@ import { getAuthUser } from '@/lib/auth'
 import { obtenerRankingLectores, getNivelLector } from '@/lib/dao/usuarioDAO'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import AppPreview from '@/components/AppPreview'
 
 export default async function LandingPage() {
   const user = await getAuthUser()
@@ -158,6 +159,9 @@ export default async function LandingPage() {
               ))}
             </div>
           </section>
+
+          {/* ── PREVIEW DE LA APP ── */}
+          <AppPreview />
 
           {/* ── ¿CÓMO FUNCIONA? ── */}
           <section id="como-funciona" style={{ paddingBottom: '4rem' }}>
