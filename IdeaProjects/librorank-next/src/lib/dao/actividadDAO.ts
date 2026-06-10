@@ -1,4 +1,4 @@
-import { query, execute } from '@/lib/db'
+import { query, queryOne, execute } from '@/lib/db'
 
 export interface ActividadSocial {
   id: number
@@ -35,6 +35,13 @@ export async function obtenerFeedAmigos(usuarioId: number): Promise<ActividadSoc
      WHERE a.usuario_id=? OR a.usuario_id IN (SELECT amigo_id FROM amigos WHERE usuario_id=?)
      ORDER BY a.fecha_creacion DESC LIMIT 50`,
     [usuarioId, usuarioId, usuarioId]
+  )
+}
+
+export async function obtenerAutorActividad(actividadId: number): Promise<{ usuario_id: number } | null> {
+  return queryOne<{ usuario_id: number }>(
+    'SELECT usuario_id FROM actividad_social WHERE id=?',
+    [actividadId]
   )
 }
 

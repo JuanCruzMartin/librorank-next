@@ -7,18 +7,32 @@ export interface Notificacion {
   mensaje: string
   leido: boolean
   fecha_creacion: string
+  actor_username: string | null
+  actor_avatar_url: string | null
 }
 
-export async function crearNotificacion(usuarioId: number, tipo: string, mensaje: string): Promise<void> {
+interface OpcionesNotif {
+  actorUsername?: string
+  actorAvatarUrl?: string | null
+}
+
+export async function crearNotificacion(
+  usuarioId: number,
+  tipo: string,
+  mensaje: string,
+  opts?: OpcionesNotif
+): Promise<void> {
   await execute(
-    'INSERT INTO notificaciones (usuario_id, tipo, mensaje) VALUES (?, ?, ?)',
-    [usuarioId, tipo, mensaje]
+    `INSERT INTO notificaciones (usuario_id, tipo, mensaje, actor_username, actor_avatar_url)
+     VALUES (?, ?, ?, ?, ?)`,
+    [usuarioId, tipo, mensaje, opts?.actorUsername ?? null, opts?.actorAvatarUrl ?? null]
   )
 }
 
 export async function obtenerNoLeidas(usuarioId: number): Promise<Notificacion[]> {
   return query<Notificacion>(
-    `SELECT id, usuario_id, tipo, mensaje, leido, fecha_creacion
+    `SELECT id, usuario_id, tipo, mensaje, leido, fecha_creacion,
+            actor_username, actor_avatar_url
      FROM notificaciones WHERE usuario_id=? AND leido=0
      ORDER BY fecha_creacion DESC LIMIT 30`,
     [usuarioId]
@@ -27,7 +41,8 @@ export async function obtenerNoLeidas(usuarioId: number): Promise<Notificacion[]
 
 export async function obtenerRecientes(usuarioId: number, limite = 20): Promise<Notificacion[]> {
   return query<Notificacion>(
-    `SELECT id, usuario_id, tipo, mensaje, leido, fecha_creacion
+    `SELECT id, usuario_id, tipo, mensaje, leido, fecha_creacion,
+            actor_username, actor_avatar_url
      FROM notificaciones WHERE usuario_id=?
      ORDER BY fecha_creacion DESC LIMIT ?`,
     [usuarioId, limite]

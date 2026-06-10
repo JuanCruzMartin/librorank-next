@@ -3,6 +3,7 @@ import { getAuthUserFromRequest } from '@/lib/auth'
 import * as amigoDAO from '@/lib/dao/amigoDAO'
 import { otorgarPuntos } from '@/lib/dao/libroDAO'
 import { registrar as registrarActividad } from '@/lib/dao/actividadDAO'
+import { crearNotificacion } from '@/lib/dao/notificacionDAO'
 import { verificarLogros } from '@/lib/dao/logroDAO'
 
 export async function GET(req: NextRequest) {
@@ -41,6 +42,13 @@ export async function POST(req: NextRequest) {
         await otorgarPuntos(user.id, 15, 'Nueva conexión de lectura')
         await registrarActividad(user.id, 'AMIGO', Number(amigoId), 'Se conectó con un nuevo lector')
         await verificarLogros(user.id)
+        // Notificar al usuario seguido (fire-and-forget)
+        crearNotificacion(
+          Number(amigoId),
+          'NUEVO_SEGUIDOR',
+          `@${user.username} empezó a seguirte`,
+          { actorUsername: user.username, actorAvatarUrl: user.avatarUrl }
+        ).catch(() => {})
       }
       return NextResponse.json({ ok })
     }

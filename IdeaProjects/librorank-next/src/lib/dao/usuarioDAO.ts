@@ -1,4 +1,5 @@
 import { query, queryOne, execute } from '@/lib/db'
+import { crearNotificacion } from './notificacionDAO'
 
 export interface Usuario {
   id: number
@@ -170,6 +171,23 @@ export async function actualizarRacha(usuarioId: number): Promise<RachaResult | 
      WHERE id = ?`,
     [nuevaRacha, hoy, escudosRestantes, bonusPts, usuarioId]
   )
+
+  // Notificación del sistema para milestones de racha
+  if (milestoneAlcanzado) {
+    const emoji = milestoneAlcanzado >= 100 ? '🔥🔥🔥' : milestoneAlcanzado >= 30 ? '🔥🔥' : '🔥'
+    crearNotificacion(
+      usuarioId,
+      'MILESTONE_RACHA',
+      `${emoji} ¡${milestoneAlcanzado} días seguidos leyendo! Ganaste +${bonusPts} puntos bonus`
+    ).catch(() => {})
+  }
+  if (escudoGanado) {
+    crearNotificacion(
+      usuarioId,
+      'ESCUDO_GANADO',
+      `🛡️ ¡Ganaste un escudo de racha! Tenés ${escudosRestantes}/2 escudos`
+    ).catch(() => {})
+  }
 
   return { nuevaRacha, escudoUsado, escudosRestantes, escudoGanado, milestoneAlcanzado, bonusPts }
 }

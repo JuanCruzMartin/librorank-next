@@ -1,4 +1,4 @@
-import { query, execute } from '@/lib/db'
+import { query, queryOne, execute } from '@/lib/db'
 import { registrar as registrarActividad } from './actividadDAO'
 
 export interface ParticipanteReto {
@@ -32,6 +32,13 @@ export async function crearReto(
     return true
   }
   return false
+}
+
+export async function obtenerCreadorReto(retoId: number): Promise<number | null> {
+  const row = await queryOne<{ creador_id: number }>(
+    'SELECT creador_id FROM retos_amigos WHERE id=?', [retoId]
+  )
+  return row?.creador_id ?? null
 }
 
 export async function unirseAReto(retoId: number, usuarioId: number): Promise<boolean> {

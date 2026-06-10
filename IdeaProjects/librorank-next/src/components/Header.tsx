@@ -10,6 +10,31 @@ interface Notificacion {
   mensaje: string
   leido: boolean
   fecha_creacion: string
+  actor_username: string | null
+  actor_avatar_url: string | null
+}
+
+function tipoInfo(tipo: string): { emoji: string; color: string } {
+  switch (tipo) {
+    case 'LIKE':           return { emoji: '👍', color: '#5dade2' }
+    case 'NUEVO_SEGUIDOR': return { emoji: '👤', color: '#27ae60' }
+    case 'RETO_UNIDO':     return { emoji: '⚔️', color: '#e74c3c' }
+    case 'MILESTONE_RACHA':return { emoji: '🔥', color: '#ff6b35' }
+    case 'ESCUDO_GANADO':  return { emoji: '🛡️', color: '#9b59b6' }
+    default:               return { emoji: '🔔', color: '#d4af37' }
+  }
+}
+
+function tiempoRelativo(fecha: string): string {
+  const diff = Date.now() - new Date(fecha).getTime()
+  const min = Math.floor(diff / 60000)
+  if (min < 1) return 'ahora'
+  if (min < 60) return `hace ${min}m`
+  const hs = Math.floor(min / 60)
+  if (hs < 24) return `hace ${hs}h`
+  const dias = Math.floor(hs / 24)
+  if (dias < 7) return `hace ${dias}d`
+  return new Date(fecha).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
 }
 
 interface HeaderProps {
@@ -200,21 +225,57 @@ export default function Header({ user }: HeaderProps) {
                     🔔 Notificaciones
                   </div>
                   {notifs.length === 0 ? (
-                    <div style={{ padding: '16px 14px', color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', textAlign: 'center' }}>
-                      Sin notificaciones
+                    <div style={{ padding: '24px 14px', color: 'rgba(255,255,255,0.35)', fontSize: '0.82rem', textAlign: 'center' }}>
+                      <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>🔔</div>
+                      Todo tranquilo por acá
                     </div>
                   ) : (
-                    <div style={{ maxHeight: 320, overflowY: 'auto' }}>
-                      {notifs.map(n => (
-                        <div key={n.id} style={{
-                          padding: '10px 14px',
-                          borderBottom: '1px solid rgba(255,255,255,0.05)',
-                          background: n.leido ? 'transparent' : 'rgba(212,175,55,0.06)',
-                        }}>
-                          <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.85)', lineHeight: 1.4 }}>{n.mensaje}</div>
-                          <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>{formatFecha(n.fecha_creacion)}</div>
-                        </div>
-                      ))}
+                    <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+                      {notifs.map(n => {
+                        const { emoji, color } = tipoInfo(n.tipo)
+                        return (
+                          <div key={n.id} style={{
+                            padding: '10px 14px',
+                            borderBottom: '1px solid rgba(255,255,255,0.05)',
+                            background: n.leido ? 'transparent' : 'rgba(255,255,255,0.04)',
+                            display: 'flex', gap: '10px', alignItems: 'flex-start',
+                          }}>
+                            {/* Avatar del actor o emoji del tipo */}
+                            <div style={{ flexShrink: 0, position: 'relative' }}>
+                              {n.actor_avatar_url ? (
+                                <img
+                                  src={n.actor_avatar_url}
+                                  alt={n.actor_username || ''}
+                                  style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: `1.5px solid ${color}` }}
+                                  onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                                />
+                              ) : (
+                                <div style={{ width: 32, height: 32, borderRadius: '50%', background: `${color}20`, border: `1.5px solid ${color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem' }}>
+                                  {emoji}
+                                </div>
+                              )}
+                              {n.actor_avatar_url && (
+                                <span style={{ position: 'absolute', bottom: -2, right: -2, fontSize: '0.65rem', lineHeight: 1 }}>{emoji}</span>
+                              )}
+                            </div>
+
+                            {/* Texto */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: '0.76rem', color: n.leido ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.92)', lineHeight: 1.45 }}>
+                                {n.mensaje}
+                              </div>
+                              <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)', marginTop: 3 }}>
+                                {tiempoRelativo(n.fecha_creacion)}
+                              </div>
+                            </div>
+
+                            {/* Punto no leída */}
+                            {!n.leido && (
+                              <div style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0, marginTop: 4 }} />
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
