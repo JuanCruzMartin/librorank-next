@@ -63,6 +63,7 @@ export default function PerfilClient({
   const [cropFile, setCropFile] = useState<File | null>(null)
   const [cropPreviewUrl, setCropPreviewUrl] = useState<string | null>(null)
   const [cropPos, setCropPos] = useState({ x: 50, y: 50 })
+  const [avatarHover, setAvatarHover] = useState(false)
   const isDragging = useRef(false)
   const lastDrag = useRef({ x: 0, y: 0 })
 
@@ -178,21 +179,33 @@ export default function PerfilClient({
                 onError={e => { (e.target as HTMLImageElement).src = '/img/personajes/personaje_1.png' }}
               />
               {esMiPerfil && (
-                <label style={{
-                  position: 'absolute', bottom: 0, right: 0,
-                  background: 'linear-gradient(135deg,#d4af37,#f1c40f)',
-                  borderRadius: '50%',
-                  width: 40, height: 40, display: 'flex',
-                  alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', fontSize: '1.1rem',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
-                  border: '2px solid #1a1614',
-                  transition: 'transform 0.15s',
-                }}
-                  onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.15)')}
-                  onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+                <label
+                  style={{
+                    position: 'absolute', inset: 0,
+                    borderRadius: '50%',
+                    background: avatarHover ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0)',
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                    gap: 4,
+                  }}
+                  onMouseEnter={() => setAvatarHover(true)}
+                  onMouseLeave={() => setAvatarHover(false)}
                 >
-                  📷
+                  <span style={{
+                    fontSize: '1.8rem', lineHeight: 1,
+                    filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.9))',
+                    opacity: avatarHover ? 1 : 0,
+                    transition: 'opacity 0.2s',
+                  }}>📷</span>
+                  <span style={{
+                    fontSize: '0.62rem', fontWeight: 700, color: '#fff',
+                    textTransform: 'uppercase', letterSpacing: '0.5px',
+                    textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                    opacity: avatarHover ? 1 : 0,
+                    transition: 'opacity 0.2s',
+                  }}>Cambiar foto</span>
                   <input type="file" accept="image/*" className="d-none" onChange={abrirCrop} />
                 </label>
               )}
