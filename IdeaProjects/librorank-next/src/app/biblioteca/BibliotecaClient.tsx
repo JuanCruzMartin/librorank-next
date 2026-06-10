@@ -894,9 +894,9 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                     <div style={{ fontSize: '0.8rem' }}>Escribí al menos 3 letras para buscar</div>
                     <button
                       onClick={() => setModoManual(true)}
-                      style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '0.72rem', cursor: 'pointer', marginTop: '0.75rem', textDecoration: 'underline' }}
+                      style={{ background: 'none', border: 'none', color: '#d4af37', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', marginTop: '0.75rem' }}
                     >
-                      O agregá un libro manualmente
+                      ✍️ Agregar manualmente
                     </button>
                   </div>
                 )}
