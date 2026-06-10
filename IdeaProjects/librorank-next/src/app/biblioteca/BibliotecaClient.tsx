@@ -39,6 +39,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   const [sugerenciasHeader, setSugerenciasHeader] = useState<Sugerencia[]>([])
   const [editando, setEditando] = useState<Libro | null>(null)
   const [showModal, setShowModal] = useState(false)
+  const [modoManual, setModoManual] = useState(false)
   const [mensaje, setMensaje] = useState('')
   const [mensajeEdit, setMensajeEdit] = useState('')
   const [guardando, setGuardando] = useState(false)
@@ -118,6 +119,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
     setBusquedaHeader('')
     setSugerencias([])
     setSugerenciasHeader([])
+    setModoManual(false)
     // Agregar el libro al estado local sin recargar
     const nuevoLibro: Libro = {
       id: json.id,
@@ -678,60 +680,227 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
 
       {/* Modal: Agregar libro — solo en mi propia biblioteca */}
       {!soloLectura && showModal && (
-        <div className="modal show d-block" tabIndex={-1} style={{ background: 'rgba(0,0,0,0.7)' }}>
+        <div className="modal show d-block" tabIndex={-1} style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
           <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content" style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-gold)', borderRadius: 20 }}>
-              <div className="modal-header border-0">
-                <h5 className="modal-title font-title" style={{ color: 'var(--accent-gold)' }}>Agregar Libro</h5>
-                <button className="btn-close btn-close-white" onClick={() => { setShowModal(false); setSugerencias([]); setBusquedaModal('') }}></button>
-              </div>
-              <div className="modal-body py-4">
-                <div className="position-relative mb-4">
-                  <label className="form-label text-gold fw-bold mb-2" style={{ fontSize: '0.85rem', letterSpacing: '0.5px' }}>BUSCAR EN GOOGLE BOOKS</label>
-                  <div className="input-group">
-                    <input type="text" className="form-control" placeholder="Escribe el título..." value={busquedaModal}
-                      onChange={e => { setBusquedaModal(e.target.value); buscarLibros(e.target.value) }} />
-                  </div>
-                  {sugerencias.length > 0 && (
-                    <div className="position-absolute w-100" style={{ background: '#2c2724', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 8, top: '100%', zIndex: 999, maxHeight: 300, overflowY: 'auto' }}>
-                      {sugerencias.map((s, i) => (
-                        <button key={i} onClick={() => seleccionarSugerencia(s)}
-                          className="d-flex gap-2 align-items-center w-100 text-start p-2" style={{ background: 'none', border: 'none', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                          {s.portada && <img src={s.portada} alt={s.titulo} style={{ height: 50, borderRadius: 4 }} />}
-                          <div><div className="fw-bold">{s.titulo}</div><div className="text-muted small">{s.autor}</div></div>
-                        </button>
-                      ))}
-                    </div>
+            <div className="modal-content" style={{ background: '#1a1714', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 20 }}>
+
+              {/* Header */}
+              <div className="modal-header border-0 pb-0">
+                <div>
+                  <h5 className="modal-title font-title mb-0" style={{ color: 'var(--accent-gold)' }}>
+                    {modoManual ? '✍️ Agregar manualmente' : '📚 Agregar libro'}
+                  </h5>
+                  {modoManual && (
+                    <button
+                      onClick={() => { setModoManual(false); setFormNuevo({ titulo: '', autor: '', anio: '', paginas: '', portada_url: '', genero: '' }); setBusquedaModal('') }}
+                      style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', padding: 0, cursor: 'pointer', marginTop: 4 }}
+                    >
+                      ← Volver a buscar
+                    </button>
                   )}
                 </div>
-                <form id="formNuevo" onSubmit={agregarLibro}>
-                  <div className="row g-3">
-                    <div className="col-12"><label className="form-label text-muted">Título *</label><input name="titulo" type="text" className="form-control" required value={formNuevo.titulo} onChange={e => setFormNuevo(p => ({...p, titulo: e.target.value}))} /></div>
-                    <div className="col-12"><label className="form-label text-muted">Autor *</label><input name="autor" type="text" className="form-control" required value={formNuevo.autor} onChange={e => setFormNuevo(p => ({...p, autor: e.target.value}))} /></div>
-                    <div className="col-6"><label className="form-label text-muted">Año</label><input name="anio" type="number" className="form-control" value={formNuevo.anio} onChange={e => setFormNuevo(p => ({...p, anio: e.target.value}))} /></div>
-                    <div className="col-6"><label className="form-label text-muted">Páginas</label><input name="paginas" type="number" className="form-control" value={formNuevo.paginas} onChange={e => setFormNuevo(p => ({...p, paginas: e.target.value}))} /></div>
-                    <div className="col-12"><label className="form-label text-muted">URL de portada</label><input name="portada_url" type="text" className="form-control" value={formNuevo.portada_url} onChange={e => setFormNuevo(p => ({...p, portada_url: e.target.value}))} /></div>
-                    <div className="col-4">
-                      <label className="form-label text-muted">Estado</label>
-                      <select name="estado" className="form-select">{ESTADOS.map(e => <option key={e} value={e}>{e}</option>)}</select>
+                <button
+                  className="btn-close btn-close-white"
+                  onClick={() => { setShowModal(false); setSugerencias([]); setBusquedaModal(''); setModoManual(false); setFormNuevo({ titulo: '', autor: '', anio: '', paginas: '', portada_url: '', genero: '' }) }}
+                />
+              </div>
+
+              <div className="modal-body pt-3 pb-4">
+
+                {/* ── Modo búsqueda ── */}
+                {!modoManual && (
+                  <div className="position-relative mb-3">
+                    <label className="form-label fw-bold mb-2" style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                      Buscar en Google Books / Open Library
+                    </label>
+                    <div className="input-group">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Escribí el título o autor..."
+                        value={busquedaModal}
+                        onChange={e => { setBusquedaModal(e.target.value); buscarLibros(e.target.value) }}
+                        autoFocus
+                      />
                     </div>
-                    <div className="col-4">
-                      <label className="form-label text-muted">Género</label>
-                      <select name="genero" className="form-select" value={formNuevo.genero} onChange={e => setFormNuevo(p => ({...p, genero: e.target.value}))}>
-                        <option value="">Sin género</option>
-                        {GENEROS.map(g => <option key={g} value={g}>{g}</option>)}
-                      </select>
-                    </div>
-                    <div className="col-4">
-                      <label className="form-label text-muted">Mood</label>
-                      <select name="mood" className="form-select"><option value="">Sin mood</option>{MOODS.map(m => <option key={m} value={m}>{m}</option>)}</select>
-                    </div>
+
+                    {/* Resultados */}
+                    {sugerencias.length > 0 && (
+                      <div className="position-absolute w-100" style={{ background: '#2c2724', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 10, top: '100%', zIndex: 999, maxHeight: 320, overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.6)', marginTop: 4 }}>
+                        {sugerencias.map((s, i) => (
+                          <button key={i} onClick={() => seleccionarSugerencia(s)}
+                            style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', width: '100%', padding: '0.65rem 0.75rem', background: 'none', border: 'none', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', textAlign: 'left' }}
+                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,175,55,0.08)')}
+                            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                          >
+                            {s.portada
+                              ? <img src={s.portada} alt={s.titulo} style={{ width: 40, height: 58, objectFit: 'cover', borderRadius: 5, flexShrink: 0 }} />
+                              : <div style={{ width: 40, height: 58, background: '#36302c', borderRadius: 5, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>📚</div>
+                            }
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontWeight: 700, fontSize: '0.85rem', lineHeight: 1.3 }}>{s.titulo}</div>
+                              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>{s.autor}</div>
+                              {s.anio && <div style={{ fontSize: '0.65rem', color: 'rgba(212,175,55,0.6)', marginTop: 2 }}>{s.anio}</div>}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* "No lo encontrás?" — aparece cuando buscaste pero no hay resultados */}
+                    {busquedaModal.length >= 3 && sugerencias.length === 0 && (
+                      <div style={{
+                        marginTop: '0.75rem',
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px dashed rgba(255,255,255,0.15)',
+                        borderRadius: 10,
+                        padding: '0.85rem 1rem',
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem',
+                      }}>
+                        <div>
+                          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff' }}>¿No encontrás tu libro?</div>
+                          <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                            Puede ser que no esté en el catálogo. Podés cargarlo a mano.
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setModoManual(true)
+                            // Precargar el título con lo que ya buscó
+                            setFormNuevo(p => ({ ...p, titulo: busquedaModal }))
+                          }}
+                          style={{
+                            background: 'rgba(212,175,55,0.12)',
+                            border: '1px solid rgba(212,175,55,0.35)',
+                            borderRadius: 8, padding: '0.45rem 0.9rem',
+                            fontSize: '0.78rem', fontWeight: 700, color: '#d4af37',
+                            cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap',
+                          }}
+                        >
+                          ✍️ Agregar manualmente
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <div className="modal-footer border-0 pt-4 px-0">
-                    <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setShowModal(false)}>Cerrar</button>
-                    <button type="submit" className="btn btn-gold btn-sm px-4">Agregar a mi biblioteca</button>
+                )}
+
+                {/* ── Modo manual: banner informativo ── */}
+                {modoManual && (
+                  <div style={{
+                    background: 'rgba(212,175,55,0.06)',
+                    border: '1px solid rgba(212,175,55,0.2)',
+                    borderRadius: 10, padding: '0.65rem 1rem',
+                    marginBottom: '1.25rem',
+                    fontSize: '0.78rem', color: 'rgba(255,255,255,0.55)',
+                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                  }}>
+                    <span style={{ fontSize: '1.1rem' }}>💡</span>
+                    Completá los datos que tengas. Solo el título y el autor son obligatorios.
+                    Para la portada podés pegar una URL de imagen (ej: de Google Imágenes).
                   </div>
-                </form>
+                )}
+
+                {/* ── Formulario (siempre visible en modo manual, o después de seleccionar) ── */}
+                {(modoManual || formNuevo.titulo) && (
+                  <form id="formNuevo" onSubmit={agregarLibro}>
+                    <div className="row g-3">
+                      <div className="col-12">
+                        <label className="form-label text-muted" style={{ fontSize: '0.8rem' }}>Título *</label>
+                        <input name="titulo" type="text" className="form-control" required
+                          value={formNuevo.titulo} onChange={e => setFormNuevo(p => ({...p, titulo: e.target.value}))} />
+                      </div>
+                      <div className="col-12">
+                        <label className="form-label text-muted" style={{ fontSize: '0.8rem' }}>Autor *</label>
+                        <input name="autor" type="text" className="form-control" required
+                          value={formNuevo.autor} onChange={e => setFormNuevo(p => ({...p, autor: e.target.value}))} />
+                      </div>
+                      <div className="col-6">
+                        <label className="form-label text-muted" style={{ fontSize: '0.8rem' }}>Año de publicación</label>
+                        <input name="anio" type="number" className="form-control" placeholder="ej: 1985"
+                          value={formNuevo.anio} onChange={e => setFormNuevo(p => ({...p, anio: e.target.value}))} />
+                      </div>
+                      <div className="col-6">
+                        <label className="form-label text-muted" style={{ fontSize: '0.8rem' }}>Cantidad de páginas</label>
+                        <input name="paginas" type="number" className="form-control" placeholder="ej: 320"
+                          value={formNuevo.paginas} onChange={e => setFormNuevo(p => ({...p, paginas: e.target.value}))} />
+                      </div>
+
+                      {/* URL de portada — solo visible en modo manual */}
+                      {modoManual && (
+                        <div className="col-12">
+                          <label className="form-label text-muted" style={{ fontSize: '0.8rem' }}>
+                            URL de portada <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>(opcional)</span>
+                          </label>
+                          <input name="portada_url" type="url" className="form-control"
+                            placeholder="https://... (pegá una imagen de Google)"
+                            value={formNuevo.portada_url} onChange={e => setFormNuevo(p => ({...p, portada_url: e.target.value}))} />
+                          {formNuevo.portada_url && (
+                            <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <img
+                                src={formNuevo.portada_url}
+                                alt="preview"
+                                style={{ height: 60, borderRadius: 4, objectFit: 'cover' }}
+                                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                              />
+                              <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)' }}>Vista previa de portada</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Campo portada oculto en modo búsqueda (viene del formulario controlado) */}
+                      {!modoManual && (
+                        <input name="portada_url" type="hidden" value={formNuevo.portada_url} />
+                      )}
+
+                      <div className="col-4">
+                        <label className="form-label text-muted" style={{ fontSize: '0.8rem' }}>Estado</label>
+                        <select name="estado" className="form-select">
+                          {ESTADOS.map(e => <option key={e} value={e}>{e}</option>)}
+                        </select>
+                      </div>
+                      <div className="col-4">
+                        <label className="form-label text-muted" style={{ fontSize: '0.8rem' }}>Género</label>
+                        <select name="genero" className="form-select" value={formNuevo.genero} onChange={e => setFormNuevo(p => ({...p, genero: e.target.value}))}>
+                          <option value="">Sin género</option>
+                          {GENEROS.map(g => <option key={g} value={g}>{g}</option>)}
+                        </select>
+                      </div>
+                      <div className="col-4">
+                        <label className="form-label text-muted" style={{ fontSize: '0.8rem' }}>Mood</label>
+                        <select name="mood" className="form-select">
+                          <option value="">Sin mood</option>
+                          {MOODS.map(m => <option key={m} value={m}>{m}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.5rem' }}>
+                      <button type="button" className="btn btn-outline-secondary btn-sm"
+                        onClick={() => { setShowModal(false); setSugerencias([]); setBusquedaModal(''); setModoManual(false); setFormNuevo({ titulo: '', autor: '', anio: '', paginas: '', portada_url: '', genero: '' }) }}>
+                        Cancelar
+                      </button>
+                      <button type="submit" className="btn btn-gold btn-sm px-4">
+                        Agregar a mi biblioteca
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* Estado inicial: solo el buscador sin resultados aún */}
+                {!modoManual && !formNuevo.titulo && busquedaModal.length < 3 && (
+                  <div style={{ textAlign: 'center', padding: '1.5rem 0 0.5rem', color: 'rgba(255,255,255,0.25)' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔍</div>
+                    <div style={{ fontSize: '0.8rem' }}>Escribí al menos 3 letras para buscar</div>
+                    <button
+                      onClick={() => setModoManual(true)}
+                      style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: '0.72rem', cursor: 'pointer', marginTop: '0.75rem', textDecoration: 'underline' }}
+                    >
+                      O agregá un libro manualmente
+                    </button>
+                  </div>
+                )}
+
               </div>
             </div>
           </div>
