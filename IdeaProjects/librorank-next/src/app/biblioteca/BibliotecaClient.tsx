@@ -8,6 +8,7 @@ import type { Usuario } from '@/lib/dao/usuarioDAO'
 import BannerExplicativo from '@/components/BannerExplicativo'
 import Toast from '@/components/Toast'
 import { GENEROS } from '@/lib/generos'
+import { getLiga } from '@/lib/ligas'
 
 const ESTADOS = ['PENDIENTE', 'LEYENDO', 'LEIDO', 'PAUSA']
 const MOODS = ['Relajado', 'Aventurero', 'Emotivo', 'Intelectual', 'Nostálgico', 'Inspirador', 'Oscuro', 'Divertido']
@@ -42,6 +43,8 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   const [mensajeEdit, setMensajeEdit] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [toast, setToast] = useState<{ puntos: number; mensaje: string } | null>(null)
+  const [ligaToast, setLigaToast] = useState<{ nombre: string; emoji: string; color: string } | null>(null)
+  const [puntosLocales, setPuntosLocales] = useState(usuario.puntos)
   const [libroAEliminar, setLibroAEliminar] = useState<Libro | null>(null)
   const [eliminando, setEliminando] = useState(false)
   const [imgErrors, setImgErrors] = useState<Set<number>>(new Set())
@@ -64,7 +67,15 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   }, [])
 
   function mostrarToast(puntos: number, mensaje: string) {
-    if (puntos > 0) setToast({ puntos, mensaje })
+    if (puntos <= 0) return
+    // Detectar cambio de liga
+    const ligaAntes = getLiga(puntosLocales)
+    const ligaDespues = getLiga(puntosLocales + puntos)
+    setPuntosLocales(p => p + puntos)
+    setToast({ puntos, mensaje })
+    if (ligaDespues.key !== ligaAntes.key) {
+      setTimeout(() => setLigaToast({ nombre: ligaDespues.nombre, emoji: ligaDespues.emoji, color: ligaDespues.color }), 1200)
+    }
   }
 
   const buscarLibros = useCallback(async (q: string) => {
@@ -226,6 +237,31 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
           mensaje={toast.mensaje}
           onClose={() => setToast(null)}
         />
+      )}
+
+      {/* Toast de subida de liga */}
+      {ligaToast && (
+        <div
+          style={{
+            position: 'fixed', bottom: 90, right: 20, zIndex: 9998,
+            background: '#0f0e0c',
+            border: `2px solid ${ligaToast.color}`,
+            borderRadius: 18, padding: '1.1rem 1.5rem',
+            boxShadow: `0 8px 40px ${ligaToast.color}55`,
+            display: 'flex', alignItems: 'center', gap: '1rem',
+            maxWidth: 300,
+            animation: 'slideInRight 0.4s cubic-bezier(.17,.67,.35,1.2)',
+          }}
+        >
+          <style>{`@keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
+          <div style={{ fontSize: '2.2rem', lineHeight: 1 }}>{ligaToast.emoji}</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.6rem', fontWeight: 700, color: ligaToast.color, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 2 }}>¡Subiste de liga!</div>
+            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#fff' }}>Liga {ligaToast.nombre}</div>
+            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>Seguís subiendo 🚀</div>
+          </div>
+          <button onClick={() => setLigaToast(null)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: '1rem', alignSelf: 'flex-start', padding: '0.2rem' }}>✕</button>
+        </div>
       )}
 
       {/* Modal confirmar eliminación */}
@@ -566,6 +602,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                   style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', aspectRatio: '2/3', cursor: 'pointer', boxShadow: hovered ? '0 12px 40px rgba(0,0,0,0.7)' : '0 2px 10px rgba(0,0,0,0.4)', transform: hovered ? 'translateY(-6px) scale(1.02)' : 'none', transition: 'all 0.22s ease' }}
                   onMouseEnter={() => setHoveredId(libro.id)}
                   onMouseLeave={() => setHoveredId(null)}
+                  onClick={() => !soloLectura && setEditando(libro)}
                 >
                   {/* Portada */}
                   {libro.portada_url && !imgErrors.has(libro.id) ? (
@@ -612,6 +649,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                     <div style={{ display: 'flex', gap: '0.35rem' }}>
                       {libro.libro_global_id && (
                         <Link href={`/libro/${libro.libro_global_id}`}
+                          onClick={e => e.stopPropagation()}
                           style={{ flex: 1, background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 6, padding: '0.3rem 0.25rem', fontSize: '0.6rem', fontWeight: 700, color: '#d4af37', textDecoration: 'none', textAlign: 'center' }}>
                           🌐 Ver
                         </Link>
@@ -619,10 +657,11 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                       {!soloLectura && (
                         <>
                           <Link href={`/diario?libroId=${libro.id}`}
+                            onClick={e => e.stopPropagation()}
                             style={{ flex: 1, background: '#d4af37', borderRadius: 6, padding: '0.3rem 0.25rem', fontSize: '0.6rem', fontWeight: 700, color: '#000', textDecoration: 'none', textAlign: 'center' }}>
                             📖 Diario
                           </Link>
-                          <button onClick={() => setEditando(libro)}
+                          <button onClick={e => { e.stopPropagation(); setEditando(libro) }}
                             style={{ flex: 1, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '0.3rem 0.25rem', fontSize: '0.6rem', fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
                             ✏️ Editar
                           </button>

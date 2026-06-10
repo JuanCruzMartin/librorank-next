@@ -9,6 +9,7 @@ import { obtenerLeyendoAhora, contarLeidosEsteAnio } from '@/lib/dao/libroDAO'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import FeedClient from './FeedClient'
+import LigaNotif from '@/components/LigaNotif'
 
 
 export default async function HomePage() {
@@ -28,6 +29,7 @@ export default async function HomePage() {
   return (
     <>
       <Header user={usuario} />
+      <LigaNotif puntos={usuario.puntos} />
       <main>
         <div className="container py-5">
           <div className="row g-4">
