@@ -21,6 +21,8 @@ function tipoInfo(tipo: string): { emoji: string; color: string } {
     case 'RETO_UNIDO':     return { emoji: '⚔️', color: '#e74c3c' }
     case 'MILESTONE_RACHA':return { emoji: '🔥', color: '#ff6b35' }
     case 'ESCUDO_GANADO':  return { emoji: '🛡️', color: '#9b59b6' }
+    case 'LIGA_SEMANAL':   return { emoji: '⚔️', color: '#d4af37' }
+    case 'RANKING':        return { emoji: '🏆', color: '#d4af37' }
     default:               return { emoji: '🔔', color: '#d4af37' }
   }
 }
@@ -66,6 +68,7 @@ export default function Header({ user }: HeaderProps) {
   const [noLeidas, setNoLeidas] = useState(0)
   const [notifAbierto, setNotifAbierto] = useState(false)
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const [misionesPendientes, setMisionesPendientes] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const isActive = (path: string) =>
@@ -80,11 +83,15 @@ export default function Header({ user }: HeaderProps) {
   // Cerrar menú al cambiar de ruta
   useEffect(() => { setMenuAbierto(false) }, [pathname])
 
-  // Cargar notificaciones
+  // Cargar notificaciones + misiones pendientes
   useEffect(() => {
     if (!user) return
     fetchNotifs()
-    const interval = setInterval(fetchNotifs, 120_000)
+    fetchMisionesPendientes()
+    const interval = setInterval(() => {
+      fetchNotifs()
+      fetchMisionesPendientes()
+    }, 120_000)
     return () => clearInterval(interval)
   }, [user])
 
@@ -106,6 +113,15 @@ export default function Header({ user }: HeaderProps) {
       const data = await res.json()
       setNotifs(data.notificaciones ?? [])
       setNoLeidas(data.total_no_leidas ?? 0)
+    } catch { /* silencioso */ }
+  }
+
+  async function fetchMisionesPendientes() {
+    try {
+      const res = await fetch('/api/misiones/pendientes')
+      if (!res.ok) return
+      const data = await res.json()
+      setMisionesPendientes(data.pendientes ?? 0)
     } catch { /* silencioso */ }
   }
 
@@ -158,11 +174,26 @@ export default function Header({ user }: HeaderProps) {
           {/* Nav desktop */}
           <nav className="header-nav-desktop">
             <ul className="d-flex list-unstyled gap-3 mb-0 align-items-center">
-              {NAV_ITEMS.map(item => (
-                <li key={item.href}>
-                  <Link href={item.href} className={isActive(item.href)}>{item.label}</Link>
-                </li>
-              ))}
+              {NAV_ITEMS.map(item => {
+                const esMisiones = item.href === '/misiones'
+                const tieneGlow = esMisiones && misionesPendientes > 0
+                return (
+                  <li key={item.href} style={{ position: 'relative' }}>
+                    <Link
+                      href={item.href}
+                      className={`${isActive(item.href)}${tieneGlow ? ' nav-mision-glow' : ''}`}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}
+                    >
+                      {item.label}
+                      {tieneGlow && (
+                        <span className="mision-glow-dot" title={`${misionesPendientes} recompensa${misionesPendientes !== 1 ? 's' : ''} por reclamar`}>
+                          {misionesPendientes}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                )
+              })}
             </ul>
           </nav>
 
@@ -370,28 +401,38 @@ export default function Header({ user }: HeaderProps) {
           {/* Items de nav */}
           <nav style={{ flex: 1 }}>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-              {NAV_ITEMS.map(item => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={() => setMenuAbierto(false)}
-                    style={{
-                      display: 'block',
-                      padding: '0.85rem 1rem',
-                      borderRadius: 10,
-                      fontWeight: 700,
-                      fontSize: '1rem',
-                      textDecoration: 'none',
-                      background: pathname.startsWith(item.href) ? 'rgba(212,175,55,0.12)' : 'transparent',
-                      color: pathname.startsWith(item.href) ? '#d4af37' : 'rgba(255,255,255,0.8)',
-                      borderLeft: pathname.startsWith(item.href) ? '3px solid #d4af37' : '3px solid transparent',
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
+              {NAV_ITEMS.map(item => {
+                const esMisiones = item.href === '/misiones'
+                const tieneGlow = esMisiones && misionesPendientes > 0
+                const activo = pathname.startsWith(item.href)
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setMenuAbierto(false)}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '0.85rem 1rem',
+                        borderRadius: 10,
+                        fontWeight: 700,
+                        fontSize: '1rem',
+                        textDecoration: 'none',
+                        background: tieneGlow ? 'rgba(212,175,55,0.08)' : activo ? 'rgba(212,175,55,0.12)' : 'transparent',
+                        color: activo || tieneGlow ? '#d4af37' : 'rgba(255,255,255,0.8)',
+                        borderLeft: activo ? '3px solid #d4af37' : tieneGlow ? '3px solid rgba(212,175,55,0.5)' : '3px solid transparent',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <span>{item.label}</span>
+                      {tieneGlow && (
+                        <span className="mision-glow-dot">
+                          {misionesPendientes}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                )
+              })}
               <li>
                 <Link
                   href="/perfil"

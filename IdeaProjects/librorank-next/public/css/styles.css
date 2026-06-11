@@ -1664,3 +1664,30 @@ textarea.form-control {
 
 
 .lector-row:hover { background: rgba(255,255,255,0.07) !important; }
+
+/* ── Misiones glow badge ── */
+@keyframes mision-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(212,175,55,0.85), 0 0 8px rgba(212,175,55,0.5); }
+  60%  { box-shadow: 0 0 0 7px rgba(212,175,55,0), 0 0 14px rgba(212,175,55,0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(212,175,55,0), 0 0 8px rgba(212,175,55,0.5); }
+}
+.mision-glow-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4af37, #f1c40f);
+  font-size: 0.55rem;
+  font-weight: 900;
+  color: #000;
+  margin-left: 4px;
+  animation: mision-pulse 1.4s ease-in-out infinite;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.nav-mision-glow {
+  color: #d4af37 !important;
+  text-shadow: 0 0 10px rgba(212,175,55,0.6);
+}

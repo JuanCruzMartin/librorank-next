@@ -4,6 +4,7 @@ import * as libroDAO from '@/lib/dao/libroDAO'
 import * as actividadDAO from '@/lib/dao/actividadDAO'
 import * as logroDAO from '@/lib/dao/logroDAO'
 import { actualizarRacha } from '@/lib/dao/usuarioDAO'
+import { notificarLigaSemanalSuperado } from '@/lib/dao/notificacionDAO'
 
 export async function GET(req: NextRequest) {
   const user = await getAuthUserFromRequest(req)
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
             await libroDAO.otorgarPuntos(user.id, 30, 'Libro marcado como LEÍDO al agregar')
             puntosGanados += 30
             await actividadDAO.registrar(user.id, 'LIBRO_LEIDO', nuevoId, titulo)
+            notificarLigaSemanalSuperado(user.id).catch(() => {})
             // Actualizar racha
             const rachaResult = await actualizarRacha(user.id)
             if (rachaResult) {
@@ -112,6 +114,7 @@ export async function POST(req: NextRequest) {
             await actividadDAO.registrar(user.id, 'LIBRO_LEIDO', Number(id), `Ha terminado de leer "${libroAnterior?.titulo}"`)
             puntosGanados += 30
             toastParts.push('📖 ¡Libro terminado!')
+            notificarLigaSemanalSuperado(user.id).catch(() => {})
             // Actualizar racha con escudos y milestones
             const rachaResult = await actualizarRacha(user.id)
             if (rachaResult) {
