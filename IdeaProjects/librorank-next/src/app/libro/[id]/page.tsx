@@ -50,10 +50,11 @@ export default async function LibroPage({ params }: Props) {
     )
   }
 
-  const notaMedia = libro.nota_media ? Math.round(libro.nota_media * 10) / 10 : null
+  const notaMedia = libro.nota_media ? Math.round(Number(libro.nota_media) * 10) / 10 : null
+  const totalLectores = Number(libro.total_lectores)
   const resenasConTexto = reviews.filter(r => r.resena?.trim())
-  const totalCalificaciones = reviews.filter(r => r.estrellas > 0).length
-  const maxDist = Math.max(...distribucion.map(d => d.cantidad), 1)
+  const totalCalificaciones = reviews.filter(r => Number(r.estrellas) > 0).length
+  const maxDist = distribucion.reduce((max, d) => Math.max(max, Number(d.cantidad)), 1)
 
   const estadoColor = (estado: string) => {
     if (estado === 'LEIDO')    return { bg: '#4cd137', color: '#000', label: 'Leído' }
@@ -110,7 +111,7 @@ export default async function LibroPage({ params }: Props) {
                       <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)' }}>📄 {libro.paginas} páginas</span>
                     )}
                     <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)' }}>
-                      👥 {libro.total_lectores} lector{libro.total_lectores !== 1 ? 'es' : ''} en LibroRank
+                      👥 {totalLectores} lector{totalLectores !== 1 ? 'es' : ''} en LibroRank
                     </span>
                   </div>
 
@@ -140,8 +141,8 @@ export default async function LibroPage({ params }: Props) {
                     {distribucion.length > 0 && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 180 }}>
                         {[5, 4, 3, 2, 1].map(n => {
-                          const d = distribucion.find(x => x.estrellas === n)
-                          const cant = d?.cantidad ?? 0
+                          const d = distribucion.find(x => Number(x.estrellas) === n)
+                          const cant = Number(d?.cantidad ?? 0)
                           const pct = Math.round((cant / maxDist) * 100)
                           return (
                             <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -150,7 +151,7 @@ export default async function LibroPage({ params }: Props) {
                               <div style={{ flex: 1, height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
                                 <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg,#b8860b,#d4af37)', borderRadius: 99, transition: 'width 0.5s ease' }} />
                               </div>
-                              <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)', width: 18 }}>{cant || ''}</span>
+                              <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)', width: 18 }}>{cant > 0 ? cant : ''}</span>
                             </div>
                           )
                         })}
