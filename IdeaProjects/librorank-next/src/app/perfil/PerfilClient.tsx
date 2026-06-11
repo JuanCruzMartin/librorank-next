@@ -21,6 +21,12 @@ interface WrappedData {
   primerLibro: { titulo: string; autor: string; portada_url: string } | null
   rachaActual: number
   paginasPorDia: number
+  diaFavorito: { dia: string; total: number } | null
+  anioAnterior: { total: number; diferencia: number }
+  objetivoAnual: number | null
+  progresoObjetivo: number | null
+  logrosEsteAnio: number
+  frase: string
 }
 
 const AVATARES = [
@@ -533,7 +539,7 @@ export default function PerfilClient({
                   <div style={{ background: 'linear-gradient(135deg,#0a0a0a,#1a1208,#0d1a0d)', borderRadius: 16, padding: '2rem', marginBottom: '1.5rem', border: '1px solid rgba(212,175,55,0.2)', textAlign: 'center' }}>
                     <p style={{ fontSize: '0.75rem', letterSpacing: 3, textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: '0.5rem' }}>Tu año en libros</p>
                     <h2 className="font-title" style={{ fontSize: '3.5rem', color: '#d4af37', margin: 0, lineHeight: 1 }}>{wrapped.anio}</h2>
-                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', marginTop: '0.5rem' }}>Un recorrido por tu año lector</p>
+                    <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.92rem', marginTop: '0.75rem', fontStyle: 'italic', maxWidth: 340, margin: '0.75rem auto 0' }}>{wrapped.frase}</p>
 
                     {/* Botón compartir */}
                     <a
@@ -627,6 +633,30 @@ export default function PerfilClient({
                       </p>
                     </div>
 
+                    {/* Día favorito */}
+                    <div className="card p-4" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(93,173,226,0.8)', margin: 0 }}>📅 Día favorito</p>
+                      <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#5dade2', lineHeight: 1 }}>
+                        {wrapped.diaFavorito?.dia ?? '—'}
+                      </div>
+                      <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+                        {wrapped.diaFavorito ? `terminaste ${wrapped.diaFavorito.total} libro${wrapped.diaFavorito.total !== 1 ? 's' : ''} este día` : 'Sin datos aún'}
+                      </p>
+                    </div>
+
+                    {/* Vs año anterior */}
+                    <div className="card p-4" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(212,175,55,0.8)', margin: 0 }}>📊 Vs {wrapped.anio - 1}</p>
+                      <div style={{ fontSize: '2.5rem', fontWeight: 900, lineHeight: 1, color: wrapped.anioAnterior.diferencia >= 0 ? '#4cd137' : '#e74c3c' }}>
+                        {wrapped.anioAnterior.diferencia >= 0 ? '+' : ''}{wrapped.anioAnterior.diferencia}
+                      </div>
+                      <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+                        {wrapped.anioAnterior.total > 0
+                          ? `vs ${wrapped.anioAnterior.total} libros el año pasado`
+                          : 'no hay datos del año anterior'}
+                      </p>
+                    </div>
+
                     {/* Libro más largo */}
                     {wrapped.libroMasLargo && (
                       <div className="card p-4" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -648,6 +678,44 @@ export default function PerfilClient({
                         </div>
                         <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>{wrapped.primerLibro.autor}</div>
                         <div style={{ fontSize: '0.72rem', color: '#af7ac5' }}>Con el que arrancaste {wrapped.anio} 🎉</div>
+                      </div>
+                    )}
+
+                    {/* Logros desbloqueados */}
+                    <div className="card p-4" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(212,175,55,0.8)', margin: 0 }}>🏆 Logros ganados</p>
+                      <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#d4af37', lineHeight: 1 }}>
+                        {wrapped.logrosEsteAnio}
+                      </div>
+                      <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+                        {wrapped.logrosEsteAnio === 0 ? '¡A conseguir logros!' : `logro${wrapped.logrosEsteAnio !== 1 ? 's' : ''} desbloqueado${wrapped.logrosEsteAnio !== 1 ? 's' : ''} este año`}
+                      </p>
+                    </div>
+
+                    {/* Objetivo anual */}
+                    {wrapped.objetivoAnual && wrapped.objetivoAnual > 0 && (
+                      <div className="card p-4" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', gridColumn: '1 / -1' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(212,175,55,0.8)', margin: 0 }}>🎯 Objetivo anual</p>
+                          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: (wrapped.progresoObjetivo ?? 0) >= 100 ? '#4cd137' : '#d4af37' }}>
+                            {wrapped.resumen.total} / {wrapped.objetivoAnual} libros
+                          </span>
+                        </div>
+                        <div style={{ height: 10, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden', marginTop: '0.25rem' }}>
+                          <div style={{
+                            height: '100%',
+                            width: `${wrapped.progresoObjetivo ?? 0}%`,
+                            background: (wrapped.progresoObjetivo ?? 0) >= 100
+                              ? 'linear-gradient(90deg,#27ae60,#2ecc71)'
+                              : 'linear-gradient(90deg,#b8860b,#d4af37)',
+                            borderRadius: 99, transition: 'width 0.6s ease',
+                          }} />
+                        </div>
+                        <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+                          {(wrapped.progresoObjetivo ?? 0) >= 100
+                            ? '🎉 ¡Objetivo cumplido!'
+                            : `${wrapped.progresoObjetivo ?? 0}% del objetivo — faltan ${wrapped.objetivoAnual - wrapped.resumen.total} libro${wrapped.objetivoAnual - wrapped.resumen.total !== 1 ? 's' : ''}`}
+                        </p>
                       </div>
                     )}
                   </div>

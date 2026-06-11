@@ -3,6 +3,19 @@ import { getAuthUser } from '@/lib/auth'
 import { query, queryOne } from '@/lib/db'
 
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+const DIAS = ['','Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
+
+function generarFrase(total: number, paginas: number, autores: { autor: string }[]): string {
+  if (total === 0) return '¡Este año todavía no empezaste! Hay tiempo. 📚'
+  if (total === 1) return `Un libro es un comienzo. ¡El próximo año vas por más! 🌱`
+  if (total >= 50) return `¡${total} libros! Sos una leyenda de la lectura. 🏆`
+  if (total >= 30) return `${total} libros este año. Tenés una dedicación admirable. ⭐`
+  if (total >= 20) return `${total} libros. La lectura es claramente tu superpoder. 🦸`
+  if (total >= 10) return `${total} libros en un año. ¡Nada mal para un lector serio! 📖`
+  if (paginas >= 3000) return `Pocos libros, pero ${paginas.toLocaleString()} páginas. Calidad sobre cantidad. 🎯`
+  if (autores.length >= 3) return `${total} libros de ${autores.length} autores distintos. Te gusta explorar. 🗺️`
+  return `${total} libros leídos. Cada página cuenta. 💪`
+}
 
 export async function GET() {
   const user = await getAuthUser()
@@ -14,8 +27,8 @@ export async function GET() {
   const [
     resumen, generos, autores, meses, mejorLibro, librosRecientes,
     libroMasLargo, primerLibro, rachaUsuario,
+    diaFavoritoRow, anioAnteriorRow, logrosEsteAnio,
   ] = await Promise.all([
-    // Totales del año
     queryOne<{ total: number; paginas: number; promedio: number }>(`
       SELECT
         COUNT(*) AS total,
@@ -26,7 +39,6 @@ export async function GET() {
         AND YEAR(fecha_registro) = ?
     `, [uid, anio]),
 
-    // Top géneros
     query<{ genero: string; total: number }>(`
       SELECT genero, COUNT(*) AS total
       FROM libros_usuario
@@ -36,7 +48,6 @@ export async function GET() {
       GROUP BY genero ORDER BY total DESC LIMIT 5
     `, [uid, anio]),
 
-    // Top autores
     query<{ autor: string; total: number }>(`
       SELECT autor, COUNT(*) AS total
       FROM libros_usuario
@@ -45,7 +56,6 @@ export async function GET() {
       GROUP BY autor ORDER BY total DESC LIMIT 3
     `, [uid, anio]),
 
-    // Lecturas por mes
     query<{ mes: number; total: number }>(`
       SELECT MONTH(fecha_registro) AS mes, COUNT(*) AS total
       FROM libros_usuario
@@ -54,7 +64,6 @@ export async function GET() {
       GROUP BY mes ORDER BY mes
     `, [uid, anio]),
 
-    // Mejor libro calificado
     queryOne<{ titulo: string; autor: string; estrellas: number; portada_url: string }>(`
       SELECT titulo, autor, estrellas, portada_url
       FROM libros_usuario
@@ -63,7 +72,6 @@ export async function GET() {
       ORDER BY fecha_registro DESC LIMIT 1
     `, [uid, anio]),
 
-    // Últimos 6 leídos del año
     query<{ titulo: string; portada_url: string; autor: string }>(`
       SELECT titulo, portada_url, autor
       FROM libros_usuario
@@ -72,7 +80,6 @@ export async function GET() {
       ORDER BY fecha_registro DESC LIMIT 6
     `, [uid, anio]),
 
-    // Libro más largo leído este año
     queryOne<{ titulo: string; autor: string; paginas: number }>(`
       SELECT titulo, autor, paginas
       FROM libros_usuario
@@ -82,7 +89,6 @@ export async function GET() {
       ORDER BY paginas DESC LIMIT 1
     `, [uid, anio]),
 
-    // Primer libro leído del año
     queryOne<{ titulo: string; autor: string; portada_url: string }>(`
       SELECT titulo, autor, portada_url
       FROM libros_usuario
@@ -91,30 +97,59 @@ export async function GET() {
       ORDER BY fecha_registro ASC LIMIT 1
     `, [uid, anio]),
 
-    // Racha actual del usuario
-    queryOne<{ racha_actual: number }>(`
-      SELECT racha_actual FROM usuarios WHERE id = ?
+    queryOne<{ racha_actual: number; objetivo_anual: number | null }>(`
+      SELECT racha_actual, objetivo_anual FROM usuarios WHERE id = ?
     `, [uid]),
+
+    // Día de la semana favorito (DAYOFWEEK: 1=Dom, 2=Lun, ..., 7=Sáb)
+    queryOne<{ dia: number; total: number }>(`
+      SELECT DAYOFWEEK(fecha_registro) AS dia, COUNT(*) AS total
+      FROM libros_usuario
+      WHERE usuario_id = ? AND UPPER(estado) IN ('LEIDO','LEÍDO')
+        AND YEAR(fecha_registro) = ?
+      GROUP BY dia ORDER BY total DESC LIMIT 1
+    `, [uid, anio]),
+
+    // Libros leídos el año anterior
+    queryOne<{ total: number }>(`
+      SELECT COUNT(*) AS total
+      FROM libros_usuario
+      WHERE usuario_id = ? AND UPPER(estado) IN ('LEIDO','LEÍDO')
+        AND YEAR(fecha_registro) = ?
+    `, [uid, anio - 1]),
+
+    // Logros desbloqueados este año
+    queryOne<{ total: number }>(`
+      SELECT COUNT(*) AS total
+      FROM usuario_logros
+      WHERE usuario_id = ? AND YEAR(fecha_desbloqueo) = ?
+    `, [uid, anio]),
   ])
 
-  // Mes más activo
   const mesMasActivo = meses.length > 0
     ? meses.reduce((a, b) => a.total > b.total ? a : b)
     : null
 
-  // Meses completos para el gráfico de barras (12 meses)
   const mesesCompletos = Array.from({ length: 12 }, (_, i) => ({
     mes: MESES[i],
     total: meses.find(m => m.mes === i + 1)?.total ?? 0,
   }))
 
-  // Páginas por día (días del año transcurridos hasta hoy)
   const hoy = new Date()
   const inicioAnio = new Date(anio, 0, 1)
   const diasTranscurridos = Math.max(1, Math.floor((hoy.getTime() - inicioAnio.getTime()) / 86400000))
   const paginasPorDia = resumen && resumen.paginas > 0
     ? Math.round(resumen.paginas / diasTranscurridos)
     : 0
+
+  const totalActual = resumen?.total ?? 0
+  const totalAnterior = Number(anioAnteriorRow?.total ?? 0)
+  const diferencia = totalActual - totalAnterior
+
+  const objetivoAnual = rachaUsuario?.objetivo_anual ?? null
+  const progresoObjetivo = objetivoAnual && objetivoAnual > 0
+    ? Math.min(100, Math.round((totalActual / objetivoAnual) * 100))
+    : null
 
   return NextResponse.json({
     anio,
@@ -129,5 +164,11 @@ export async function GET() {
     primerLibro: primerLibro ?? null,
     rachaActual: rachaUsuario?.racha_actual ?? 0,
     paginasPorDia,
+    diaFavorito: diaFavoritoRow ? { dia: DIAS[diaFavoritoRow.dia] ?? '—', total: diaFavoritoRow.total } : null,
+    anioAnterior: { total: totalAnterior, diferencia },
+    objetivoAnual,
+    progresoObjetivo,
+    logrosEsteAnio: Number(logrosEsteAnio?.total ?? 0),
+    frase: generarFrase(totalActual, resumen?.paginas ?? 0, autores),
   })
 }
