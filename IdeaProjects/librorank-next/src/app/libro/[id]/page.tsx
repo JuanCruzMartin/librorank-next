@@ -31,23 +31,33 @@ export default async function LibroPage({ params }: Props) {
   const { id } = await params
   const authUser = await getAuthUser()
 
-  const [libro, reviews, lectores, distribucion, usuario] = await Promise.all([
-    buscarLibroGlobal(Number(id)),
-    obtenerReviews(Number(id)),
-    obtenerLectores(Number(id)),
-    obtenerDistribucionEstrellas(Number(id)),
-    authUser ? buscarUsuario(authUser.id) : Promise.resolve(null),
-  ])
+  let libro, reviews, lectores, distribucion, usuario
+  try {
+    ;[libro, reviews, lectores, distribucion, usuario] = await Promise.all([
+      buscarLibroGlobal(Number(id)),
+      obtenerReviews(Number(id)),
+      obtenerLectores(Number(id)),
+      obtenerDistribucionEstrellas(Number(id)),
+      authUser ? buscarUsuario(authUser.id) : Promise.resolve(null),
+    ])
+  } catch (err) {
+    console.error('[LibroPage] Error en queries paralelas:', err)
+    throw err
+  }
 
   if (!libro) notFound()
 
   // Verificar si el usuario ya tiene este libro en su biblioteca
   let yaEnBiblioteca = false
   if (authUser) {
-    const misL = await misLibros(authUser.id)
-    yaEnBiblioteca = misL.some(l =>
-      l.titulo.toLowerCase().trim() === libro.titulo.toLowerCase().trim()
-    )
+    try {
+      const misL = await misLibros(authUser.id)
+      yaEnBiblioteca = misL.some(l =>
+        l.titulo.toLowerCase().trim() === (libro as NonNullable<typeof libro>).titulo.toLowerCase().trim()
+      )
+    } catch (err) {
+      console.error('[LibroPage] Error en misLibros:', err)
+    }
   }
 
   const notaMedia = libro.nota_media ? Math.round(Number(libro.nota_media) * 10) / 10 : null
