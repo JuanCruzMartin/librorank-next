@@ -213,7 +213,7 @@ export default async function LibroPage({ params }: Props) {
                           style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', padding: '0.6rem 0.75rem', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
                         >
                           {l.avatar_url ? (
-                            <img src={l.avatar_url} alt={l.username} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).src = '/img/personajes/personaje_1.png' }} />
+                            <img src={l.avatar_url} alt={l.username} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                           ) : (
                             <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(212,175,55,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>📚</div>
                           )}
@@ -286,7 +286,6 @@ export default async function LibroPage({ params }: Props) {
           </div>
         </div>
       </main>
-      <style>{`.lector-row:hover { background: rgba(255,255,255,0.07) !important; }`}</style>
       <Footer />
     </>
   )
