@@ -1,10 +1,17 @@
 import { notFound } from 'next/navigation'
 import { getAuthUser } from '@/lib/auth'
-import { buscarPorId as buscarLibroGlobal, obtenerReviews } from '@/lib/dao/libroGlobalDAO'
+import {
+  buscarPorId as buscarLibroGlobal,
+  obtenerReviews,
+  obtenerLectores,
+  obtenerDistribucionEstrellas,
+} from '@/lib/dao/libroGlobalDAO'
 import { buscarPorId as buscarUsuario } from '@/lib/dao/usuarioDAO'
+import { buscarPorUsuario as misLibros } from '@/lib/dao/libroDAO'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
+import LibroDetalleClient from './LibroDetalleClient'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -24,16 +31,36 @@ export default async function LibroPage({ params }: Props) {
   const { id } = await params
   const authUser = await getAuthUser()
 
-  const [libro, reviews, usuario] = await Promise.all([
+  const [libro, reviews, lectores, distribucion, usuario] = await Promise.all([
     buscarLibroGlobal(Number(id)),
     obtenerReviews(Number(id)),
+    obtenerLectores(Number(id)),
+    obtenerDistribucionEstrellas(Number(id)),
     authUser ? buscarUsuario(authUser.id) : Promise.resolve(null),
   ])
 
   if (!libro) notFound()
 
+  // Verificar si el usuario ya tiene este libro en su biblioteca
+  let yaEnBiblioteca = false
+  if (authUser) {
+    const misL = await misLibros(authUser.id)
+    yaEnBiblioteca = misL.some(l =>
+      l.titulo.toLowerCase().trim() === libro.titulo.toLowerCase().trim()
+    )
+  }
+
   const notaMedia = libro.nota_media ? Math.round(libro.nota_media * 10) / 10 : null
-  const resenasConTexto = reviews.filter(r => r.resena && r.resena.trim())
+  const resenasConTexto = reviews.filter(r => r.resena?.trim())
+  const totalCalificaciones = reviews.filter(r => r.estrellas > 0).length
+  const maxDist = Math.max(...distribucion.map(d => d.cantidad), 1)
+
+  const estadoColor = (estado: string) => {
+    if (estado === 'LEIDO')    return { bg: '#4cd137', color: '#000', label: 'Leído' }
+    if (estado === 'LEYENDO')  return { bg: '#f1c40f', color: '#000', label: 'Leyendo' }
+    if (estado === 'PAUSA')    return { bg: '#5dade2', color: '#000', label: 'Pausa' }
+    return { bg: 'rgba(255,255,255,0.2)', color: '#fff', label: 'Pendiente' }
+  }
 
   return (
     <>
@@ -41,14 +68,14 @@ export default async function LibroPage({ params }: Props) {
       <main>
         <div style={{ minHeight: '100vh' }}>
 
-          {/* Hero */}
+          {/* ── Hero ── */}
           <div style={{
             background: 'linear-gradient(135deg,#0a0a0a 0%,#151515 60%,#1a1208 100%)',
             borderBottom: '2px solid rgba(212,175,55,0.2)',
             padding: '3rem 0',
           }}>
             <div className="container">
-              <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '2.5rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
 
                 {/* Portada */}
                 <div style={{ flexShrink: 0 }}>
@@ -56,10 +83,10 @@ export default async function LibroPage({ params }: Props) {
                     <img
                       src={libro.portada_url.replace('http://', 'https://')}
                       alt={libro.titulo}
-                      style={{ width: 140, height: 210, objectFit: 'cover', borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}
+                      style={{ width: 160, height: 240, objectFit: 'cover', borderRadius: 14, boxShadow: '0 12px 40px rgba(0,0,0,0.7)' }}
                     />
                   ) : (
-                    <div style={{ width: 140, height: 210, background: '#25211e', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem' }}>
+                    <div style={{ width: 160, height: 240, background: '#25211e', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3.5rem', boxShadow: '0 12px 40px rgba(0,0,0,0.7)' }}>
                       📚
                     </div>
                   )}
@@ -67,15 +94,15 @@ export default async function LibroPage({ params }: Props) {
 
                 {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <h1 className="font-title" style={{ fontSize: '2rem', color: '#fff', marginBottom: '0.25rem', lineHeight: 1.2 }}>
+                  <h1 className="font-title" style={{ fontSize: '2rem', color: '#fff', marginBottom: '0.3rem', lineHeight: 1.2 }}>
                     {libro.titulo}
                   </h1>
-                  <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.55)', marginBottom: '1rem' }}>
+                  <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.5)', marginBottom: '1.25rem' }}>
                     {libro.autor}
                   </p>
 
                   {/* Meta */}
-                  <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
                     {libro.anio && (
                       <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)' }}>📅 {libro.anio}</span>
                     )}
@@ -87,82 +114,165 @@ export default async function LibroPage({ params }: Props) {
                     </span>
                   </div>
 
-                  {/* Rating */}
-                  {notaMedia && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-                      <div style={{ fontSize: '2rem', fontWeight: 900, color: '#d4af37', lineHeight: 1 }}>
-                        {notaMedia}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '1rem', letterSpacing: 2 }}>
-                          {'⭐'.repeat(Math.round(notaMedia))}
+                  {/* Rating + distribución */}
+                  <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: '1.75rem' }}>
+                    {notaMedia ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#d4af37', lineHeight: 1 }}>
+                          {notaMedia}
                         </div>
-                        <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)' }}>
-                          promedio de {reviews.filter(r => r.estrellas > 0).length} calificaciones
+                        <div>
+                          <div style={{ fontSize: '1.1rem', letterSpacing: 2 }}>
+                            {'⭐'.repeat(Math.round(notaMedia))}
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                            {totalCalificaciones} calificacion{totalCalificaciones !== 1 ? 'es' : ''}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>
+                        Sin calificaciones aún
+                      </div>
+                    )}
 
-                  <Link href="/biblioteca" className="btn-gold" style={{
-                    display: 'inline-block', textDecoration: 'none',
-                    padding: '0.55rem 1.5rem', borderRadius: 10,
-                    fontWeight: 700, fontSize: '0.88rem',
-                  }}>
-                    + Agregar a mi biblioteca
-                  </Link>
+                    {/* Distribución de estrellas */}
+                    {distribucion.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 180 }}>
+                        {[5, 4, 3, 2, 1].map(n => {
+                          const d = distribucion.find(x => x.estrellas === n)
+                          const cant = d?.cantidad ?? 0
+                          const pct = Math.round((cant / maxDist) * 100)
+                          return (
+                            <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', width: 14, textAlign: 'right' }}>{n}</span>
+                              <span style={{ fontSize: '0.65rem' }}>⭐</span>
+                              <div style={{ flex: 1, height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg,#b8860b,#d4af37)', borderRadius: 99, transition: 'width 0.5s ease' }} />
+                              </div>
+                              <span style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)', width: 18 }}>{cant || ''}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Botón agregar — client component para interactividad */}
+                  {authUser ? (
+                    <LibroDetalleClient
+                      libroGlobalId={libro.id}
+                      titulo={libro.titulo}
+                      autor={libro.autor}
+                      portadaUrl={libro.portada_url}
+                      anio={libro.anio}
+                      paginas={libro.paginas}
+                      yaEnBiblioteca={yaEnBiblioteca}
+                    />
+                  ) : (
+                    <Link href="/login" style={{
+                      display: 'inline-block', textDecoration: 'none',
+                      padding: '0.6rem 1.6rem', borderRadius: 10,
+                      background: 'linear-gradient(135deg,#d4af37,#f1c40f)',
+                      fontWeight: 700, fontSize: '0.9rem', color: '#000',
+                    }}>
+                      + Agregar a mi biblioteca
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Reseñas */}
           <div className="container py-5">
-            <h2 className="font-title h4 mb-1" style={{ color: '#fff' }}>
-              ✍️ Reseñas de la comunidad
-            </h2>
-            <p className="text-muted small mb-4">
-              {resenasConTexto.length > 0
-                ? `${resenasConTexto.length} reseña${resenasConTexto.length !== 1 ? 's' : ''} de lectores de LibroRank`
-                : 'Aún nadie escribió una reseña de este libro.'}
-            </p>
+            <div className="row g-5">
 
-            {resenasConTexto.length === 0 ? (
-              <div className="card p-5 text-center">
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📝</div>
-                <p className="text-muted mb-3">Sé el primero en dejar tu opinión.</p>
-                <Link href="/biblioteca" className="btn-gold" style={{ display: 'inline-block', textDecoration: 'none', padding: '0.5rem 1.5rem', borderRadius: 8, fontWeight: 700, fontSize: '0.85rem' }}>
-                  Ir a mi biblioteca
-                </Link>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.25rem' }}>
-                {resenasConTexto.map((r, i) => (
-                  <div key={i} style={{
-                    background: 'var(--bg-card)',
-                    border: '1px solid rgba(255,255,255,0.07)',
-                    borderRadius: 16, padding: '1.25rem',
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                      <Link href={`/perfil/${r.username}`} style={{ fontWeight: 700, color: '#fff', textDecoration: 'none', fontSize: '0.88rem' }}>
-                        @{r.username}
-                      </Link>
-                      {r.estrellas > 0 && (
-                        <span style={{ fontSize: '0.8rem', letterSpacing: 1.5 }}>{'⭐'.repeat(r.estrellas)}</span>
-                      )}
-                    </div>
-                    <p style={{
-                      margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.65)',
-                      fontStyle: 'italic', lineHeight: 1.7,
-                      borderLeft: '2px solid rgba(212,175,55,0.3)',
-                      paddingLeft: '0.75rem',
-                    }}>
-                      &ldquo;{r.resena}&rdquo;
-                    </p>
+              {/* ── Lectores ── */}
+              {lectores.length > 0 && (
+                <div className="col-lg-4">
+                  <h2 className="font-title h5 mb-3" style={{ color: '#fff' }}>
+                    👥 Quiénes lo leyeron
+                  </h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                    {lectores.map(l => {
+                      const ec = estadoColor(l.estado)
+                      return (
+                        <Link key={l.username} href={`/perfil/${l.username}`}
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', padding: '0.6rem 0.75rem', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', transition: 'background 0.15s' }}
+                          onMouseOver={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+                          onMouseOut={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+                        >
+                          {l.avatar_url ? (
+                            <img src={l.avatar_url} alt={l.username} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).src = '/img/personajes/personaje_1.png' }} />
+                          ) : (
+                            <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(212,175,55,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>📚</div>
+                          )}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff' }}>@{l.username}</div>
+                            {l.estrellas > 0 && (
+                              <div style={{ fontSize: '0.6rem', letterSpacing: 1 }}>{'⭐'.repeat(l.estrellas)}</div>
+                            )}
+                          </div>
+                          <span style={{ fontSize: '0.58rem', fontWeight: 700, background: ec.bg, color: ec.color, borderRadius: 99, padding: '2px 6px', flexShrink: 0 }}>
+                            {ec.label}
+                          </span>
+                        </Link>
+                      )
+                    })}
                   </div>
-                ))}
+                </div>
+              )}
+
+              {/* ── Reseñas ── */}
+              <div className={lectores.length > 0 ? 'col-lg-8' : 'col-12'}>
+                <h2 className="font-title h5 mb-1" style={{ color: '#fff' }}>
+                  ✍️ Reseñas de la comunidad
+                </h2>
+                <p className="text-muted small mb-4">
+                  {resenasConTexto.length > 0
+                    ? `${resenasConTexto.length} reseña${resenasConTexto.length !== 1 ? 's' : ''} de lectores de LibroRank`
+                    : 'Nadie escribió una reseña todavía.'}
+                </p>
+
+                {resenasConTexto.length === 0 ? (
+                  <div className="card p-5 text-center">
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📝</div>
+                    <p className="text-muted mb-3">Sé el primero en dejar tu opinión.</p>
+                    <Link href="/biblioteca" className="btn-gold" style={{ display: 'inline-block', textDecoration: 'none', padding: '0.5rem 1.5rem', borderRadius: 8, fontWeight: 700, fontSize: '0.85rem' }}>
+                      Ir a mi biblioteca
+                    </Link>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {resenasConTexto.map((r, i) => (
+                      <div key={i} style={{
+                        background: 'var(--bg-card)',
+                        border: '1px solid rgba(255,255,255,0.07)',
+                        borderRadius: 14, padding: '1.1rem 1.25rem',
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                          <Link href={`/perfil/${r.username}`} style={{ fontWeight: 700, color: '#fff', textDecoration: 'none', fontSize: '0.88rem' }}>
+                            @{r.username}
+                          </Link>
+                          {r.estrellas > 0 && (
+                            <span style={{ fontSize: '0.8rem', letterSpacing: 1.5 }}>{'⭐'.repeat(r.estrellas)}</span>
+                          )}
+                        </div>
+                        <p style={{
+                          margin: 0, fontSize: '0.88rem', color: 'rgba(255,255,255,0.65)',
+                          fontStyle: 'italic', lineHeight: 1.7,
+                          borderLeft: '2px solid rgba(212,175,55,0.3)',
+                          paddingLeft: '0.85rem',
+                        }}>
+                          &ldquo;{r.resena}&rdquo;
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+
+            </div>
           </div>
         </div>
       </main>

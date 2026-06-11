@@ -52,3 +52,37 @@ export async function obtenerReviews(libroGlobalId: number): Promise<ReviewGloba
     [libroGlobalId]
   )
 }
+
+export interface LectorGlobal {
+  username: string
+  avatar_url: string | null
+  estado: string
+  estrellas: number
+}
+
+export interface DistribucionEstrellas {
+  estrellas: number
+  cantidad: number
+}
+
+export async function obtenerLectores(libroGlobalId: number, limite = 20): Promise<LectorGlobal[]> {
+  return query<LectorGlobal>(
+    `SELECT u.username, u.avatar_url, lu.estado, lu.estrellas
+     FROM libros_usuario lu JOIN usuarios u ON lu.usuario_id=u.id
+     WHERE lu.libro_global_id=?
+     ORDER BY lu.estrellas DESC, lu.id DESC
+     LIMIT ?`,
+    [libroGlobalId, limite]
+  )
+}
+
+export async function obtenerDistribucionEstrellas(libroGlobalId: number): Promise<DistribucionEstrellas[]> {
+  return query<DistribucionEstrellas>(
+    `SELECT estrellas, COUNT(*) AS cantidad
+     FROM libros_usuario
+     WHERE libro_global_id=? AND estrellas > 0
+     GROUP BY estrellas
+     ORDER BY estrellas DESC`,
+    [libroGlobalId]
+  )
+}
