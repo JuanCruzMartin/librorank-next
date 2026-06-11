@@ -208,6 +208,33 @@ export async function obtenerRankingSemanal(limite = 50): Promise<UsuarioSemanal
   )
 }
 
+export interface UsuarioLigaSemanal {
+  id: number
+  nombre: string
+  username: string
+  avatar_url: string | null
+  puntos: number
+  libros_semana: number
+}
+
+export async function obtenerRankingLigaSemanal(ligaMin: number, ligaMax: number): Promise<UsuarioLigaSemanal[]> {
+  const maxParam = ligaMax === Infinity ? 9999999 : ligaMax
+  return query<UsuarioLigaSemanal>(
+    `SELECT u.id, u.nombre, u.username, u.avatar_url, u.monedas AS puntos,
+            COUNT(l.id) AS libros_semana
+     FROM usuarios u
+     LEFT JOIN libros_usuario l ON u.id = l.usuario_id
+       AND UPPER(l.estado) IN ('LEIDO','LEÍDO')
+       AND l.fecha_leido IS NOT NULL
+       AND l.fecha_leido >= DATE(NOW() - INTERVAL WEEKDAY(NOW()) DAY)
+     WHERE u.monedas >= ? AND u.monedas <= ?
+     GROUP BY u.id, u.nombre, u.username, u.avatar_url, u.monedas
+     ORDER BY libros_semana DESC, u.monedas DESC
+     LIMIT 100`,
+    [ligaMin, maxParam]
+  )
+}
+
 export function getTituloLector(totalLeidos: number): string {
   // Mantenida por compatibilidad — usar getNivelLector(puntos) cuando se tenga el dato
   if (totalLeidos >= 100) return 'Guardián del Conocimiento'

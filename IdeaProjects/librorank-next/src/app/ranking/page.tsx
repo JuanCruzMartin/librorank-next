@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/lib/auth'
-import { buscarPorId, obtenerRankingLectores, obtenerRankingSemanal } from '@/lib/dao/usuarioDAO'
+import { buscarPorId, obtenerRankingLectores, obtenerRankingSemanal, obtenerRankingLigaSemanal, getNivelLector } from '@/lib/dao/usuarioDAO'
 import { obtenerIdsAmigos } from '@/lib/dao/amigoDAO'
+import { getLiga } from '@/lib/ligas'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import RankingClient from './RankingClient'
@@ -9,7 +10,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Ranking de Lectores',
-  description: 'Mirá quiénes son los lectores más activos de LibroRank. Competí, subí de nivel y alcanzá la cima del ranking literario.',
+  description: 'Mirá quiénes son los lectores más activos de LibroRank. Competí, subí de liga y alcanzá la cima del ranking literario.',
 }
 
 export default async function RankingPage() {
@@ -24,6 +25,9 @@ export default async function RankingPage() {
   ])
 
   if (!usuario) redirect('/login')
+
+  const ligaActual = getLiga(usuario.puntos ?? 0)
+  const ligaSemanalRaw = await obtenerRankingLigaSemanal(ligaActual.min, ligaActual.max)
 
   const ranking = rankingRaw.map(u => ({
     id: u.id,
@@ -47,6 +51,18 @@ export default async function RankingPage() {
     es_amigo: idsAmigos.includes(u.id),
   }))
 
+  const ligaSemanal = ligaSemanalRaw.map(u => ({
+    id: u.id,
+    nombre: u.nombre,
+    username: u.username,
+    avatar_url: u.avatar_url ?? null,
+    puntos: u.puntos ?? 0,
+    libros_semana: Number(u.libros_semana ?? 0),
+    es_yo: u.id === authUser.id,
+    es_amigo: idsAmigos.includes(u.id),
+    nivel: getNivelLector(u.puntos ?? 0),
+  }))
+
   return (
     <>
       <Header user={usuario} />
@@ -54,6 +70,8 @@ export default async function RankingPage() {
         <RankingClient
           ranking={ranking}
           rankingSemanal={rankingSemanal}
+          ligaSemanal={ligaSemanal}
+          ligaActualKey={ligaActual.key}
           usuarioId={authUser.id}
           puntosUsuario={usuario.puntos ?? 0}
         />

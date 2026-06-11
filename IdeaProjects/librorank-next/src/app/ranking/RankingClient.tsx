@@ -33,9 +33,23 @@ interface UsuarioSemanal {
   es_amigo: boolean
 }
 
+interface UsuarioLigaSemanal {
+  id: number
+  nombre: string
+  username: string
+  avatar_url: string | null
+  puntos: number
+  libros_semana: number
+  es_yo: boolean
+  es_amigo: boolean
+  nivel: { emoji: string; titulo: string; nivel: number }
+}
+
 interface Props {
   ranking: UsuarioRanking[]
   rankingSemanal: UsuarioSemanal[]
+  ligaSemanal: UsuarioLigaSemanal[]
+  ligaActualKey: string
   usuarioId: number
   puntosUsuario: number
 }
@@ -51,21 +65,30 @@ function Medal({ pos }: { pos: number }) {
 
 // ── Componente principal ─────────────────────────────────────────────────────
 
-// Calcula días hasta el próximo lunes (reset semanal)
-function diasParaReset(): number {
-  const hoy = new Date().getDay() // 0=Dom, 1=Lun, ...
-  return ((1 - hoy + 7) % 7) || 7
+// Calcula horas hasta el próximo lunes (reset semanal)
+function horasParaReset(): string {
+  const ahora = new Date()
+  const lunes = new Date(ahora)
+  const diasHastaLunes = (8 - ahora.getDay()) % 7 || 7
+  lunes.setDate(ahora.getDate() + diasHastaLunes)
+  lunes.setHours(0, 0, 0, 0)
+  const diffMs = lunes.getTime() - ahora.getTime()
+  const horas = Math.floor(diffMs / 3600000)
+  const mins = Math.floor((diffMs % 3600000) / 60000)
+  if (horas >= 24) return `${Math.floor(horas / 24)}d ${horas % 24}h`
+  return `${horas}h ${mins}m`
 }
 
-export default function RankingClient({ ranking, rankingSemanal, usuarioId, puntosUsuario }: Props) {
+export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ligaActualKey, usuarioId, puntosUsuario }: Props) {
   const ligaActual = getLigaActual(puntosUsuario)
   const ligaSiguiente = LIGAS[LIGAS.indexOf(ligaActual) + 1] ?? null
 
-  const [ligaTab, setLigaTab] = useState<string>('general')
+  const [ligaTab, setLigaTab] = useState<string>('ligasemanal')
 
-  const esGeneral  = ligaTab === 'general'
-  const esLibros   = ligaTab === 'libros'
-  const esSemanal  = ligaTab === 'semanal'
+  const esGeneral      = ligaTab === 'general'
+  const esLibros       = ligaTab === 'libros'
+  const esSemanal      = ligaTab === 'semanal'
+  const esLigaSemanal  = ligaTab === 'ligasemanal'
   const ligaSeleccionada = LIGAS.find(l => l.key === ligaTab)
 
   // Usuarios a mostrar según tab
@@ -192,6 +215,28 @@ export default function RankingClient({ ranking, rankingSemanal, usuarioId, punt
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
 
+          {/* Tab Liga Semanal ⚔️ */}
+          <button
+            onClick={() => setLigaTab('ligasemanal')}
+            style={{
+              background: esLigaSemanal ? `${ligaActual.colorBg}` : 'rgba(255,255,255,0.04)',
+              border: esLigaSemanal ? `2px solid ${ligaActual.border}` : '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 20, padding: '0.45rem 1.1rem',
+              fontSize: '0.82rem', fontWeight: 700,
+              color: esLigaSemanal ? ligaActual.color : 'rgba(255,255,255,0.5)',
+              cursor: 'pointer', transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+            }}
+          >
+            ⚔️ Liga Semanal
+            <span style={{
+              background: 'rgba(255,100,0,0.15)', color: '#ff6400',
+              borderRadius: 20, padding: '1px 7px', fontSize: '0.65rem', fontWeight: 800,
+            }}>
+              NUEVO
+            </span>
+          </button>
+
           {/* Tab General */}
           <button
             onClick={() => setLigaTab('general')}
@@ -293,6 +338,7 @@ export default function RankingClient({ ranking, rankingSemanal, usuarioId, punt
         </div>
 
         {/* Descripción del tab activo */}
+        {!esLigaSemanal && (
         <div style={{
           background: esGeneral ? 'rgba(212,175,55,0.06)' : esSemanal ? 'rgba(233,30,140,0.06)' : ligaSeleccionada?.colorBg,
           border: `1px solid ${esGeneral ? 'rgba(212,175,55,0.2)' : esSemanal ? 'rgba(233,30,140,0.25)' : ligaSeleccionada?.border}`,
@@ -311,7 +357,7 @@ export default function RankingClient({ ranking, rankingSemanal, usuarioId, punt
               {esGeneral || esLibros
                 ? `Todos los lectores · ${ranking.length} en total`
                 : esSemanal
-                  ? `${rankingSemanal.length} lectores activos · reinicia en ${diasParaReset()} día${diasParaReset() !== 1 ? 's' : ''}`
+                  ? `${rankingSemanal.length} lectores activos · reinicia el lunes`
                   : ligaSeleccionada?.max === Infinity
                     ? `${ligaSeleccionada?.min}+ puntos · ${usuariosLiga.length} lectores`
                     : `${ligaSeleccionada?.min}–${ligaSeleccionada?.max} puntos · ${usuariosLiga.length} lectores`
@@ -331,6 +377,175 @@ export default function RankingClient({ ranking, rankingSemanal, usuarioId, punt
             </div>
           )}
         </div>
+        )}
+
+        {/* ── Liga Semanal ─────────────────────────────────────────────── */}
+        {esLigaSemanal && (() => {
+          const miPosicion = ligaSemanal.findIndex(u => u.id === usuarioId) + 1
+          const totalEnLiga = ligaSemanal.length
+          const zonaAscenso = 3
+          const zonaDescenso = Math.max(totalEnLiga - 3, zonaAscenso + 1)
+          const activosEstaSemana = ligaSemanal.filter(u => u.libros_semana > 0).length
+
+          return (
+            <div>
+              {/* Banner de estado de la liga */}
+              <div style={{
+                background: `linear-gradient(135deg, ${ligaActual.colorBg}, rgba(0,0,0,0.3))`,
+                border: `1px solid ${ligaActual.border}`,
+                borderRadius: 16, padding: '1.25rem 1.5rem',
+                marginBottom: '1.5rem',
+                display: 'flex', flexWrap: 'wrap', gap: '1.25rem', alignItems: 'center',
+              }}>
+                <div style={{ fontSize: '2.5rem', lineHeight: 1 }}>{ligaActual.emoji}</div>
+                <div style={{ flex: 1, minWidth: 180 }}>
+                  <div style={{ fontWeight: 800, fontSize: '1rem', color: ligaActual.color }}>
+                    Liga {ligaActual.nombre} — Semana actual
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>
+                    {totalEnLiga} lectores en tu liga · {activosEstaSemana} activos esta semana
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: miPosicion > 0 ? ligaActual.color : 'rgba(255,255,255,0.3)' }}>
+                      {miPosicion > 0 ? `#${miPosicion}` : '—'}
+                    </div>
+                    <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 }}>tu posición</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#ff6b35' }}>
+                      {horasParaReset()}
+                    </div>
+                    <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 }}>para el reset</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Leyenda de zonas */}
+              <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.72rem' }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(76,209,55,0.5)', flexShrink: 0 }} />
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>Top 3 — zona de ascenso</span>
+                </div>
+                {ligaSiguiente && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.72rem' }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(231,76,60,0.5)', flexShrink: 0 }} />
+                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>Últimos 3 — zona de descenso</span>
+                  </div>
+                )}
+              </div>
+
+              {ligaSemanal.length === 0 ? (
+                <div className="text-center py-5">
+                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{ligaActual.emoji}</div>
+                  <p className="text-muted">Nadie en tu liga leyó esta semana aún. ¡Sé el primero!</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  {ligaSemanal.map((u, i) => {
+                    const pos = i + 1
+                    const esYo = u.id === usuarioId
+                    const enZonaAscenso = pos <= zonaAscenso && u.libros_semana > 0
+                    const enZonaDescenso = ligaSiguiente && pos > zonaDescenso && totalEnLiga > 6
+                    const borderColor = enZonaAscenso
+                      ? 'rgba(76,209,55,0.4)'
+                      : enZonaDescenso
+                        ? 'rgba(231,76,60,0.3)'
+                        : esYo
+                          ? ligaActual.border
+                          : 'rgba(255,255,255,0.05)'
+                    const bgColor = enZonaAscenso
+                      ? 'rgba(76,209,55,0.05)'
+                      : enZonaDescenso
+                        ? 'rgba(231,76,60,0.04)'
+                        : esYo
+                          ? `${ligaActual.color}10`
+                          : 'var(--bg-card)'
+
+                    return (
+                      <div key={u.id} style={{
+                        background: bgColor,
+                        border: `1px solid ${borderColor}`,
+                        borderRadius: 12, padding: '0.75rem 1.25rem',
+                        display: 'flex', alignItems: 'center', gap: '0.9rem',
+                        transition: 'transform 0.15s',
+                      }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateX(4px)'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'none'}
+                      >
+                        {/* Posición + indicador de zona */}
+                        <div style={{ width: 34, textAlign: 'center', flexShrink: 0, position: 'relative' }}>
+                          {enZonaAscenso && pos <= 3 ? (
+                            <Medal pos={pos} />
+                          ) : (
+                            <span style={{ fontSize: '0.78rem', color: enZonaDescenso ? '#e74c3c' : 'rgba(255,255,255,0.4)', fontWeight: 700 }}>#{pos}</span>
+                          )}
+                          {enZonaAscenso && (
+                            <div style={{ position: 'absolute', top: -2, right: -4, fontSize: '0.55rem', color: '#4cd137' }}>▲</div>
+                          )}
+                          {enZonaDescenso && (
+                            <div style={{ position: 'absolute', top: -2, right: -4, fontSize: '0.55rem', color: '#e74c3c' }}>▼</div>
+                          )}
+                        </div>
+
+                        {/* Avatar */}
+                        <img
+                          src={u.avatar_url || '/img/personajes/personaje_1.png'}
+                          alt={u.username}
+                          style={{
+                            width: 38, height: 38, borderRadius: '50%',
+                            objectFit: 'cover', flexShrink: 0,
+                            border: `2px solid ${esYo ? ligaActual.color : enZonaAscenso ? 'rgba(76,209,55,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                            opacity: u.libros_semana === 0 ? 0.5 : 1,
+                          }}
+                        />
+
+                        {/* Nombre */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            <Link href={`/perfil/${u.username}`} style={{ fontWeight: 700, color: u.libros_semana === 0 ? 'rgba(255,255,255,0.4)' : '#fff', textDecoration: 'none', fontSize: '0.88rem' }}>
+                              @{u.username}
+                            </Link>
+                            {esYo && (
+                              <span style={{ fontSize: '0.62rem', fontWeight: 700, background: `${ligaActual.color}25`, color: ligaActual.color, borderRadius: 20, padding: '1px 7px', border: `1px solid ${ligaActual.border}` }}>
+                                Vos
+                              </span>
+                            )}
+                            {u.es_amigo && (
+                              <span style={{ fontSize: '0.62rem', fontWeight: 700, background: 'rgba(39,174,96,0.15)', color: '#27ae60', borderRadius: 20, padding: '1px 7px', border: '1px solid rgba(39,174,96,0.3)' }}>
+                                amigo
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                            {u.nivel.emoji} {u.nivel.titulo}
+                          </div>
+                        </div>
+
+                        {/* Stats */}
+                        <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center', flexShrink: 0 }}>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontWeight: 800, fontSize: '1.05rem', color: u.libros_semana > 0 ? '#4cd137' : 'rgba(255,255,255,0.2)' }}>
+                              {u.libros_semana > 0 ? `📚 ${u.libros_semana}` : '—'}
+                            </div>
+                            <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)' }}>esta semana</div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontWeight: 600, color: `${ligaActual.color}99`, fontSize: '0.82rem' }}>
+                              ⭐ {u.puntos}
+                            </div>
+                            <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)' }}>pts totales</div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })()}
 
         {/* ── Tabla Semanal ─────────────────────────────────────────────── */}
         {esSemanal && (
