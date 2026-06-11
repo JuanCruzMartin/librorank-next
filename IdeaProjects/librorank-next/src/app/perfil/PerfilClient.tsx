@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import NextImage from 'next/image'
 import type { Usuario, NivelInfo } from '@/lib/dao/usuarioDAO'
-import type { Libro, PerfilStats } from '@/lib/dao/libroDAO'
+import type { Libro, PerfilStats, LibroFavorito } from '@/lib/dao/libroDAO'
 import type { Logro } from '@/lib/dao/logroDAO'
 
 interface WrappedData {
@@ -52,11 +52,15 @@ interface Props {
   esMiPerfil: boolean
   topGeneros: string[]
   resenasPublicas: Libro[]
+  paginasLeidas: number
+  librosDestacados: LibroFavorito[]
+  promedioEstrellas: number
 }
 
 export default function PerfilClient({
   usuario, stats, ultimasLecturas, logros,
   leidosEsteAnio, totalLeidos, nivelInfo, esMiPerfil, topGeneros, resenasPublicas,
+  paginasLeidas, librosDestacados, promedioEstrellas,
 }: Props) {
   const router = useRouter()
   const [tab, setTab] = useState<'resumen' | 'anio' | 'config'>('resumen')
@@ -339,6 +343,73 @@ export default function PerfilClient({
           {/* ── RESUMEN ── */}
           {tab === 'resumen' && (
             <>
+              {/* Stats hero */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                {[
+                  { icon: '📚', valor: totalLeidos, label: 'libros leídos', color: '#d4af37' },
+                  { icon: '📄', valor: paginasLeidas > 0 ? paginasLeidas.toLocaleString('es-AR') : '—', label: 'páginas', color: '#4cd137' },
+                  { icon: '📖', valor: leidosEsteAnio, label: `leídos en ${new Date().getFullYear()}`, color: '#5dade2' },
+                  { icon: '⭐', valor: promedioEstrellas > 0 ? promedioEstrellas : '—', label: 'nota media', color: '#f39c12' },
+                ].map(s => (
+                  <div key={s.label} style={{
+                    background: `${s.color}0d`,
+                    border: `1px solid ${s.color}25`,
+                    borderRadius: 12, padding: '0.9rem 1rem',
+                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                  }}>
+                    <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{s.icon}</span>
+                    <div>
+                      <div style={{ fontSize: '1.4rem', fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.valor}</div>
+                      <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, marginTop: 2 }}>{s.label}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Libros destacados */}
+              {librosDestacados.length > 0 && (
+                <div className="card p-4 mb-4">
+                  <h5 className="font-title mb-3" style={{ color: 'var(--accent-gold)', fontSize: '0.95rem' }}>
+                    ⭐ Libros favoritos
+                  </h5>
+                  <div style={{ display: 'flex', gap: '0.6rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
+                    {librosDestacados.map((l, i) => (
+                      <div key={i} style={{ flexShrink: 0, width: 64, position: 'relative' }} title={`${l.titulo} — ${l.autor}`}>
+                        {l.portada_url ? (
+                          <img
+                            src={l.portada_url.replace('http://', 'https://')}
+                            alt={l.titulo}
+                            style={{ width: 64, height: 92, objectFit: 'cover', borderRadius: 8, display: 'block', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}
+                          />
+                        ) : (
+                          <div style={{ width: 64, height: 92, background: 'rgba(212,175,55,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
+                            📚
+                          </div>
+                        )}
+                        {l.estrellas === 5 && (
+                          <div style={{ position: 'absolute', top: 4, right: 4, fontSize: '0.6rem', background: '#d4af37', color: '#000', borderRadius: 99, padding: '1px 4px', fontWeight: 800 }}>
+                            5⭐
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Racha */}
+              {(usuario.racha_actual ?? 0) > 0 && (
+                <div className="card p-4 mb-4" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ fontSize: '2rem', lineHeight: 1 }}>🔥</div>
+                  <div>
+                    <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#ff6b35' }}>
+                      {usuario.racha_actual} día{(usuario.racha_actual ?? 0) !== 1 ? 's' : ''} de racha
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>seguidos marcando libros</div>
+                  </div>
+                </div>
+              )}
+
               {/* Últimas conquistas */}
               <div className="card p-4 mb-4">
                 <div className="d-flex justify-content-between align-items-center mb-3">

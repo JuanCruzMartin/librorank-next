@@ -152,6 +152,14 @@ export async function obtenerMejorCalificado(usuarioId: number): Promise<string>
   return row?.titulo ?? 'N/A'
 }
 
+export async function obtenerPromedioEstrellas(usuarioId: number): Promise<number> {
+  const row = await queryOne<{ promedio: number }>(
+    `SELECT ROUND(AVG(NULLIF(estrellas,0)), 1) AS promedio FROM libros_usuario WHERE usuario_id=? AND UPPER(estado) IN ('LEIDO','LEÍDO')`,
+    [usuarioId]
+  )
+  return row?.promedio ?? 0
+}
+
 export async function obtenerResenasPublicas(usuarioId: number, limite = 10): Promise<Libro[]> {
   return query<Libro>(
     `SELECT * FROM libros_usuario
@@ -217,6 +225,7 @@ export interface LibroFavorito {
   autor: string
   estrellas: number
   genero: string | null
+  portada_url: string | null
 }
 
 export interface LibroAmigo {
@@ -230,10 +239,10 @@ export interface LibroAmigo {
 
 export async function obtenerLibrosFavoritos(usuarioId: number, limite = 5): Promise<LibroFavorito[]> {
   return query<LibroFavorito>(
-    `SELECT titulo, autor, estrellas, genero
+    `SELECT titulo, autor, estrellas, genero, portada_url
      FROM libros_usuario
      WHERE usuario_id = ? AND estrellas >= 4
-     ORDER BY estrellas DESC, fecha_leido DESC
+     ORDER BY estrellas DESC, id DESC
      LIMIT ?`,
     [usuarioId, limite]
   )
