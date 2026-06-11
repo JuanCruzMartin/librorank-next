@@ -6,22 +6,25 @@ import { buscarPorId } from '@/lib/dao/usuarioDAO'
 import { obtenerFeedAmigos } from '@/lib/dao/actividadDAO'
 import { obtenerCitaAleatoria } from '@/lib/dao/citaDAO'
 import { obtenerLeyendoAhora, contarLeidosEsteAnio } from '@/lib/dao/libroDAO'
+import { obtenerMisionesConProgreso } from '@/lib/dao/misionDAO'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import FeedClient from './FeedClient'
 import LigaNotif from '@/components/LigaNotif'
+import MisionesWidget from './MisionesWidget'
 
 
 export default async function HomePage() {
   const authUser = await getAuthUser()
   if (!authUser) redirect('/login')
 
-  const [usuario, feed, citaDelDia, librosLeyendo, leidosEsteAnio] = await Promise.all([
+  const [usuario, feed, citaDelDia, librosLeyendo, leidosEsteAnio, misiones] = await Promise.all([
     buscarPorId(authUser.id),
     obtenerFeedAmigos(authUser.id),
     obtenerCitaAleatoria(authUser.id),
     obtenerLeyendoAhora(authUser.id),
     contarLeidosEsteAnio(authUser.id),
+    obtenerMisionesConProgreso(authUser.id),
   ])
 
   if (!usuario) redirect('/login')
@@ -140,6 +143,8 @@ export default async function HomePage() {
                 <Link href="/biblioteca" className="btn btn-gold w-100 mb-2">Mi Biblioteca</Link>
                 <Link href="/stats" className="btn btn-outline-secondary w-100 btn-sm">Ver mis stats</Link>
               </div>
+
+              <MisionesWidget misionesIniciales={misiones} />
             </div>
 
             {/* Columna Derecha: Feed Social */}
