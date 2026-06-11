@@ -212,6 +212,53 @@ export async function otorgarPuntos(usuarioId: number, monto: number, concepto: 
   }
 }
 
+export interface LibroFavorito {
+  titulo: string
+  autor: string
+  estrellas: number
+  genero: string | null
+}
+
+export interface LibroAmigo {
+  titulo: string
+  autor: string
+  portada_url: string | null
+  genero: string | null
+  amigos_leyeron: number
+  amigos_names: string
+}
+
+export async function obtenerLibrosFavoritos(usuarioId: number, limite = 5): Promise<LibroFavorito[]> {
+  return query<LibroFavorito>(
+    `SELECT titulo, autor, estrellas, genero
+     FROM libros_usuario
+     WHERE usuario_id = ? AND estrellas >= 4
+     ORDER BY estrellas DESC, fecha_leido DESC
+     LIMIT ?`,
+    [usuarioId, limite]
+  )
+}
+
+export async function obtenerLibrosAmigos(usuarioId: number, limite = 24): Promise<LibroAmigo[]> {
+  return query<LibroAmigo>(
+    `SELECT l.titulo, l.autor, l.portada_url, l.genero,
+            COUNT(DISTINCT l.usuario_id) AS amigos_leyeron,
+            GROUP_CONCAT(DISTINCT u.username ORDER BY u.username SEPARATOR ', ') AS amigos_names
+     FROM libros_usuario l
+     JOIN amigos a ON l.usuario_id = a.amigo_id
+     JOIN usuarios u ON l.usuario_id = u.id
+     WHERE a.usuario_id = ?
+       AND UPPER(l.estado) IN ('LEIDO','LEÍDO')
+       AND LOWER(l.titulo) NOT IN (
+         SELECT LOWER(titulo) FROM libros_usuario WHERE usuario_id = ?
+       )
+     GROUP BY l.titulo, l.autor, l.portada_url, l.genero
+     ORDER BY amigos_leyeron DESC, l.titulo
+     LIMIT ?`,
+    [usuarioId, usuarioId, limite]
+  )
+}
+
 async function notificarRankingSuperado(
   usuarioId: number,
   saldoAnterior: number,

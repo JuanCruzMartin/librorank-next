@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUserFromRequest } from '@/lib/auth'
-import { obtenerConteoPorGenero, buscarPorUsuario } from '@/lib/dao/libroDAO'
+import { obtenerConteoPorGenero, buscarPorUsuario, obtenerLibrosFavoritos, obtenerLibrosAmigos } from '@/lib/dao/libroDAO'
 
 // Mapeo mood → queries para Google Books
 const MOOD_QUERIES: Record<string, string[]> = {
@@ -86,33 +86,73 @@ export async function GET(req: NextRequest) {
   const user = await getAuthUserFromRequest(req)
   if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
-  const mood = req.nextUrl.searchParams.get('mood') || 'Relajado'
+  const tipo = req.nextUrl.searchParams.get('tipo') || 'mood'
   const apiKey = process.env.GOOGLE_BOOKS_API_KEY || ''
 
   // Libros que el usuario ya tiene (para no recomendarlos)
   const misLibros = await buscarPorUsuario(user.id)
   const titulosYaTengo = new Set(misLibros.map(l => l.titulo.toLowerCase().trim()))
 
-  // Géneros favoritos del usuario (top 2)
+  // ── Sección: Lo que leen tus amigos ──────────────────────────────────────
+  if (tipo === 'amigos') {
+    const librosAmigos = await obtenerLibrosAmigos(user.id)
+    return NextResponse.json({ libros: librosAmigos, tipo: 'amigos' })
+  }
+
+  // ── Sección: Basado en tus favoritos (autores de libros ≥4 estrellas) ───
+  if (tipo === 'favoritos') {
+    const favoritos = await obtenerLibrosFavoritos(user.id)
+    if (favoritos.length === 0) {
+      return NextResponse.json({ libros: [], tipo: 'favoritos', sinFavoritos: true })
+    }
+
+    // Por cada autor único, buscar otros libros suyos en Google Books
+    const autoresUnicos = Array.from(new Set(favoritos.map(f => f.autor))).slice(0, 4)
+    const queries = autoresUnicos.map(a => `inauthor:"${a}"`)
+
+    // Complementar con géneros de los favoritos
+    const generosUnicos = Array.from(new Set(favoritos.map(f => f.genero).filter(Boolean))) as string[]
+    if (generosUnicos[0]) {
+      const subject = GENERO_SUBJECT[generosUnicos[0]] || 'fiction'
+      queries.push(`subject:${subject}`)
+    }
+
+    const resultados = await Promise.all(queries.map(q => buscarEnGoogleBooks(q, apiKey)))
+
+    const vistos = new Set<string>()
+    const libros: LibroRecomendado[] = []
+    for (const lista of resultados) {
+      for (const libro of lista) {
+        if (vistos.has(libro.id)) continue
+        if (titulosYaTengo.has(libro.titulo.toLowerCase().trim())) continue
+        vistos.add(libro.id)
+        libros.push(libro)
+        if (libros.length >= 20) break
+      }
+      if (libros.length >= 20) break
+    }
+
+    return NextResponse.json({ libros, tipo: 'favoritos', autoresBase: autoresUnicos })
+  }
+
+  // ── Sección: Por mood (comportamiento original) ──────────────────────────
+  const mood = req.nextUrl.searchParams.get('mood') || 'Relajado'
+
   const generoConteo = await obtenerConteoPorGenero(user.id)
   const topGeneros = Object.entries(generoConteo)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 2)
     .map(([g]) => GENERO_SUBJECT[g] || 'fiction')
 
-  // Queries: 2 por mood + 1 por género favorito
   const moodQueries = MOOD_QUERIES[mood] || MOOD_QUERIES['Relajado']
   const queries = [moodQueries[0], moodQueries[1]]
   if (topGeneros[0]) queries.push(`subject:${topGeneros[0]} ${moodQueries[0]}`)
   if (topGeneros[1]) queries.push(`subject:${topGeneros[1]}`)
 
-  // Búsquedas paralelas
   const resultados = await Promise.all(queries.map(q => buscarEnGoogleBooks(q, apiKey)))
 
-  // Deduplicar por id y filtrar los que ya tiene
   const vistos = new Set<string>()
   const libros: LibroRecomendado[] = []
-
   for (const lista of resultados) {
     for (const libro of lista) {
       if (vistos.has(libro.id)) continue
@@ -124,5 +164,5 @@ export async function GET(req: NextRequest) {
     if (libros.length >= 20) break
   }
 
-  return NextResponse.json({ libros, mood, generosUsuario: topGeneros })
+  return NextResponse.json({ libros, mood, generosUsuario: topGeneros, tipo: 'mood' })
 }
