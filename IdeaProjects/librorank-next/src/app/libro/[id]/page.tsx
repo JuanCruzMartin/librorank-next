@@ -198,9 +198,8 @@ export default async function LibroPage({ params }: Props) {
                       const ec = estadoColor(l.estado)
                       return (
                         <Link key={l.username} href={`/perfil/${l.username}`}
-                          style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', padding: '0.6rem 0.75rem', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', transition: 'background 0.15s' }}
-                          onMouseOver={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
-                          onMouseOut={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+                          className="lector-row"
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', padding: '0.6rem 0.75rem', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
                         >
                           {l.avatar_url ? (
                             <img src={l.avatar_url} alt={l.username} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).src = '/img/personajes/personaje_1.png' }} />
@@ -276,6 +275,7 @@ export default async function LibroPage({ params }: Props) {
           </div>
         </div>
       </main>
+      <style>{`.lector-row:hover { background: rgba(255,255,255,0.07) !important; }`}</style>
       <Footer />
     </>
   )
