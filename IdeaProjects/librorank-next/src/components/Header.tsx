@@ -22,6 +22,7 @@ function tipoInfo(tipo: string): { emoji: string; color: string } {
     case 'MILESTONE_RACHA':return { emoji: '🔥', color: '#ff6b35' }
     case 'ESCUDO_GANADO':  return { emoji: '🛡️', color: '#9b59b6' }
     case 'LIGA_SEMANAL':   return { emoji: '⚔️', color: '#d4af37' }
+    case 'LIGA_COMP':      return { emoji: '🏅', color: '#7ecfff' }
     case 'RANKING':        return { emoji: '🏆', color: '#d4af37' }
     default:               return { emoji: '🔔', color: '#d4af37' }
   }
@@ -247,7 +248,7 @@ export default function Header({ user }: HeaderProps) {
               {notifAbierto && (
                 <div style={{
                   position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-                  width: 300, background: '#1a1a2e',
+                  width: 300, maxWidth: 'calc(100vw - 1.5rem)', background: '#1a1a2e',
                   border: '1px solid rgba(212,175,55,0.3)',
                   borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
                   zIndex: 9999, overflow: 'hidden',

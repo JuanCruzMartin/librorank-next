@@ -1691,3 +1691,123 @@ textarea.form-control {
   color: #d4af37 !important;
   text-shadow: 0 0 10px rgba(212,175,55,0.6);
 }
+
+/* ══════════════════════════════════════════
+   CORRECCIONES RESPONSIVE — MOBILE FIRST
+   ══════════════════════════════════════════ */
+
+/* ── Tabs con scroll horizontal (ranking, misiones, biblioteca) ── */
+.tabs-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.tabs-scroll-x::-webkit-scrollbar { display: none; }
+.tabs-scroll-x > * { flex-shrink: 0; }
+
+/* ── Touch targets mínimos (44px WCAG) en móvil ── */
+@media (max-width: 768px) {
+  .btn, button:not([style*="font-size: 0.5"]):not([style*="font-size: 0.6"]) {
+    min-height: 40px;
+  }
+  .btn-sm { min-height: 38px; }
+}
+
+/* ── Ranking ── */
+@media (max-width: 576px) {
+  /* Stats grid hero: 2 col → 1 col */
+  .ranking-stats-grid {
+    grid-template-columns: 1fr !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  /* Ocultar columna secundaria "pts" en pantallas muy chicas */
+  .ranking-pts-col { display: none; }
+
+  /* Ocultar badge "amigo" en texto para no desborder username */
+  .ranking-amigo-badge { display: none; }
+
+  /* Badge liga oculto en texto secundario */
+  .ranking-liga-badge { display: none; }
+
+  /* Stats section: un solo item visible */
+  .ranking-row-stats { gap: 0.4rem !important; }
+
+  /* Padding reducido en hero del ranking */
+  .ranking-hero-progress { max-width: 100% !important; }
+}
+
+/* ── Misiones ── */
+@media (max-width: 576px) {
+  /* Grid de misiones: min 240px para caber en 390px */
+  .misiones-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
+  }
+
+  /* Hero stats: wrap en columna */
+  .misiones-hero-stats {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .misiones-hero-stats > div {
+    padding: 0.75rem !important;
+  }
+}
+
+/* ── Biblioteca ── */
+@media (max-width: 576px) {
+  /* Grid de libros: mínimo menor para que quepan 2 en 390px */
+  .biblioteca-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
+  }
+}
+
+/* ── Perfil — grids multicol → 1 col en móvil ── */
+@media (max-width: 640px) {
+  .perfil-datos-grid,
+  .perfil-logros-grid,
+  .perfil-wrapped-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Libros favoritos — scroll horizontal ya correcto */
+  .perfil-favoritos-scroll {
+    padding-bottom: 0.5rem;
+    scrollbar-width: none;
+  }
+  .perfil-favoritos-scroll::-webkit-scrollbar { display: none; }
+}
+
+/* ── Modal responsive (biblioteca agregar libro) ── */
+@media (max-width: 576px) {
+  .modal-dialog { margin: 0.5rem !important; }
+  .modal-dialog.modal-lg { max-width: calc(100vw - 1rem) !important; }
+}
+
+/* ── Toasts y dropdowns — no desbordar el viewport ── */
+@media (max-width: 576px) {
+  [style*="position: fixed"][style*="bottom"] {
+    right: 0.75rem !important;
+    left: 0.75rem !important;
+    max-width: calc(100vw - 1.5rem) !important;
+  }
+}
+
+/* ── Hero sections — padding reducido en móvil ── */
+@media (max-width: 576px) {
+  .container { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+}
+
+/* ── Features grid 3 col → 1 col ── */
+@media (max-width: 768px) {
+  .features-grid { grid-template-columns: 1fr !important; }
+  .game-preview  { grid-template-columns: 1fr !important; gap: 2rem !important; }
+}
+
+/* ── Bingo — casillas más compactas en 390px ── */
+@media (max-width: 420px) {
+  .bingo-square { min-height: 52px !important; }
+  .bingo-square .bingo-text { font-size: 0.48rem !important; }
+}

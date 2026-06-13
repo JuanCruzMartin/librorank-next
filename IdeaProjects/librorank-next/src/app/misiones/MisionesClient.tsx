@@ -10,10 +10,10 @@ interface Props {
 }
 
 const TABS: { key: TipoMision | 'todas'; label: string; emoji: string }[] = [
-  { key: 'todas',      label: 'Todas',      emoji: '🗂️' },
-  { key: 'mensual',    label: 'Mensuales',   emoji: '📅' },
-  { key: 'semanal',    label: 'Semanales',   emoji: '⚡' },
-  { key: 'permanente', label: 'Permanentes', emoji: '🏆' },
+  { key: 'todas',      label: 'Todas',               emoji: '🗂️' },
+  { key: 'mensual',    label: 'Mensuales',            emoji: '📅' },
+  { key: 'semanal',    label: 'Semanales (esta semana)', emoji: '⚡' },
+  { key: 'permanente', label: 'Permanentes',          emoji: '🏆' },
 ]
 
 export default function MisionesClient({ misionesIniciales, puntos: puntosIni }: Props) {
@@ -74,7 +74,7 @@ export default function MisionesClient({ misionesIniciales, puntos: puntosIni }:
           </p>
 
           {/* Stats del hero */}
-          <div style={{
+          <div className="misiones-hero-stats" style={{
             display: 'flex',
             justifyContent: 'center',
             gap: '1.5rem',
@@ -150,8 +150,8 @@ export default function MisionesClient({ misionesIniciales, puntos: puntosIni }:
           )}
         </div>
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+        {/* Tabs — scroll horizontal en móvil */}
+        <div className="tabs-scroll-x" style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'nowrap' }}>
           {TABS.map(t => (
             <button
               key={t.key}
@@ -162,12 +162,14 @@ export default function MisionesClient({ misionesIniciales, puntos: puntosIni }:
                   : 'rgba(255,255,255,0.05)',
                 border: tab === t.key ? 'none' : '1px solid rgba(255,255,255,0.1)',
                 borderRadius: 20,
-                padding: '0.4rem 1rem',
+                padding: '0.45rem 1rem',
                 fontSize: '0.82rem',
                 fontWeight: 700,
                 color: tab === t.key ? '#000' : 'rgba(255,255,255,0.6)',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
+                flexShrink: 0,
+                minHeight: 44,
               }}
             >
               {t.emoji} {t.label}
@@ -176,7 +178,7 @@ export default function MisionesClient({ misionesIniciales, puntos: puntosIni }:
         </div>
 
         {/* Grid de misiones */}
-        <div style={{
+        <div className="misiones-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
           gap: '1rem',
@@ -313,11 +315,12 @@ export default function MisionesClient({ misionesIniciales, puntos: puntosIni }:
                           ? 'rgba(212,175,55,0.3)'
                           : 'linear-gradient(135deg, #d4af37, #f1c40f)',
                         border: 'none', borderRadius: 8,
-                        padding: '0.4rem 1rem',
-                        fontSize: '0.75rem', fontWeight: 800,
+                        padding: '0.5rem 1.25rem',
+                        fontSize: '0.82rem', fontWeight: 800,
                         color: '#000', cursor: esReclamando ? 'default' : 'pointer',
                         transition: 'opacity 0.15s',
                         animation: esReclamando ? 'none' : 'pulse 1.5s ease-in-out infinite',
+                        minHeight: 44, minWidth: 100,
                       }}
                     >
                       {esReclamando ? '...' : '🎁 Reclamar'}
@@ -337,10 +340,11 @@ export default function MisionesClient({ misionesIniciales, puntos: puntosIni }:
       {/* ── Toast ── */}
       {toast && (
         <div style={{
-          position: 'fixed', bottom: '2rem', right: '2rem',
+          position: 'fixed', bottom: '1rem', right: '1rem',
+          maxWidth: 'calc(100vw - 2rem)',
           background: toast.tipo === 'ok' ? '#27ae60' : '#e74c3c',
           color: '#fff', borderRadius: 12,
-          padding: '0.85rem 1.5rem',
+          padding: '0.85rem 1.25rem',
           fontSize: '0.88rem', fontWeight: 700,
           boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
           zIndex: 9999,

@@ -30,6 +30,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   const [filtro, setFiltro] = useState('TODOS')
   const [filtroGenero, setFiltroGenero] = useState('TODOS')
   const [filtroEstrellas, setFiltroEstrellas] = useState(0)
+  const [filtroAnio, setFiltroAnio] = useState(0)
   const [ordenar, setOrdenar] = useState('reciente')
   const [busqueda, setBusqueda] = useState('')
   const [busquedaModal, setBusquedaModal] = useState('')
@@ -135,6 +136,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
       mood: String(fd.get('mood') || '') || null,
       estrellas: 0,
       resena: null,
+      fecha_leido: null,
     }
     setLibros(prev => [nuevoLibro, ...prev])
     setFormNuevo({ titulo: '', autor: '', anio: '', paginas: '', portada_url: '', genero: '' })
@@ -199,13 +201,17 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
     setEliminando(false)
   }
 
-  const hayFiltrosActivos = filtro !== 'TODOS' || filtroGenero !== 'TODOS' || filtroEstrellas > 0 || busqueda !== ''
+  const hayFiltrosActivos = filtro !== 'TODOS' || filtroGenero !== 'TODOS' || filtroEstrellas > 0 || filtroAnio > 0 || busqueda !== ''
 
   const librosFiltrados = libros
     .filter(l => {
       if (filtro !== 'TODOS' && l.estado !== filtro) return false
       if (filtroGenero !== 'TODOS' && l.genero !== filtroGenero) return false
       if (filtroEstrellas > 0 && (l.estrellas ?? 0) < filtroEstrellas) return false
+      if (filtroAnio > 0) {
+        const anioLeido = l.fecha_leido ? new Date(l.fecha_leido).getFullYear() : null
+        if (anioLeido !== filtroAnio) return false
+      }
       if (busqueda && !l.titulo.toLowerCase().includes(busqueda.toLowerCase()) && !l.autor.toLowerCase().includes(busqueda.toLowerCase())) return false
       return true
     })
@@ -220,6 +226,13 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
 
   // Géneros que realmente existen en la biblioteca del usuario
   const generosEnBiblioteca = ['TODOS', ...Array.from(new Set(libros.map(l => l.genero).filter(Boolean) as string[]))]
+
+  // Años en que el usuario leyó libros (de más reciente a más antiguo)
+  const aniosLeidos = Array.from(new Set(
+    libros
+      .filter(l => l.fecha_leido)
+      .map(l => new Date(l.fecha_leido!).getFullYear())
+  )).sort((a, b) => b - a)
 
   const [hoveredId, setHoveredId] = useState<number | null>(null)
 
@@ -456,8 +469,8 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
             )}
           </div>
 
-          {/* Fila 2: Género + Calificación + Ordenar + Búsqueda */}
-          <div className="d-flex gap-2 flex-wrap align-items-center">
+          {/* Fila 2: Género + Calificación + Ordenar + Búsqueda — scroll en móvil */}
+          <div className="tabs-scroll-x d-flex gap-2 align-items-center" style={{ flexWrap: 'nowrap' }}>
 
             {/* Género */}
             <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.8px', marginRight: 4 }}>Género</span>
@@ -521,6 +534,30 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
               <option value="paginas"   style={{ background: '#1a1a1a' }}>📄 Más páginas</option>
             </select>
 
+            {/* Año leído */}
+            {aniosLeidos.length > 0 && (
+              <>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.8px', marginLeft: 8, marginRight: 4 }}>Año</span>
+                <select
+                  value={filtroAnio}
+                  onChange={e => setFiltroAnio(Number(e.target.value))}
+                  style={{
+                    background: filtroAnio > 0 ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.05)',
+                    border: filtroAnio > 0 ? '1px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 20, padding: '0.3rem 0.85rem',
+                    fontSize: '0.75rem', fontWeight: 700,
+                    color: filtroAnio > 0 ? '#d4af37' : 'rgba(255,255,255,0.6)',
+                    cursor: 'pointer', outline: 'none',
+                  }}
+                >
+                  <option value={0} style={{ background: '#1a1a1a' }}>📅 Todos los años</option>
+                  {aniosLeidos.map(a => (
+                    <option key={a} value={a} style={{ background: '#1a1a1a' }}>{a}</option>
+                  ))}
+                </select>
+              </>
+            )}
+
             {/* Búsqueda dentro de la biblioteca */}
             <div style={{ position: 'relative', marginLeft: 'auto', flex: '1 1 180px', maxWidth: 280 }}>
               <input
@@ -559,7 +596,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
             </span>
             {hayFiltrosActivos && (
               <button
-                onClick={() => { setFiltro('TODOS'); setFiltroGenero('TODOS'); setFiltroEstrellas(0); setOrdenar('reciente'); setBusqueda('') }}
+                onClick={() => { setFiltro('TODOS'); setFiltroGenero('TODOS'); setFiltroEstrellas(0); setFiltroAnio(0); setOrdenar('reciente'); setBusqueda('') }}
                 style={{ background: 'none', border: 'none', color: '#ff5e57', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', padding: 0 }}
               >
                 ✕ Limpiar filtros
@@ -595,7 +632,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
             )}
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '1rem' }}>
+          <div className="biblioteca-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '1rem' }}>
             {librosFiltrados.map(libro => {
               const hovered = hoveredId === libro.id
               const ec = estadoColor(libro.estado)

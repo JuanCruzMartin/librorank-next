@@ -11,10 +11,10 @@ export interface JWTPayload {
 }
 
 const jwtSecret = process.env.JWT_SECRET
-if (!jwtSecret && process.env.NODE_ENV === 'production') {
+if (!jwtSecret) {
   throw new Error('JWT_SECRET no está configurado. Agregalo en las variables de entorno.')
 }
-const secret = new TextEncoder().encode(jwtSecret || 'librorank-dev-secret-local-only')
+const secret = new TextEncoder().encode(jwtSecret)
 
 const COOKIE_NAME = 'librorank_token'
 const EXPIRES_IN = '7d'

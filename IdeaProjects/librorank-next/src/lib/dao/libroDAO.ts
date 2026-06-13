@@ -16,6 +16,7 @@ export interface Libro {
   resena: string | null
   genero: string | null
   mood: string | null
+  fecha_leido: string | null
 }
 
 export interface PerfilStats {

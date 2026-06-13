@@ -344,7 +344,7 @@ export default function PerfilClient({
           {tab === 'resumen' && (
             <>
               {/* Stats hero */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <div className="perfil-datos-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
                 {[
                   { icon: '📚', valor: totalLeidos, label: 'libros leídos', color: '#d4af37' },
                   { icon: '📄', valor: paginasLeidas > 0 ? paginasLeidas.toLocaleString('es-AR') : '—', label: 'páginas', color: '#4cd137' },
@@ -530,7 +530,7 @@ export default function PerfilClient({
                           }}>
                             {labels[cat]}
                           </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.8rem' }}>
+                          <div className="perfil-logros-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.8rem' }}>
                             {grupo.map(l => (
                               <div key={l.id} style={{
                                 position: 'relative',
@@ -636,7 +636,7 @@ export default function PerfilClient({
                   </div>
 
                   {/* Stats grandes */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div className="perfil-wrapped-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
                     {[
                       { valor: wrapped.resumen.total, label: 'libros leídos', icon: '📚', color: '#d4af37' },
                       { valor: wrapped.resumen.paginas.toLocaleString(), label: 'páginas', icon: '📄', color: '#4cd137' },
@@ -680,7 +680,7 @@ export default function PerfilClient({
                   </div>
 
                   {/* Datos curiosos: racha, páginas/día, libro más largo, primer libro */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div className="perfil-wrapped-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
 
                     {/* Racha actual */}
                     <div className="card p-4" style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -792,7 +792,7 @@ export default function PerfilClient({
                   </div>
 
                   {/* Géneros y Autores */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div className="perfil-wrapped-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                     {/* Géneros */}
                     <div className="card p-4">
                       <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: '1rem' }}>🎭 Géneros</p>

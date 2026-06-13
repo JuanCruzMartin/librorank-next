@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         portada_url: portada_url || null,
         genero: genero || null,
         mood: mood || null,
-        estrellas: 0, resena: null,
+        estrellas: 0, resena: null, fecha_leido: null,
       })
 
       let puntosGanados = 0

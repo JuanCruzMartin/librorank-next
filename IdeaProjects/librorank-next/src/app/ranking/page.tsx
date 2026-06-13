@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/lib/auth'
-import { buscarPorId, obtenerRankingLectores, obtenerRankingSemanal, obtenerRankingLigaSemanal, getNivelLector } from '@/lib/dao/usuarioDAO'
+import { buscarPorId, obtenerRankingLectores, obtenerRankingSemanal, getNivelLector } from '@/lib/dao/usuarioDAO'
 import { obtenerIdsAmigos } from '@/lib/dao/amigoDAO'
 import { getLiga } from '@/lib/ligas'
+import { ensureResetSemanal, getLigaCompUsuario, getRankingLigaComp } from '@/lib/dao/ligaCompDAO'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import RankingClient from './RankingClient'
@@ -17,6 +18,9 @@ export default async function RankingPage() {
   const authUser = await getAuthUser()
   if (!authUser) redirect('/login')
 
+  // Dispara el reset semanal lazy (no-op si ya se corrió esta semana)
+  await ensureResetSemanal().catch(() => {})
+
   const [usuario, rankingRaw, idsAmigos, rankingSemanalRaw] = await Promise.all([
     buscarPorId(authUser.id),
     obtenerRankingLectores(200),
@@ -26,8 +30,9 @@ export default async function RankingPage() {
 
   if (!usuario) redirect('/login')
 
-  const ligaActual = getLiga(usuario.puntos ?? 0)
-  const ligaSemanalRaw = await obtenerRankingLigaSemanal(ligaActual.min, ligaActual.max)
+  const ligaActual    = getLiga(usuario.puntos ?? 0)
+  const ligaCompKey   = await getLigaCompUsuario(authUser.id)
+  const ligaCompRaw   = await getRankingLigaComp(ligaCompKey)
 
   const ranking = rankingRaw.map(u => ({
     id: u.id,
@@ -51,7 +56,7 @@ export default async function RankingPage() {
     es_amigo: idsAmigos.includes(u.id),
   }))
 
-  const ligaSemanal = ligaSemanalRaw.map(u => ({
+  const ligaSemanal = ligaCompRaw.map(u => ({
     id: u.id,
     nombre: u.nombre,
     username: u.username,
@@ -72,6 +77,7 @@ export default async function RankingPage() {
           rankingSemanal={rankingSemanal}
           ligaSemanal={ligaSemanal}
           ligaActualKey={ligaActual.key}
+          ligaCompKey={ligaCompKey}
           usuarioId={authUser.id}
           puntosUsuario={usuario.puntos ?? 0}
         />

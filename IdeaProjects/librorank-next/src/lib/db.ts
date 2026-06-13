@@ -1,13 +1,18 @@
 import mysql from 'mysql2/promise'
 
+const requiredEnvVars = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'] as const
+for (const v of requiredEnvVars) {
+  if (!process.env[v]) throw new Error(`Variable de entorno faltante: ${v}. Configurala en Vercel o en .env.local.`)
+}
+
 // Pool singleton — se crea una vez por proceso y se reutiliza entre requests
 // Evita abrir/cerrar una conexión nueva en cada query (costoso en Vercel/Railway)
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT) || 3306,
-  database: process.env.DB_NAME || 'libreria',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
   timezone: '+00:00',
   connectTimeout: 10000,

@@ -50,6 +50,7 @@ interface Props {
   rankingSemanal: UsuarioSemanal[]
   ligaSemanal: UsuarioLigaSemanal[]
   ligaActualKey: string
+  ligaCompKey: string
   usuarioId: number
   puntosUsuario: number
 }
@@ -79,9 +80,11 @@ function horasParaReset(): string {
   return `${horas}h ${mins}m`
 }
 
-export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ligaActualKey, usuarioId, puntosUsuario }: Props) {
-  const ligaActual = getLigaActual(puntosUsuario)
+export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ligaActualKey, ligaCompKey, usuarioId, puntosUsuario }: Props) {
+  const ligaActual  = getLigaActual(puntosUsuario)
+  const ligaComp    = LIGAS.find(l => l.key === ligaCompKey) ?? LIGAS[0]
   const ligaSiguiente = LIGAS[LIGAS.indexOf(ligaActual) + 1] ?? null
+  const ligaCompSig   = LIGAS[LIGAS.indexOf(ligaComp) + 1] ?? null
 
   const [ligaTab, setLigaTab] = useState<string>('ligasemanal')
 
@@ -127,22 +130,43 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
 
             {/* Info liga del usuario */}
             <div className="col-md-6 text-center text-md-start">
+              {/* Liga permanente (por puntos) */}
               <div style={{
                 display: 'inline-flex', alignItems: 'center', gap: '0.6rem',
                 background: ligaActual.colorBg,
                 border: `1px solid ${ligaActual.border}`,
                 borderRadius: 12, padding: '0.4rem 1rem',
                 fontSize: '0.8rem', fontWeight: 700,
-                color: ligaActual.color, marginBottom: '0.75rem',
+                color: ligaActual.color, marginBottom: '0.5rem',
               }}>
-                {ligaActual.emoji} Liga {ligaActual.nombre}
-                {posEnLiga > 0 && <span style={{ opacity: 0.7 }}>· #{posEnLiga} en tu liga</span>}
+                {ligaActual.emoji} Liga permanente: {ligaActual.nombre}
+                {posEnLiga > 0 && <span style={{ opacity: 0.7 }}>· #{posEnLiga}</span>}
               </div>
+
+              {/* Liga competitiva (con ascenso/descenso) */}
+              <div style={{ marginBottom: '0.75rem' }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                  background: ligaComp.colorBg,
+                  border: `1px solid ${ligaComp.border}`,
+                  borderRadius: 12, padding: '0.4rem 1rem',
+                  fontSize: '0.8rem', fontWeight: 700,
+                  color: ligaComp.color,
+                }}>
+                  ⚔️ Liga competitiva: {ligaComp.emoji} {ligaComp.nombre}
+                  {ligaCompSig && (
+                    <span style={{ opacity: 0.65, fontSize: '0.7rem' }}>
+                      · top 3 sube a {ligaCompSig.emoji} {ligaCompSig.nombre}
+                    </span>
+                  )}
+                </div>
+              </div>
+
               <h1 className="font-title display-5 mb-2" style={{ color: '#fff' }}>
                 🏆 Ranking Global
               </h1>
               <p className="text-muted" style={{ fontSize: '1rem', marginBottom: '1.25rem' }}>
-                Competí con lectores de todo LibroRank. Subí de liga acumulando puntos.
+                Liga permanente: acumulá puntos. Liga competitiva: top 3 de cada semana sube, los inactivos bajan.
               </p>
 
               {/* Barra de progreso hacia siguiente liga */}
@@ -183,15 +207,15 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
 
             {/* Tus stats rápidos */}
             <div className="col-md-6">
-              <div style={{
+              <div className="ranking-stats-grid" style={{
                 display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem',
                 maxWidth: 360, marginLeft: 'auto',
               }}>
                 {[
                   { label: 'Tus puntos', value: `⭐ ${puntosUsuario}`, color: '#d4af37' },
-                  { label: 'Tu liga', value: `${ligaActual.emoji} ${ligaActual.nombre}`, color: ligaActual.color },
+                  { label: 'Liga permanente', value: `${ligaActual.emoji} ${ligaActual.nombre}`, color: ligaActual.color },
+                  { label: 'Liga competitiva', value: `${ligaComp.emoji} ${ligaComp.nombre}`, color: ligaComp.color },
                   { label: 'Posición global', value: `#${ranking.findIndex(u => u.id === usuarioId) + 1 || '—'}`, color: '#fff' },
-                  { label: 'En tu liga', value: posEnLiga > 0 ? `#${posEnLiga}` : '—', color: '#fff' },
                 ].map(stat => (
                   <div key={stat.label} style={{
                     background: 'rgba(255,255,255,0.04)',
@@ -212,28 +236,29 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
       {/* ── CONTENIDO ── */}
       <div className="container py-5">
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+        {/* Tabs — scroll horizontal en móvil */}
+        <div className="tabs-scroll-x" style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'nowrap' }}>
 
-          {/* Tab Liga Semanal ⚔️ */}
+          {/* Tab Liga Competitiva ⚔️ */}
           <button
             onClick={() => setLigaTab('ligasemanal')}
             style={{
-              background: esLigaSemanal ? `${ligaActual.colorBg}` : 'rgba(255,255,255,0.04)',
-              border: esLigaSemanal ? `2px solid ${ligaActual.border}` : '1px solid rgba(255,255,255,0.08)',
+              background: esLigaSemanal ? ligaComp.colorBg : 'rgba(255,255,255,0.04)',
+              border: esLigaSemanal ? `2px solid ${ligaComp.border}` : '1px solid rgba(255,255,255,0.08)',
               borderRadius: 20, padding: '0.45rem 1.1rem',
               fontSize: '0.82rem', fontWeight: 700,
-              color: esLigaSemanal ? ligaActual.color : 'rgba(255,255,255,0.5)',
+              color: esLigaSemanal ? ligaComp.color : 'rgba(255,255,255,0.5)',
               cursor: 'pointer', transition: 'all 0.2s',
               display: 'flex', alignItems: 'center', gap: '0.4rem',
             }}
           >
-            ⚔️ Liga Semanal
+            ⚔️ Liga Competitiva
             <span style={{
-              background: 'rgba(255,100,0,0.15)', color: '#ff6400',
+              background: esLigaSemanal ? ligaComp.colorBg : 'rgba(255,255,255,0.08)',
+              color: esLigaSemanal ? ligaComp.color : 'rgba(255,255,255,0.4)',
               borderRadius: 20, padding: '1px 7px', fontSize: '0.65rem', fontWeight: 800,
             }}>
-              NUEVO
+              {ligaComp.emoji}
             </span>
           </button>
 
@@ -379,7 +404,7 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
         </div>
         )}
 
-        {/* ── Liga Semanal ─────────────────────────────────────────────── */}
+        {/* ── Liga Competitiva Semanal ─────────────────────────────────── */}
         {esLigaSemanal && (() => {
           const miPosicion = ligaSemanal.findIndex(u => u.id === usuarioId) + 1
           const totalEnLiga = ligaSemanal.length
@@ -391,24 +416,24 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
             <div>
               {/* Banner de estado de la liga */}
               <div style={{
-                background: `linear-gradient(135deg, ${ligaActual.colorBg}, rgba(0,0,0,0.3))`,
-                border: `1px solid ${ligaActual.border}`,
+                background: `linear-gradient(135deg, ${ligaComp.colorBg}, rgba(0,0,0,0.3))`,
+                border: `1px solid ${ligaComp.border}`,
                 borderRadius: 16, padding: '1.25rem 1.5rem',
-                marginBottom: '1.5rem',
+                marginBottom: '0.75rem',
                 display: 'flex', flexWrap: 'wrap', gap: '1.25rem', alignItems: 'center',
               }}>
-                <div style={{ fontSize: '2.5rem', lineHeight: 1 }}>{ligaActual.emoji}</div>
+                <div style={{ fontSize: '2.5rem', lineHeight: 1 }}>{ligaComp.emoji}</div>
                 <div style={{ flex: 1, minWidth: 180 }}>
-                  <div style={{ fontWeight: 800, fontSize: '1rem', color: ligaActual.color }}>
-                    Liga {ligaActual.nombre} — Semana actual
+                  <div style={{ fontWeight: 800, fontSize: '1rem', color: ligaComp.color }}>
+                    ⚔️ Liga Competitiva: {ligaComp.nombre}
                   </div>
                   <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>
-                    {totalEnLiga} lectores en tu liga · {activosEstaSemana} activos esta semana
+                    {totalEnLiga} lectores · {activosEstaSemana} activos esta semana
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: miPosicion > 0 ? ligaActual.color : 'rgba(255,255,255,0.3)' }}>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: miPosicion > 0 ? ligaComp.color : 'rgba(255,255,255,0.3)' }}>
                       {miPosicion > 0 ? `#${miPosicion}` : '—'}
                     </div>
                     <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 }}>tu posición</div>
@@ -420,6 +445,19 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
                     <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 }}>para el reset</div>
                   </div>
                 </div>
+              </div>
+
+              {/* Reglas compactas */}
+              <div style={{
+                display: 'flex', gap: '0.5rem', flexWrap: 'wrap',
+                marginBottom: '1rem', fontSize: '0.7rem',
+                color: 'rgba(255,255,255,0.4)',
+              }}>
+                <span>⚡ Reset cada lunes</span>
+                <span>·</span>
+                <span style={{ color: 'rgba(76,209,55,0.8)' }}>▲ Top 3 activos → sube de liga</span>
+                <span>·</span>
+                <span style={{ color: 'rgba(231,76,60,0.8)' }}>▼ Últimos 3 inactivos → baja de liga</span>
               </div>
 
               {/* Leyenda de zonas */}
@@ -438,8 +476,8 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
 
               {ligaSemanal.length === 0 ? (
                 <div className="text-center py-5">
-                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{ligaActual.emoji}</div>
-                  <p className="text-muted">Nadie en tu liga leyó esta semana aún. ¡Sé el primero!</p>
+                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{ligaComp.emoji}</div>
+                  <p className="text-muted">Nadie en tu liga competitiva leyó esta semana aún. ¡Sé el primero!</p>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -453,39 +491,39 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
                       : enZonaDescenso
                         ? 'rgba(231,76,60,0.3)'
                         : esYo
-                          ? ligaActual.border
+                          ? ligaComp.border
                           : 'rgba(255,255,255,0.05)'
                     const bgColor = enZonaAscenso
                       ? 'rgba(76,209,55,0.05)'
                       : enZonaDescenso
                         ? 'rgba(231,76,60,0.04)'
                         : esYo
-                          ? `${ligaActual.color}10`
+                          ? `${ligaComp.color}10`
                           : 'var(--bg-card)'
 
                     return (
-                      <div key={u.id} style={{
+                      <div key={u.id} className="ranking-row" style={{
                         background: bgColor,
                         border: `1px solid ${borderColor}`,
-                        borderRadius: 12, padding: '0.75rem 1.25rem',
-                        display: 'flex', alignItems: 'center', gap: '0.9rem',
+                        borderRadius: 12, padding: '0.65rem 1rem',
+                        display: 'flex', alignItems: 'center', gap: '0.6rem',
                         transition: 'transform 0.15s',
                       }}
                         onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateX(4px)'}
                         onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'none'}
                       >
                         {/* Posición + indicador de zona */}
-                        <div style={{ width: 34, textAlign: 'center', flexShrink: 0, position: 'relative' }}>
+                        <div style={{ width: 28, textAlign: 'center', flexShrink: 0, position: 'relative' }}>
                           {enZonaAscenso && pos <= 3 ? (
                             <Medal pos={pos} />
                           ) : (
-                            <span style={{ fontSize: '0.78rem', color: enZonaDescenso ? '#e74c3c' : 'rgba(255,255,255,0.4)', fontWeight: 700 }}>#{pos}</span>
+                            <span style={{ fontSize: '0.75rem', color: enZonaDescenso ? '#e74c3c' : 'rgba(255,255,255,0.4)', fontWeight: 700 }}>#{pos}</span>
                           )}
                           {enZonaAscenso && (
-                            <div style={{ position: 'absolute', top: -2, right: -4, fontSize: '0.55rem', color: '#4cd137' }}>▲</div>
+                            <div style={{ position: 'absolute', top: -2, right: -4, fontSize: '0.5rem', color: '#4cd137' }}>▲</div>
                           )}
                           {enZonaDescenso && (
-                            <div style={{ position: 'absolute', top: -2, right: -4, fontSize: '0.55rem', color: '#e74c3c' }}>▼</div>
+                            <div style={{ position: 'absolute', top: -2, right: -4, fontSize: '0.5rem', color: '#e74c3c' }}>▼</div>
                           )}
                         </div>
 
@@ -494,48 +532,48 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
                           src={u.avatar_url || '/img/personajes/personaje_1.png'}
                           alt={u.username}
                           style={{
-                            width: 38, height: 38, borderRadius: '50%',
+                            width: 34, height: 34, borderRadius: '50%',
                             objectFit: 'cover', flexShrink: 0,
-                            border: `2px solid ${esYo ? ligaActual.color : enZonaAscenso ? 'rgba(76,209,55,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                            border: `2px solid ${esYo ? ligaComp.color : enZonaAscenso ? 'rgba(76,209,55,0.5)' : 'rgba(255,255,255,0.1)'}`,
                             opacity: u.libros_semana === 0 ? 0.5 : 1,
                           }}
                         />
 
                         {/* Nombre */}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                            <Link href={`/perfil/${u.username}`} style={{ fontWeight: 700, color: u.libros_semana === 0 ? 'rgba(255,255,255,0.4)' : '#fff', textDecoration: 'none', fontSize: '0.88rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                            <Link href={`/perfil/${u.username}`} className="ranking-row-username" style={{ fontWeight: 700, color: u.libros_semana === 0 ? 'rgba(255,255,255,0.4)' : '#fff', textDecoration: 'none', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
                               @{u.username}
                             </Link>
                             {esYo && (
-                              <span style={{ fontSize: '0.62rem', fontWeight: 700, background: `${ligaActual.color}25`, color: ligaActual.color, borderRadius: 20, padding: '1px 7px', border: `1px solid ${ligaActual.border}` }}>
+                              <span style={{ fontSize: '0.6rem', fontWeight: 700, background: `${ligaComp.color}25`, color: ligaComp.color, borderRadius: 20, padding: '1px 6px', border: `1px solid ${ligaComp.border}`, flexShrink: 0 }}>
                                 Vos
                               </span>
                             )}
                             {u.es_amigo && (
-                              <span style={{ fontSize: '0.62rem', fontWeight: 700, background: 'rgba(39,174,96,0.15)', color: '#27ae60', borderRadius: 20, padding: '1px 7px', border: '1px solid rgba(39,174,96,0.3)' }}>
+                              <span className="ranking-amigo-badge" style={{ fontSize: '0.6rem', fontWeight: 700, background: 'rgba(39,174,96,0.15)', color: '#27ae60', borderRadius: 20, padding: '1px 6px', border: '1px solid rgba(39,174,96,0.3)', flexShrink: 0 }}>
                                 amigo
                               </span>
                             )}
                           </div>
-                          <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                          <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>
                             {u.nivel.emoji} {u.nivel.titulo}
                           </div>
                         </div>
 
                         {/* Stats */}
-                        <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center', flexShrink: 0 }}>
+                        <div className="ranking-row-stats" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexShrink: 0 }}>
                           <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontWeight: 800, fontSize: '1.05rem', color: u.libros_semana > 0 ? '#4cd137' : 'rgba(255,255,255,0.2)' }}>
+                            <div style={{ fontWeight: 800, fontSize: '1rem', color: u.libros_semana > 0 ? '#4cd137' : 'rgba(255,255,255,0.2)' }}>
                               {u.libros_semana > 0 ? `📚 ${u.libros_semana}` : '—'}
                             </div>
-                            <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)' }}>esta semana</div>
+                            <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)' }}>semana</div>
                           </div>
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontWeight: 600, color: `${ligaActual.color}99`, fontSize: '0.82rem' }}>
+                          <div className="ranking-pts-col" style={{ textAlign: 'center' }}>
+                            <div style={{ fontWeight: 600, color: `${ligaComp.color}99`, fontSize: '0.8rem' }}>
                               ⭐ {u.puntos}
                             </div>
-                            <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)' }}>pts totales</div>
+                            <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)' }}>pts</div>
                           </div>
                         </div>
                       </div>
@@ -570,71 +608,71 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
                       border: esYo
                         ? '1px solid rgba(233,30,140,0.35)'
                         : pos <= 3 ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.05)',
-                      borderRadius: 12, padding: '0.85rem 1.25rem',
-                      display: 'flex', alignItems: 'center', gap: '1rem',
+                      borderRadius: 12, padding: '0.65rem 1rem',
+                      display: 'flex', alignItems: 'center', gap: '0.6rem',
                       transition: 'transform 0.15s',
                     }}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateX(4px)'}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'none'}
                   >
-                    <div style={{ width: 32, textAlign: 'center', flexShrink: 0 }}>
+                    <div style={{ width: 28, textAlign: 'center', flexShrink: 0 }}>
                       <Medal pos={pos} />
                     </div>
                     <img
                       src={u.avatar_url || '/img/personajes/personaje_1.png'}
                       alt={u.username}
                       style={{
-                        width: 38, height: 38, borderRadius: '50%',
+                        width: 34, height: 34, borderRadius: '50%',
                         objectFit: 'cover', flexShrink: 0,
                         border: `2px solid ${esYo ? '#e91e8c' : medalColor}`,
                       }}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
                         <Link
                           href={`/perfil/${u.username}`}
-                          style={{ fontWeight: 700, color: '#fff', textDecoration: 'none', fontSize: '0.88rem' }}
+                          style={{ fontWeight: 700, color: '#fff', textDecoration: 'none', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                         >
                           @{u.username}
                         </Link>
                         {esYo && (
                           <span style={{
-                            fontSize: '0.62rem', fontWeight: 700, background: 'rgba(233,30,140,0.2)',
-                            color: '#e91e8c', borderRadius: 20, padding: '1px 7px',
-                            border: '1px solid rgba(233,30,140,0.3)',
+                            fontSize: '0.6rem', fontWeight: 700, background: 'rgba(233,30,140,0.2)',
+                            color: '#e91e8c', borderRadius: 20, padding: '1px 6px',
+                            border: '1px solid rgba(233,30,140,0.3)', flexShrink: 0,
                           }}>
                             Vos
                           </span>
                         )}
                         {u.es_amigo && (
-                          <span style={{
-                            fontSize: '0.62rem', fontWeight: 700, background: 'rgba(39,174,96,0.15)',
-                            color: '#27ae60', borderRadius: 20, padding: '1px 7px',
-                            border: '1px solid rgba(39,174,96,0.3)',
+                          <span className="ranking-amigo-badge" style={{
+                            fontSize: '0.6rem', fontWeight: 700, background: 'rgba(39,174,96,0.15)',
+                            color: '#27ae60', borderRadius: 20, padding: '1px 6px',
+                            border: '1px solid rgba(39,174,96,0.3)', flexShrink: 0,
                           }}>
                             amigo
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                      <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>
                         {getNivelLector(u.puntos).emoji} {getNivelLector(u.puntos).titulo}
-                        <span style={{ marginLeft: 6, color: getLigaActual(u.puntos).color, opacity: 0.8, fontWeight: 700, fontSize: '0.6rem' }}>
+                        <span className="ranking-liga-badge" style={{ marginLeft: 6, color: getLigaActual(u.puntos).color, opacity: 0.8, fontWeight: 700, fontSize: '0.58rem' }}>
                           · {getLigaActual(u.puntos).emoji} {getLigaActual(u.puntos).nombre}
                         </span>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexShrink: 0 }}>
+                    <div className="ranking-row-stats" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexShrink: 0 }}>
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 800, color: '#e91e8c', fontSize: '1.1rem' }}>
+                        <div style={{ fontWeight: 800, color: '#e91e8c', fontSize: '1rem' }}>
                           📚 {u.libros_semana}
                         </div>
-                        <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>esta semana</div>
+                        <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)' }}>semana</div>
                       </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 600, color: 'rgba(212,175,55,0.55)', fontSize: '0.85rem' }}>
+                      <div className="ranking-pts-col" style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: 600, color: 'rgba(212,175,55,0.55)', fontSize: '0.82rem' }}>
                           ⭐ {u.puntos}
                         </div>
-                        <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>puntos</div>
+                        <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)' }}>pts</div>
                       </div>
                     </div>
                   </div>
@@ -667,15 +705,15 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
                       border: esYo
                         ? `1px solid ${(ligaSeleccionada ?? ligaActual).border}`
                         : pos <= 3 ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.05)',
-                      borderRadius: 12, padding: '0.85rem 1.25rem',
-                      display: 'flex', alignItems: 'center', gap: '1rem',
+                      borderRadius: 12, padding: '0.65rem 1rem',
+                      display: 'flex', alignItems: 'center', gap: '0.6rem',
                       transition: 'transform 0.15s',
                     }}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateX(4px)'}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'none'}
                   >
                     {/* Posición */}
-                    <div style={{ width: 32, textAlign: 'center', flexShrink: 0 }}>
+                    <div style={{ width: 28, textAlign: 'center', flexShrink: 0 }}>
                       <Medal pos={pos} />
                     </div>
 
@@ -684,7 +722,7 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
                       src={u.avatar_url || '/img/personajes/personaje_1.png'}
                       alt={u.username}
                       style={{
-                        width: 38, height: 38, borderRadius: '50%',
+                        width: 34, height: 34, borderRadius: '50%',
                         objectFit: 'cover', flexShrink: 0,
                         border: esYo ? `2px solid ${(ligaSeleccionada ?? ligaActual).color}` : '1px solid rgba(255,255,255,0.1)',
                       }}
@@ -692,37 +730,37 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
 
                     {/* Nombre */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
                         <Link
                           href={`/perfil/${u.username}`}
-                          style={{ fontWeight: 700, color: '#fff', textDecoration: 'none', fontSize: '0.88rem' }}
+                          style={{ fontWeight: 700, color: '#fff', textDecoration: 'none', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                         >
                           @{u.username}
                         </Link>
                         {esYo && (
                           <span style={{
-                            fontSize: '0.62rem', fontWeight: 700, background: 'rgba(212,175,55,0.2)',
-                            color: '#d4af37', borderRadius: 20, padding: '1px 7px',
-                            border: '1px solid rgba(212,175,55,0.3)',
+                            fontSize: '0.6rem', fontWeight: 700, background: 'rgba(212,175,55,0.2)',
+                            color: '#d4af37', borderRadius: 20, padding: '1px 6px',
+                            border: '1px solid rgba(212,175,55,0.3)', flexShrink: 0,
                           }}>
                             Vos
                           </span>
                         )}
                         {u.es_amigo && (
-                          <span style={{
-                            fontSize: '0.62rem', fontWeight: 700, background: 'rgba(39,174,96,0.15)',
-                            color: '#27ae60', borderRadius: 20, padding: '1px 7px',
-                            border: '1px solid rgba(39,174,96,0.3)',
+                          <span className="ranking-amigo-badge" style={{
+                            fontSize: '0.6rem', fontWeight: 700, background: 'rgba(39,174,96,0.15)',
+                            color: '#27ae60', borderRadius: 20, padding: '1px 6px',
+                            border: '1px solid rgba(39,174,96,0.3)', flexShrink: 0,
                           }}>
                             amigo
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', marginTop: 2, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)', marginTop: 1, display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
                         <span>{nivelInfo.emoji} {nivelInfo.titulo}</span>
                         {esGeneral && (
-                          <span style={{
-                            fontSize: '0.6rem', fontWeight: 700,
+                          <span className="ranking-liga-badge" style={{
+                            fontSize: '0.58rem', fontWeight: 700,
                             color: getLigaActual(u.puntos).color,
                             opacity: 0.8,
                           }}>
@@ -733,18 +771,18 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
                     </div>
 
                     {/* Stats — orden cambia según tab */}
-                    <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexShrink: 0 }}>
+                    <div className="ranking-row-stats" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexShrink: 0 }}>
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 800, color: esLibros ? '#4a9e7a' : '#fff', fontSize: esLibros ? '1rem' : '0.9rem' }}>
+                        <div style={{ fontWeight: 800, color: esLibros ? '#4a9e7a' : '#fff', fontSize: '0.9rem' }}>
                           📚 {u.total_leidos}
                         </div>
-                        <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>leídos</div>
+                        <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)' }}>leídos</div>
                       </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: esLibros ? 600 : 800, color: esLibros ? 'rgba(212,175,55,0.6)' : '#d4af37', fontSize: '0.9rem' }}>
+                      <div className="ranking-pts-col" style={{ textAlign: 'center' }}>
+                        <div style={{ fontWeight: esLibros ? 600 : 800, color: esLibros ? 'rgba(212,175,55,0.6)' : '#d4af37', fontSize: '0.85rem' }}>
                           ⭐ {u.puntos}
                         </div>
-                        <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)' }}>puntos</div>
+                        <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)' }}>pts</div>
                       </div>
                     </div>
                   </div>
