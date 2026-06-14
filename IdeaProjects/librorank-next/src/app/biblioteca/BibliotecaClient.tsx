@@ -109,6 +109,10 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   async function agregarLibro(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
+    const titulo = (fd.get('titulo') as string ?? '').trim().toLowerCase()
+    const autor = (fd.get('autor') as string ?? '').trim().toLowerCase()
+    const duplicado = libros.some(l => l.titulo.trim().toLowerCase() === titulo && l.autor.trim().toLowerCase() === autor)
+    if (duplicado) { setMensaje('Ya tenés este libro en tu biblioteca'); return }
     const res = await fetch('/api/libros', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accion: 'nuevo', titulo: fd.get('titulo'), autor: fd.get('autor'), anio: fd.get('anio'), paginas: fd.get('paginas'), estado: fd.get('estado'), portada_url: fd.get('portada_url'), genero: fd.get('genero'), mood: fd.get('mood') }),
@@ -428,7 +432,6 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
       </header>
 
       <main className="container my-5">
-        {mensaje && <div className="alert alert-danger">{mensaje}</div>}
         {!soloLectura && (
           <BannerExplicativo
             icon="📚"
@@ -738,7 +741,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                 </div>
                 <button
                   className="btn-close btn-close-white"
-                  onClick={() => { setShowModal(false); setSugerencias([]); setBusquedaModal(''); setModoManual(false); setFormNuevo({ titulo: '', autor: '', anio: '', paginas: '', portada_url: '', genero: '' }) }}
+                  onClick={() => { setShowModal(false); setSugerencias([]); setBusquedaModal(''); setModoManual(false); setFormNuevo({ titulo: '', autor: '', anio: '', paginas: '', portada_url: '', genero: '' }); setMensaje('') }}
                 />
               </div>
 
@@ -840,6 +843,11 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                 {/* ── Formulario (siempre visible en modo manual, o después de seleccionar) ── */}
                 {(modoManual || formNuevo.titulo) && (
                   <form id="formNuevo" onSubmit={agregarLibro}>
+                    {mensaje && (
+                      <div className="alert alert-danger py-2 mb-3" style={{ fontSize: '0.85rem' }}>
+                        ⚠️ {mensaje}
+                      </div>
+                    )}
                     <div className="row g-3">
                       <div className="col-12">
                         <label className="form-label text-muted" style={{ fontSize: '0.8rem' }}>Título *</label>
@@ -914,7 +922,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.5rem' }}>
                       <button type="button" className="btn btn-outline-secondary btn-sm"
-                        onClick={() => { setShowModal(false); setSugerencias([]); setBusquedaModal(''); setModoManual(false); setFormNuevo({ titulo: '', autor: '', anio: '', paginas: '', portada_url: '', genero: '' }) }}>
+                        onClick={() => { setShowModal(false); setSugerencias([]); setBusquedaModal(''); setModoManual(false); setFormNuevo({ titulo: '', autor: '', anio: '', paginas: '', portada_url: '', genero: '' }); setMensaje('') }}>
                         Cancelar
                       </button>
                       <button type="submit" className="btn btn-gold btn-sm px-4">
