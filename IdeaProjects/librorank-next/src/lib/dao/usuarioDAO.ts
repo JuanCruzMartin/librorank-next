@@ -243,7 +243,7 @@ export interface AutorRanking {
 
 export async function obtenerRankingAutores(limite = 30): Promise<AutorRanking[]> {
   return query<AutorRanking>(
-    `SELECT TRIM(autor) AS autor,
+    `SELECT MIN(TRIM(autor)) AS autor,
             COUNT(DISTINCT usuario_id) AS lectores,
             COUNT(*) AS total_lecturas
      FROM libros_usuario
