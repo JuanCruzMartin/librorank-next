@@ -47,6 +47,7 @@ export default function MisionesClient({ misionesIniciales, puntos: puntosIni }:
         setMisiones(prev => prev.map(m => m.key === mision.key ? { ...m, reclamada: true } : m))
         setPuntos(p => p + (json.puntos ?? 0))
         mostrarToast(`¡+${json.puntos} pts! ${mision.nombre} completada 🎉`, 'ok')
+        window.dispatchEvent(new CustomEvent('mision-reclamada'))
       } else {
         mostrarToast(json.error || 'No se pudo reclamar', 'err')
       }

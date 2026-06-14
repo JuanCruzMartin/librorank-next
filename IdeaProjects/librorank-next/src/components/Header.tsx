@@ -93,7 +93,11 @@ export default function Header({ user }: HeaderProps) {
       fetchNotifs()
       fetchMisionesPendientes()
     }, 120_000)
-    return () => clearInterval(interval)
+    window.addEventListener('mision-reclamada', fetchMisionesPendientes)
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('mision-reclamada', fetchMisionesPendientes)
+    }
   }, [user])
 
   // Cerrar dropdown notif al hacer clic fuera
