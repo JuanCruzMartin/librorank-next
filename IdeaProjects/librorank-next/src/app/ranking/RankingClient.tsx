@@ -93,7 +93,7 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
   const ligaSiguiente = LIGAS[LIGAS.indexOf(ligaActual) + 1] ?? null
   const ligaCompSig   = LIGAS[LIGAS.indexOf(ligaComp) + 1] ?? null
 
-  const [ligaTab, setLigaTab] = useState<string>('ligasemanal')
+  const [ligaTab, setLigaTab] = useState<string>('general')
 
   const esGeneral      = ligaTab === 'general'
   const esLibros       = ligaTab === 'libros'
@@ -245,7 +245,7 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
       <div className="container py-5">
 
         {/* Tabs — scroll horizontal en móvil */}
-        <div className="tabs-scroll-x" style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'nowrap', paddingRight: '1rem' }}>
+        <div className="tabs-scroll-x" style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'nowrap' }}>
 
           {/* Tab Liga Competitiva ⚔️ */}
           <button
@@ -391,6 +391,8 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
               </button>
             )
           })}
+          {/* Spacer para que el último tab no quede cortado al scrollear */}
+          <div style={{ flexShrink: 0, width: '0.5rem' }} aria-hidden />
         </div>
 
         {/* Descripción del tab activo */}
