@@ -671,8 +671,8 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                   {/* Botón eliminar — solo en mi propia biblioteca */}
                   {!soloLectura && (
                     <button onClick={e => { e.stopPropagation(); setLibroAEliminar(libro) }}
-                      style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.65)', border: 'none', borderRadius: '50%', width: 26, height: 26, color: '#ff5e57', cursor: 'pointer', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: hovered ? 1 : 0, transition: 'opacity 0.2s' }}>
-                      ✕
+                      style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.65)', border: 'none', borderRadius: '50%', width: 26, height: 26, color: '#ff5e57', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: hovered ? 1 : 0, transition: 'opacity 0.2s' }}>
+                      <i className="bi bi-trash3" />
                     </button>
                   )}
 
