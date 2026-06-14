@@ -235,6 +235,27 @@ export async function obtenerRankingLigaSemanal(ligaMin: number, ligaMax: number
   )
 }
 
+export interface AutorRanking {
+  autor: string
+  lectores: number
+  total_lecturas: number
+}
+
+export async function obtenerRankingAutores(limite = 30): Promise<AutorRanking[]> {
+  return query<AutorRanking>(
+    `SELECT TRIM(autor) AS autor,
+            COUNT(DISTINCT usuario_id) AS lectores,
+            COUNT(*) AS total_lecturas
+     FROM libros_usuario
+     WHERE UPPER(estado) IN ('LEIDO','LEÍDO')
+       AND autor IS NOT NULL AND TRIM(autor) != ''
+     GROUP BY LOWER(TRIM(autor))
+     ORDER BY lectores DESC, total_lecturas DESC
+     LIMIT ?`,
+    [limite]
+  )
+}
+
 export function getTituloLector(totalLeidos: number): string {
   // Mantenida por compatibilidad — usar getNivelLector(puntos) cuando se tenga el dato
   if (totalLeidos >= 100) return 'Guardián del Conocimiento'

@@ -45,10 +45,17 @@ interface UsuarioLigaSemanal {
   nivel: { emoji: string; titulo: string; nivel: number }
 }
 
+interface AutorRanking {
+  autor: string
+  lectores: number
+  total_lecturas: number
+}
+
 interface Props {
   ranking: UsuarioRanking[]
   rankingSemanal: UsuarioSemanal[]
   ligaSemanal: UsuarioLigaSemanal[]
+  rankingAutores: AutorRanking[]
   ligaActualKey: string
   ligaCompKey: string
   usuarioId: number
@@ -80,7 +87,7 @@ function horasParaReset(): string {
   return `${horas}h ${mins}m`
 }
 
-export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ligaActualKey, ligaCompKey, usuarioId, puntosUsuario }: Props) {
+export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, rankingAutores, ligaActualKey, ligaCompKey, usuarioId, puntosUsuario }: Props) {
   const ligaActual  = getLigaActual(puntosUsuario)
   const ligaComp    = LIGAS.find(l => l.key === ligaCompKey) ?? LIGAS[0]
   const ligaSiguiente = LIGAS[LIGAS.indexOf(ligaActual) + 1] ?? null
@@ -92,6 +99,7 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
   const esLibros       = ligaTab === 'libros'
   const esSemanal      = ligaTab === 'semanal'
   const esLigaSemanal  = ligaTab === 'ligasemanal'
+  const esAutores      = ligaTab === 'autores'
   const ligaSeleccionada = LIGAS.find(l => l.key === ligaTab)
 
   // Usuarios a mostrar según tab
@@ -308,6 +316,29 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
             </span>
           </button>
 
+          {/* Tab Escritores */}
+          <button
+            onClick={() => setLigaTab('autores')}
+            style={{
+              background: esAutores ? 'rgba(155,89,182,0.15)' : 'rgba(255,255,255,0.04)',
+              border: esAutores ? '2px solid rgba(155,89,182,0.5)' : '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 20, padding: '0.45rem 1.1rem',
+              fontSize: '0.82rem', fontWeight: 700,
+              color: esAutores ? '#9b59b6' : 'rgba(255,255,255,0.5)',
+              cursor: 'pointer', transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+            }}
+          >
+            ✍️ Escritores
+            <span style={{
+              background: esAutores ? 'rgba(155,89,182,0.3)' : 'rgba(255,255,255,0.08)',
+              color: esAutores ? '#9b59b6' : 'rgba(255,255,255,0.4)',
+              borderRadius: 20, padding: '1px 7px', fontSize: '0.68rem',
+            }}>
+              {rankingAutores.length}
+            </span>
+          </button>
+
           {/* Tab Esta semana */}
           <button
             onClick={() => setLigaTab('semanal')}
@@ -363,7 +394,7 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
         </div>
 
         {/* Descripción del tab activo */}
-        {!esLigaSemanal && (
+        {!esLigaSemanal && !esAutores && (
         <div style={{
           background: esGeneral ? 'rgba(212,175,55,0.06)' : esSemanal ? 'rgba(233,30,140,0.06)' : ligaSeleccionada?.colorBg,
           border: `1px solid ${esGeneral ? 'rgba(212,175,55,0.2)' : esSemanal ? 'rgba(233,30,140,0.25)' : ligaSeleccionada?.border}`,
@@ -402,6 +433,57 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, li
             </div>
           )}
         </div>
+        )}
+
+        {/* ── Ranking Escritores ───────────────────────────────────────── */}
+        {esAutores && (
+          <div>
+            <div style={{ background: 'rgba(155,89,182,0.06)', border: '1px solid rgba(155,89,182,0.2)', borderRadius: 12, padding: '0.85rem 1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{ fontSize: '1.8rem' }}>✍️</span>
+              <div>
+                <div style={{ fontWeight: 700, color: '#9b59b6', fontSize: '0.9rem' }}>Escritores más leídos</div>
+                <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
+                  Los autores con más lectores únicos en la comunidad
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {rankingAutores.map((a, i) => (
+                <div key={a.autor} style={{
+                  background: i === 0 ? 'rgba(212,175,55,0.06)' : i === 1 ? 'rgba(192,192,192,0.05)' : i === 2 ? 'rgba(205,127,50,0.05)' : 'rgba(255,255,255,0.02)',
+                  border: i === 0 ? '1px solid rgba(212,175,55,0.2)' : i === 1 ? '1px solid rgba(192,192,192,0.15)' : i === 2 ? '1px solid rgba(205,127,50,0.15)' : '1px solid rgba(255,255,255,0.05)',
+                  borderRadius: 12,
+                  padding: '0.75rem 1rem',
+                  display: 'flex', alignItems: 'center', gap: '0.75rem',
+                }}>
+                  <div style={{ width: 32, textAlign: 'center', flexShrink: 0 }}>
+                    <Medal pos={i + 1} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {a.autor}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '1rem', flexShrink: 0, alignItems: 'center' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#9b59b6' }}>{a.lectores}</div>
+                      <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 0.5 }}>lectores</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'rgba(255,255,255,0.6)' }}>{a.total_lecturas}</div>
+                      <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 0.5 }}>lecturas</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {rankingAutores.length === 0 && (
+                <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '3rem 0' }}>
+                  Todavía no hay datos suficientes.
+                </p>
+              )}
+            </div>
+          </div>
         )}
 
         {/* ── Liga Competitiva Semanal ─────────────────────────────────── */}

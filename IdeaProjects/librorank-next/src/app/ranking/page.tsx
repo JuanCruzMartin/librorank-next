@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/lib/auth'
-import { buscarPorId, obtenerRankingLectores, obtenerRankingSemanal, getNivelLector } from '@/lib/dao/usuarioDAO'
+import { buscarPorId, obtenerRankingLectores, obtenerRankingSemanal, obtenerRankingAutores, getNivelLector } from '@/lib/dao/usuarioDAO'
 import { obtenerIdsAmigos } from '@/lib/dao/amigoDAO'
 import { getLiga } from '@/lib/ligas'
 import { ensureResetSemanal, getLigaCompUsuario, getRankingLigaComp } from '@/lib/dao/ligaCompDAO'
@@ -21,11 +21,12 @@ export default async function RankingPage() {
   // Dispara el reset semanal lazy (no-op si ya se corrió esta semana)
   await ensureResetSemanal().catch(() => {})
 
-  const [usuario, rankingRaw, idsAmigos, rankingSemanalRaw] = await Promise.all([
+  const [usuario, rankingRaw, idsAmigos, rankingSemanalRaw, rankingAutores] = await Promise.all([
     buscarPorId(authUser.id),
     obtenerRankingLectores(200),
     obtenerIdsAmigos(authUser.id),
     obtenerRankingSemanal(100),
+    obtenerRankingAutores(30),
   ])
 
   if (!usuario) redirect('/login')
@@ -76,6 +77,7 @@ export default async function RankingPage() {
           ranking={ranking}
           rankingSemanal={rankingSemanal}
           ligaSemanal={ligaSemanal}
+          rankingAutores={rankingAutores}
           ligaActualKey={ligaActual.key}
           ligaCompKey={ligaCompKey}
           usuarioId={authUser.id}
