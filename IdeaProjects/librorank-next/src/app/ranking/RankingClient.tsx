@@ -245,7 +245,7 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
       <div className="container py-5">
 
         {/* Tabs — scroll horizontal en móvil */}
-        <div className="tabs-scroll-x" style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'nowrap' }}>
+        <div className="ranking-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
 
           {/* Tab Liga Competitiva ⚔️ */}
           <button
@@ -391,8 +391,6 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
               </button>
             )
           })}
-          {/* Spacer para que el último tab no quede cortado al scrollear */}
-          <div style={{ flexShrink: 0, width: '0.5rem' }} aria-hidden />
         </div>
 
         {/* Descripción del tab activo */}

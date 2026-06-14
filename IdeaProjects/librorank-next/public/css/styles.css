@@ -1780,6 +1780,20 @@ textarea.form-control {
   .perfil-favoritos-scroll::-webkit-scrollbar { display: none; }
 }
 
+/* ── Ranking tabs — wrap en desktop, scroll en móvil ── */
+.ranking-tabs { flex-wrap: wrap; }
+@media (max-width: 768px) {
+  .ranking-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .ranking-tabs::-webkit-scrollbar { display: none; }
+  .ranking-tabs > * { flex-shrink: 0; }
+}
+
 /* ── Modal responsive (biblioteca agregar libro) ── */
 @media (max-width: 576px) {
   .modal-dialog { margin: 0.5rem !important; }
