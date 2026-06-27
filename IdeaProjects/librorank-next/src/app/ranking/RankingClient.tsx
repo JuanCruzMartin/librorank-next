@@ -17,6 +17,7 @@ interface UsuarioRanking {
   username: string
   puntos: number
   total_leidos: number
+  total_paginas: number
   avatar_url: string | null
   es_amigo: boolean
   es_yo: boolean
@@ -93,9 +94,10 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
   const ligaSiguiente = LIGAS[LIGAS.indexOf(ligaActual) + 1] ?? null
   const ligaCompSig   = LIGAS[LIGAS.indexOf(ligaComp) + 1] ?? null
 
-  const [ligaTab, setLigaTab] = useState<string>('general')
+  const [ligaTab, setLigaTab] = useState<string>('paginas')
 
   const esGeneral      = ligaTab === 'general'
+  const esPaginas      = ligaTab === 'paginas'
   const esLibros       = ligaTab === 'libros'
   const esSemanal      = ligaTab === 'semanal'
   const esLigaSemanal  = ligaTab === 'ligasemanal'
@@ -105,11 +107,13 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
   // Usuarios a mostrar según tab
   const usuariosLiga = esGeneral
     ? [...ranking].sort((a, b) => b.puntos - a.puntos)
-    : esLibros
-      ? [...ranking].sort((a, b) => b.total_leidos - a.total_leidos)
-      : esSemanal
-        ? rankingSemanal
-        : ranking
+    : esPaginas
+      ? [...ranking].sort((a, b) => b.total_paginas - a.total_paginas)
+      : esLibros
+        ? [...ranking].sort((a, b) => b.total_leidos - a.total_leidos)
+        : esSemanal
+          ? rankingSemanal
+          : ranking
             .filter(u => ligaSeleccionada && u.puntos >= ligaSeleccionada.min && u.puntos <= ligaSeleccionada.max)
             .sort((a, b) => b.puntos - a.puntos)
 
@@ -247,46 +251,23 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
         {/* Tabs — scroll horizontal en móvil */}
         <div className="ranking-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
 
-          {/* Tab Liga Competitiva ⚔️ */}
+          {/* Tab Páginas leídas */}
           <button
-            onClick={() => setLigaTab('ligasemanal')}
+            onClick={() => setLigaTab('paginas')}
             style={{
-              background: esLigaSemanal ? ligaComp.colorBg : 'rgba(255,255,255,0.04)',
-              border: esLigaSemanal ? `2px solid ${ligaComp.border}` : '1px solid rgba(255,255,255,0.08)',
+              background: esPaginas ? 'rgba(52,152,219,0.15)' : 'rgba(255,255,255,0.04)',
+              border: esPaginas ? '2px solid rgba(52,152,219,0.5)' : '1px solid rgba(255,255,255,0.08)',
               borderRadius: 20, padding: '0.45rem 1.1rem',
               fontSize: '0.82rem', fontWeight: 700,
-              color: esLigaSemanal ? ligaComp.color : 'rgba(255,255,255,0.5)',
+              color: esPaginas ? '#3498db' : 'rgba(255,255,255,0.5)',
               cursor: 'pointer', transition: 'all 0.2s',
               display: 'flex', alignItems: 'center', gap: '0.4rem',
             }}
           >
-            ⚔️ Liga Competitiva
+            📄 Páginas leídas
             <span style={{
-              background: esLigaSemanal ? ligaComp.colorBg : 'rgba(255,255,255,0.08)',
-              color: esLigaSemanal ? ligaComp.color : 'rgba(255,255,255,0.4)',
-              borderRadius: 20, padding: '1px 7px', fontSize: '0.65rem', fontWeight: 800,
-            }}>
-              {ligaComp.emoji}
-            </span>
-          </button>
-
-          {/* Tab General */}
-          <button
-            onClick={() => setLigaTab('general')}
-            style={{
-              background: esGeneral ? 'rgba(212,175,55,0.12)' : 'rgba(255,255,255,0.04)',
-              border: esGeneral ? '2px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 20, padding: '0.45rem 1.1rem',
-              fontSize: '0.82rem', fontWeight: 700,
-              color: esGeneral ? '#d4af37' : 'rgba(255,255,255,0.5)',
-              cursor: 'pointer', transition: 'all 0.2s',
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-            }}
-          >
-            🌍 General
-            <span style={{
-              background: esGeneral ? 'rgba(212,175,55,0.3)' : 'rgba(255,255,255,0.08)',
-              color: esGeneral ? '#d4af37' : 'rgba(255,255,255,0.4)',
+              background: esPaginas ? 'rgba(52,152,219,0.3)' : 'rgba(255,255,255,0.08)',
+              color: esPaginas ? '#3498db' : 'rgba(255,255,255,0.4)',
               borderRadius: 20, padding: '1px 7px', fontSize: '0.68rem',
             }}>
               {ranking.length}
@@ -336,6 +317,52 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
               borderRadius: 20, padding: '1px 7px', fontSize: '0.68rem',
             }}>
               {rankingAutores.length}
+            </span>
+          </button>
+
+          {/* Tab Liga Competitiva ⚔️ */}
+          <button
+            onClick={() => setLigaTab('ligasemanal')}
+            style={{
+              background: esLigaSemanal ? ligaComp.colorBg : 'rgba(255,255,255,0.04)',
+              border: esLigaSemanal ? `2px solid ${ligaComp.border}` : '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 20, padding: '0.45rem 1.1rem',
+              fontSize: '0.82rem', fontWeight: 700,
+              color: esLigaSemanal ? ligaComp.color : 'rgba(255,255,255,0.5)',
+              cursor: 'pointer', transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+            }}
+          >
+            ⚔️ Liga Competitiva
+            <span style={{
+              background: esLigaSemanal ? ligaComp.colorBg : 'rgba(255,255,255,0.08)',
+              color: esLigaSemanal ? ligaComp.color : 'rgba(255,255,255,0.4)',
+              borderRadius: 20, padding: '1px 7px', fontSize: '0.65rem', fontWeight: 800,
+            }}>
+              {ligaComp.emoji}
+            </span>
+          </button>
+
+          {/* Tab General */}
+          <button
+            onClick={() => setLigaTab('general')}
+            style={{
+              background: esGeneral ? 'rgba(212,175,55,0.12)' : 'rgba(255,255,255,0.04)',
+              border: esGeneral ? '2px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 20, padding: '0.45rem 1.1rem',
+              fontSize: '0.82rem', fontWeight: 700,
+              color: esGeneral ? '#d4af37' : 'rgba(255,255,255,0.5)',
+              cursor: 'pointer', transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+            }}
+          >
+            ⭐ Puntos
+            <span style={{
+              background: esGeneral ? 'rgba(212,175,55,0.3)' : 'rgba(255,255,255,0.08)',
+              color: esGeneral ? '#d4af37' : 'rgba(255,255,255,0.4)',
+              borderRadius: 20, padding: '1px 7px', fontSize: '0.68rem',
+            }}>
+              {ranking.length}
             </span>
           </button>
 
@@ -403,14 +430,14 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
           display: 'flex', alignItems: 'center', gap: '0.75rem',
         }}>
           <span style={{ fontSize: '1.8rem' }}>
-            {esGeneral ? '🌍' : esLibros ? '📚' : esSemanal ? '🔥' : ligaSeleccionada?.emoji}
+            {esPaginas ? '📄' : esGeneral ? '⭐' : esLibros ? '📚' : esSemanal ? '🔥' : ligaSeleccionada?.emoji}
           </span>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, color: esGeneral ? '#d4af37' : esLibros ? '#4a9e7a' : esSemanal ? '#e91e8c' : ligaSeleccionada?.color, fontSize: '0.9rem' }}>
-              {esGeneral ? 'Ranking General — Por puntos' : esLibros ? 'Ranking — Por libros leídos' : esSemanal ? 'Ranking Semanal — Últimos 7 días' : `Liga ${ligaSeleccionada?.nombre}`}
+            <div style={{ fontWeight: 700, color: esPaginas ? '#3498db' : esGeneral ? '#d4af37' : esLibros ? '#4a9e7a' : esSemanal ? '#e91e8c' : ligaSeleccionada?.color, fontSize: '0.9rem' }}>
+              {esPaginas ? 'Ranking — Por páginas leídas' : esGeneral ? 'Ranking — Por puntos' : esLibros ? 'Ranking — Por libros leídos' : esSemanal ? 'Ranking Semanal — Últimos 7 días' : `Liga ${ligaSeleccionada?.nombre}`}
             </div>
             <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
-              {esGeneral || esLibros
+              {esPaginas || esGeneral || esLibros
                 ? `Todos los lectores · ${ranking.length} en total`
                 : esSemanal
                   ? `${rankingSemanal.length} lectores activos · reinicia el lunes`
@@ -854,14 +881,22 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
 
                     {/* Stats — orden cambia según tab */}
                     <div className="ranking-row-stats" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexShrink: 0 }}>
+                      {esPaginas && (
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontWeight: 800, color: '#3498db', fontSize: '0.9rem' }}>
+                            📄 {(u as UsuarioRanking).total_paginas?.toLocaleString('es-AR') ?? 0}
+                          </div>
+                          <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)' }}>páginas</div>
+                        </div>
+                      )}
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 800, color: esLibros ? '#4a9e7a' : '#fff', fontSize: '0.9rem' }}>
+                        <div style={{ fontWeight: 800, color: esLibros ? '#4a9e7a' : esPaginas ? 'rgba(255,255,255,0.4)' : '#fff', fontSize: esPaginas ? '0.78rem' : '0.9rem' }}>
                           📚 {u.total_leidos}
                         </div>
                         <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)' }}>leídos</div>
                       </div>
                       <div className="ranking-pts-col" style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: esLibros ? 600 : 800, color: esLibros ? 'rgba(212,175,55,0.6)' : '#d4af37', fontSize: '0.85rem' }}>
+                        <div style={{ fontWeight: esLibros || esPaginas ? 600 : 800, color: esLibros || esPaginas ? 'rgba(212,175,55,0.6)' : '#d4af37', fontSize: '0.85rem' }}>
                           ⭐ {u.puntos}
                         </div>
                         <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)' }}>pts</div>

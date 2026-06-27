@@ -17,6 +17,7 @@ export interface Usuario {
   ultima_fecha_lectura: string | null
   escudos_racha: number
   total_leidos?: number
+  total_paginas?: number
 }
 
 export interface RachaResult {
@@ -80,9 +81,10 @@ export async function buscarPorId(id: number): Promise<Usuario | null> {
 export async function obtenerRankingLectores(limite = 50): Promise<Usuario[]> {
   return query<Usuario>(
     `SELECT u.id, u.nombre, u.username, u.email, u.bio, u.avatar_url, u.objetivo_anual,
-            u.monedas AS puntos, COUNT(l.id) AS total_leidos
+            u.monedas AS puntos, COUNT(l.id) AS total_leidos,
+            COALESCE(SUM(CASE WHEN UPPER(l.estado) IN ('LEIDO','LEÍDO') THEN l.paginas ELSE 0 END), 0) AS total_paginas
      FROM usuarios u
-     LEFT JOIN libros_usuario l ON u.id = l.usuario_id AND l.estado = 'LEIDO'
+     LEFT JOIN libros_usuario l ON u.id = l.usuario_id AND UPPER(l.estado) IN ('LEIDO','LEÍDO')
      GROUP BY u.id, u.nombre, u.username, u.email, u.bio, u.avatar_url, u.objetivo_anual, u.monedas
      ORDER BY puntos DESC, total_leidos DESC, u.nombre ASC
      LIMIT ?`,

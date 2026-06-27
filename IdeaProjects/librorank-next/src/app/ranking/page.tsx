@@ -41,6 +41,7 @@ export default async function RankingPage() {
     username: u.username,
     puntos: u.puntos ?? 0,
     total_leidos: u.total_leidos ?? 0,
+    total_paginas: u.total_paginas ?? 0,
     avatar_url: u.avatar_url ?? null,
     es_amigo: idsAmigos.includes(u.id),
     es_yo: u.id === authUser.id,
