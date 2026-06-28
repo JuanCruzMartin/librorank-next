@@ -137,6 +137,22 @@ export async function sumarPaginasLeidas(usuarioId: number): Promise<number> {
   return row?.total ?? 0
 }
 
+export async function contarResenasTotal(usuarioId: number): Promise<number> {
+  const row = await queryOne<{ total: number }>(
+    `SELECT COUNT(*) AS total FROM libros_usuario WHERE usuario_id=? AND resena IS NOT NULL AND resena != ''`,
+    [usuarioId]
+  )
+  return row?.total ?? 0
+}
+
+export async function contarGenerosDistintos(usuarioId: number): Promise<number> {
+  const row = await queryOne<{ total: number }>(
+    `SELECT COUNT(DISTINCT LOWER(genero)) AS total FROM libros_usuario WHERE usuario_id=? AND UPPER(estado) IN ('LEIDO','LEÍDO') AND genero IS NOT NULL AND genero != ''`,
+    [usuarioId]
+  )
+  return row?.total ?? 0
+}
+
 export async function obtenerAutorMasLeido(usuarioId: number): Promise<string> {
   const row = await queryOne<{ autor: string }>(
     `SELECT autor FROM libros_usuario WHERE usuario_id=? AND autor!='' AND UPPER(estado) IN ('LEIDO','LEÍDO') GROUP BY autor ORDER BY COUNT(*) DESC LIMIT 1`,

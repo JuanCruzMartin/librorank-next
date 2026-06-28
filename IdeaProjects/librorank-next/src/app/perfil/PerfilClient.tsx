@@ -7,6 +7,8 @@ import NextImage from 'next/image'
 import type { Usuario, NivelInfo } from '@/lib/dao/usuarioDAO'
 import type { Libro, PerfilStats, LibroFavorito } from '@/lib/dao/libroDAO'
 import type { Logro } from '@/lib/dao/logroDAO'
+import type { Personaje } from '@/lib/personaje'
+import PersonajeCard from '@/components/PersonajeCard'
 
 interface WrappedData {
   anio: number
@@ -55,15 +57,16 @@ interface Props {
   paginasLeidas: number
   librosDestacados: LibroFavorito[]
   promedioEstrellas: number
+  personaje: Personaje
 }
 
 export default function PerfilClient({
   usuario, stats, ultimasLecturas, logros,
   leidosEsteAnio, totalLeidos, nivelInfo, esMiPerfil, topGeneros, resenasPublicas,
-  paginasLeidas, librosDestacados, promedioEstrellas,
+  paginasLeidas, librosDestacados, promedioEstrellas, personaje,
 }: Props) {
   const router = useRouter()
-  const [tab, setTab] = useState<'resumen' | 'anio' | 'config'>('resumen')
+  const [tab, setTab] = useState<'resumen' | 'anio' | 'config' | 'personaje'>('resumen')
   const [wrapped, setWrapped] = useState<WrappedData | null>(null)
   const [loadingWrapped, setLoadingWrapped] = useState(false)
   const [mensaje, setMensaje] = useState('')
@@ -336,6 +339,9 @@ export default function PerfilClient({
               </button>
               <button onClick={() => setTab('config')} className={`tab-btn ${tab === 'config' ? 'active' : ''}`}>
                 ⚙️ Editar Cuenta
+              </button>
+              <button onClick={() => setTab('personaje')} className={`tab-btn ${tab === 'personaje' ? 'active' : ''}`}>
+                ⚔️ Personaje
               </button>
             </div>
           )}
@@ -959,6 +965,13 @@ export default function PerfilClient({
                   {guardando ? 'Guardando...' : 'Guardar cambios'}
                 </button>
               </form>
+            </div>
+          )}
+
+          {/* ── PERSONAJE ── */}
+          {tab === 'personaje' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <PersonajeCard personaje={personaje} username={usuario.username} />
             </div>
           )}
         </div>

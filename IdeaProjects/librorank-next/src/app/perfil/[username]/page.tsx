@@ -3,6 +3,7 @@ import { getAuthUser } from '@/lib/auth'
 import * as usuarioDAO from '@/lib/dao/usuarioDAO'
 import * as libroDAO from '@/lib/dao/libroDAO'
 import * as logroDAO from '@/lib/dao/logroDAO'
+import { calcularPersonaje } from '@/lib/personaje'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import PerfilClient from '../PerfilClient'
@@ -34,7 +35,7 @@ export default async function PerfilUsernamePage({ params }: Props) {
   const usuarioTarget = await usuarioDAO.buscarPorUsername(username)
   if (!usuarioTarget) notFound()
 
-  const [authUsuario, stats, ultimasLecturas, logros, leidosEsteAnio, totalLeidos, topGeneros, resenasPublicas, paginasLeidas, librosDestacados, promedioEstrellas] = await Promise.all([
+  const [authUsuario, stats, ultimasLecturas, logros, leidosEsteAnio, totalLeidos, topGeneros, resenasPublicas, paginasLeidas, librosDestacados, promedioEstrellas, totalResenas, generosDistintos] = await Promise.all([
     authUser ? usuarioDAO.buscarPorId(authUser.id) : Promise.resolve(null),
     libroDAO.obtenerStatsPorUsuario(usuarioTarget.id),
     libroDAO.obtenerUltimasLecturas(usuarioTarget.id, 5),
@@ -46,7 +47,16 @@ export default async function PerfilUsernamePage({ params }: Props) {
     libroDAO.sumarPaginasLeidas(usuarioTarget.id),
     libroDAO.obtenerLibrosFavoritos(usuarioTarget.id, 8),
     libroDAO.obtenerPromedioEstrellas(usuarioTarget.id),
+    libroDAO.contarResenasTotal(usuarioTarget.id),
+    libroDAO.contarGenerosDistintos(usuarioTarget.id),
   ])
+
+  const personaje = calcularPersonaje(
+    totalLeidos,
+    totalResenas,
+    usuarioTarget.racha_actual ?? 0,
+    generosDistintos,
+  )
 
   return (
     <>
@@ -66,6 +76,7 @@ export default async function PerfilUsernamePage({ params }: Props) {
           paginasLeidas={paginasLeidas}
           librosDestacados={librosDestacados}
           promedioEstrellas={promedioEstrellas}
+          personaje={personaje}
         />
       </main>
       <Footer />
