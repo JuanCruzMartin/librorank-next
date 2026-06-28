@@ -219,14 +219,25 @@ export async function otorgarPuntos(usuarioId: number, monto: number, concepto: 
   let saldoNuevo = 0
 
   await transaction(async conn => {
-    const [rows] = await conn.query('SELECT monedas FROM usuarios WHERE id=?', [usuarioId])
-    saldoAnterior = ((rows as { monedas: number }[])[0])?.monedas ?? 0
+    const [rows] = await conn.query('SELECT monedas, puntos_hito_ultimo FROM usuarios WHERE id=?', [usuarioId])
+    const row0 = (rows as { monedas: number; puntos_hito_ultimo: number }[])[0]
+    saldoAnterior = row0?.monedas ?? 0
     saldoNuevo = saldoAnterior + monto
     await conn.execute('UPDATE usuarios SET monedas=? WHERE id=?', [saldoNuevo, usuarioId])
     await conn.execute(
       `INSERT INTO movimientos_moneda (usuario_id, tipo, concepto, monto, saldo_resultante) VALUES (?, 'GANANCIA', ?, ?, ?)`,
       [usuarioId, concepto, monto, saldoNuevo]
     )
+    // Tiradas de cartas: cada 500 puntos acumulados = +3 tiradas
+    const hitoActual = row0?.puntos_hito_ultimo ?? 0
+    const nuevoHito = Math.floor(saldoNuevo / 500) * 500
+    if (nuevoHito > hitoActual) {
+      const hitosGanados = (nuevoHito - hitoActual) / 500
+      await conn.execute(
+        'UPDATE usuarios SET tiradas_disponibles = tiradas_disponibles + ?, puntos_hito_ultimo = ? WHERE id=?',
+        [hitosGanados, nuevoHito, usuarioId]
+      )
+    }
   })
 
   // Detectar usuarios superados y notificarlos (fire & forget, no bloquea)

@@ -57,6 +57,7 @@ const NAV_ITEMS = [
   { href: '/bingo',           label: '🎲 Bingo' },
   { href: '/retos',           label: '⚔️ Retos' },
   { href: '/cuento',          label: '✍️ Cuento' },
+  { href: '/coleccion',       label: '📖 Colección' },
   { href: '/ranking',         label: '🏆 Ranking' },
   { href: '/clubes',          label: '📚 Clubes' },
   { href: '/amigos',          label: '👥 Comunidad' },

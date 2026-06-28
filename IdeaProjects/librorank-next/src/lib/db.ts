@@ -5,21 +5,26 @@ for (const v of requiredEnvVars) {
   if (!process.env[v]) throw new Error(`Variable de entorno faltante: ${v}. Configurala en Vercel o en .env.local.`)
 }
 
-// Pool singleton — se crea una vez por proceso y se reutiliza entre requests
-// Evita abrir/cerrar una conexión nueva en cada query (costoso en Vercel/Railway)
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT),
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
-  timezone: '+00:00',
-  connectTimeout: 10000,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-})
+const g = global as unknown as { _dbPool?: mysql.Pool }
+
+if (!g._dbPool) {
+  g._dbPool = mysql.createPool({
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT),
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+    timezone: '+00:00',
+    connectTimeout: 10000,
+    waitForConnections: true,
+    connectionLimit: 2,
+    queueLimit: 50,
+    idleTimeout: 60000,
+  })
+}
+
+const pool = g._dbPool
 
 // Mantenemos getConnection() para compatibilidad con transaction()
 export async function getConnection() {
