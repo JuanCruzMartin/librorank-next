@@ -1,0 +1,22 @@
+{
+  "don-quijote": { "imagen": "/cartas/don-quijote.png" },
+  "sancho-panza": { "imagen": "/cartas/sancho-panza.png" },
+  "robinson-crusoe": { "imagen": "/cartas/robinson-crusoe.png" },
+  "emma-bovary": { "imagen": "/cartas/emma-bovary.png" },
+  "heathcliff": { "imagen": "/cartas/heathcliff.png" },
+  "quasimodo": { "imagen": "/cartas/quasimodo.png" },
+  "raskolnikov": { "imagen": "/cartas/raskolnikov.png" },
+  "jean-valjean": { "imagen": "/cartas/jean-valjean.png" },
+  "dorian-gray": { "imagen": "/cartas/dorian-gray.png" },
+  "don-juan": { "imagen": "/cartas/don-juan.png" },
+  "hamlet": { "imagen": "/cartas/hamlet.png" },
+  "sherlock-holmes": { "imagen": "/cartas/sherlock-holmes.png" },
+  "cyrano": { "imagen": "/cartas/cyrano.png" },
+  "anna-karenina": { "imagen": "/cartas/anna-karenina.png" },
+  "edmond-dantes": { "imagen": "/cartas/edmond-dantes.png" },
+  "dracula": { "imagen": "/cartas/dracula.png" },
+  "frankenstein": { "imagen": "/cartas/frankenstein.png" },
+  "capitan-ahab": { "imagen": "/cartas/capitan-ahab.png" },
+  "fausto": { "imagen": "/cartas/fausto.png" },
+  "shakespeare": { "imagen": "/cartas/shakespeare.png" }
+}

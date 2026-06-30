@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { CARTAS, RAREZAS, type Carta, type Rareza } from '@/lib/cartas'
 import CartaPersonaje from '@/components/CartaPersonaje'
+import CartaDorso from '@/components/CartaDorso'
 
 interface Props {
   coleccion: string[]
@@ -19,7 +20,8 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
   const [coleccion, setColeccion] = useState<string[]>(coleccionInicial)
   const [tiradas, setTiradas] = useState(tiradasIniciales)
   const [tirando, setTirando] = useState(false)
-  const [reveal, setReveal] = useState<{ carta: Carta; esNueva: boolean } | null>(null)
+  const [reveal, setReveal] = useState<{ carta: Carta; esNueva: boolean; revelada: boolean } | null>(null)
+  const [ampliada, setAmpliada] = useState<Carta | null>(null)
 
   const totalObtenidas = new Set(coleccion).size
 
@@ -32,7 +34,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
       const data = await res.json()
       setTiradas(t => t - 1)
       if (data.esNueva) setColeccion(c => [...c, data.carta.id])
-      setReveal({ carta: data.carta, esNueva: data.esNueva })
+      setReveal({ carta: data.carta, esNueva: data.esNueva, revelada: false })
     } finally {
       setTirando(false)
     }
@@ -137,48 +139,18 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
             </div>
 
             {/* Grid de cartas */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.85rem' }}>
               {cartasDeRareza.map(carta => {
                 const tengo = coleccion.includes(carta.id)
+                const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
                 return (
                   <div
                     key={carta.id}
-                    style={{ position: 'relative' }}
                     title={tengo ? `${carta.nombre} — ${carta.obra}` : '???'}
+                    onClick={() => tengo && setAmpliada(carta)}
+                    style={{ cursor: tengo ? 'pointer' : 'default' }}
                   >
-                    {tengo ? (
-                      <CartaPersonaje carta={carta} obtenida size="sm" />
-                    ) : (
-                      /* Slot vacío estilo álbum */
-                      <div style={{
-                        width: 130, height: 182,
-                        borderRadius: 10,
-                        border: `1.5px dashed ${r.color}35`,
-                        background: `${r.color}06`,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 6,
-                        flexShrink: 0,
-                      }}>
-                        <div style={{
-                          width: 44, height: 44, borderRadius: '50%',
-                          background: `${r.color}12`,
-                          border: `1px solid ${r.color}25`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '1.3rem', color: `${r.color}60`,
-                        }}>
-                          ?
-                        </div>
-                        <div style={{
-                          fontSize: '0.55rem', fontWeight: 700, color: `${r.color}50`,
-                          textTransform: 'uppercase', letterSpacing: 1,
-                        }}>
-                          {r.label}
-                        </div>
-                      </div>
-                    )}
+                    <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} />
                   </div>
                 )
               })}
@@ -194,7 +166,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)',
             zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
-          onClick={() => setReveal(null)}
+          onClick={() => reveal.revelada && setReveal(null)}
         >
           <div onClick={e => e.stopPropagation()} style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem',
@@ -202,57 +174,140 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
             <p style={{
               fontSize: '0.72rem', fontWeight: 700, letterSpacing: 2,
               textTransform: 'uppercase',
-              color: reveal.esNueva ? '#4cd137' : 'rgba(255,255,255,0.3)',
+              color: !reveal.revelada ? 'rgba(255,255,255,0.4)' : reveal.esNueva ? '#4cd137' : 'rgba(255,255,255,0.3)',
+              minHeight: '1em',
             }}>
-              {reveal.esNueva ? '✨ ¡Carta nueva!' : '🔁 Duplicada'}
+              {!reveal.revelada ? 'Tocá la carta para revelar' : reveal.esNueva ? '✨ ¡Carta nueva!' : '🔁 Duplicada'}
             </p>
 
-            <div style={{ animation: 'reveal-carta 0.45s cubic-bezier(0.34,1.56,0.64,1)' }}>
-              <CartaPersonaje carta={reveal.carta} obtenida size="lg" />
-            </div>
-
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>
-                {reveal.carta.autor} · {reveal.carta.anio}
-              </p>
-              <p style={{ fontSize: '0.73rem', color: 'rgba(255,255,255,0.35)', maxWidth: 260 }}>
-                {reveal.carta.descripcion}
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: 10 }}>
-              {tiradas > 0 && (
-                <button className="btn--brand" onClick={() => { setReveal(null); setTimeout(tirar, 80) }}>
-                  🎴 Otra tirada ({tiradas})
-                </button>
+            {/* Flip card */}
+            <div
+              onClick={() => !reveal.revelada && setReveal(r => r ? { ...r, revelada: true } : r)}
+              style={{
+                width: 300, height: 480, perspective: 1200,
+                cursor: reveal.revelada ? 'default' : 'pointer',
+                position: 'relative',
+              }}
+            >
+              {/* Partículas para rarezas altas, solo después de revelar */}
+              {reveal.revelada && (reveal.carta.rareza === 'legendario' || reveal.carta.rareza === 'mitico') && (
+                <div style={{ position: 'absolute', inset: -40, pointerEvents: 'none', zIndex: 10 }}>
+                  {Array.from({ length: 16 }).map((_, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        position: 'absolute',
+                        left: '50%', top: '50%',
+                        width: 5, height: 5, borderRadius: '50%',
+                        background: reveal.carta.color,
+                        boxShadow: `0 0 6px ${reveal.carta.color}`,
+                        animation: 'particula-fly 1.1s ease-out forwards',
+                        animationDelay: `${i * 30}ms`,
+                        opacity: 0,
+                        ['--ang' as string]: `${(360 / 16) * i}deg`,
+                      } as React.CSSProperties}
+                    />
+                  ))}
+                </div>
               )}
-              <button
-                onClick={() => setReveal(null)}
-                style={{
-                  padding: '0.5rem 1.25rem',
-                  background: 'rgba(255,255,255,0.07)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  borderRadius: 10, color: 'rgba(255,255,255,0.6)',
-                  cursor: 'pointer', fontSize: '0.82rem',
-                }}
-              >
-                Ver colección
-              </button>
+
+              <div style={{
+                width: '100%', height: '100%',
+                position: 'relative',
+                transformStyle: 'preserve-3d',
+                transition: 'transform 0.7s cubic-bezier(0.4,0.2,0.2,1)',
+                transform: reveal.revelada ? 'rotateY(180deg)' : 'rotateY(0deg)',
+              }}>
+                <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden' }}>
+                  <CartaDorso size="lg" />
+                </div>
+                <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+                  <CartaPersonaje carta={reveal.carta} obtenida size="lg" numero={CARTAS.findIndex(c => c.id === reveal.carta.id) + 1} total={CARTAS.length} />
+                </div>
+              </div>
             </div>
+
+            {reveal.revelada && (
+              <>
+                <div style={{ textAlign: 'center', animation: 'fade-in-bg 0.4s ease' }}>
+                  <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>
+                    {reveal.carta.autor} · {reveal.carta.anio}
+                  </p>
+                  <p style={{ fontSize: '0.73rem', color: 'rgba(255,255,255,0.35)', maxWidth: 260, fontStyle: 'italic' }}>
+                    {reveal.carta.cita}
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, animation: 'fade-in-bg 0.4s ease' }}>
+                  {tiradas > 0 && (
+                    <button className="btn--brand" onClick={() => { setReveal(null); setTimeout(tirar, 80) }}>
+                      🎴 Otra tirada ({tiradas})
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setReveal(null)}
+                    style={{
+                      padding: '0.5rem 1.25rem',
+                      background: 'rgba(255,255,255,0.07)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: 10, color: 'rgba(255,255,255,0.6)',
+                      cursor: 'pointer', fontSize: '0.82rem',
+                    }}
+                  >
+                    Ver colección
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal ampliar carta */}
+      {ampliada && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(10,8,5,0.82)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 9998, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            animation: 'fade-in-bg 0.2s ease',
+          }}
+          onClick={() => setAmpliada(null)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ animation: 'zoom-in-carta 0.3s cubic-bezier(0.22,1,0.36,1)', position: 'relative' }}
+          >
+            <CartaPersonaje carta={ampliada} obtenida size="lg" numero={CARTAS.findIndex(c => c.id === ampliada.id) + 1} total={CARTAS.length} />
+            <button
+              onClick={() => setAmpliada(null)}
+              style={{
+                position: 'absolute', top: -14, right: -14,
+                width: 32, height: 32, borderRadius: '50%',
+                background: '#1a1a2e', border: '2px solid rgba(255,255,255,0.2)',
+                color: '#fff', fontSize: '1rem', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}
 
       <style>{`
-        @keyframes reveal-carta {
-          from { transform: scale(0.4) rotateY(90deg); opacity: 0; }
-          to   { transform: scale(1) rotateY(0deg);   opacity: 1; }
+        @keyframes fade-in-bg {
+          from { opacity: 0; }
+          to   { opacity: 1; }
         }
-        @keyframes shimmer-carta {
-          0%   { background-position: 200% center; }
-          100% { background-position: -200% center; }
+        @keyframes zoom-in-carta {
+          from { transform: scale(0.7) translateY(20px); opacity: 0; }
+          to   { transform: scale(1) translateY(0);      opacity: 1; }
         }
-        .carta-personaje:hover { transform: translateY(-3px) scale(1.04); }
+        @keyframes particula-fly {
+          0%   { opacity: 1; transform: translate(-50%, -50%) rotate(var(--ang)) translateX(0px) scale(1); }
+          100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--ang)) translateX(110px) scale(0.2); }
+        }
       `}</style>
     </div>
   )
