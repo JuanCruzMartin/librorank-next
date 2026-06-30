@@ -2,25 +2,34 @@
 
 interface Props {
   size?: 'sm' | 'md' | 'lg'
+  glowColor?: string
+  pulsar?: boolean
 }
 
-export default function CartaDorso({ size = 'lg' }: Props) {
+export default function CartaDorso({ size = 'lg', glowColor, pulsar }: Props) {
   const dims = size === 'sm' ? { w: 168, h: 268 } : size === 'lg' ? { w: 300, h: 480 } : { w: 220, h: 352 }
+  const colorGlow = glowColor ?? '#d4af37'
 
   return (
-    <div style={{
-      width: dims.w,
-      height: dims.h,
-      borderRadius: 10,
-      border: '3px double #d4af37aa',
-      background: 'linear-gradient(155deg, #1a1410 0%, #2a2018 55%, #1a1410 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      position: 'relative',
-      overflow: 'hidden',
-      boxShadow: '0 0 20px rgba(212,175,55,0.25), inset 0 0 0 1px rgba(212,175,55,0.15)',
-    }}>
+    <div
+      className={pulsar ? 'dorso-pulsante' : undefined}
+      style={{
+        width: dims.w,
+        height: dims.h,
+        borderRadius: 10,
+        border: `3px double ${colorGlow}aa`,
+        background: 'linear-gradient(155deg, #1a1410 0%, #2a2018 55%, #1a1410 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+        boxShadow: `0 0 20px ${colorGlow}40, inset 0 0 0 1px ${colorGlow}25`,
+        transition: 'border-color 0.4s ease, box-shadow 0.4s ease',
+        ['--glow-soft' as string]: `0 0 20px ${colorGlow}40, inset 0 0 0 1px ${colorGlow}25`,
+        ['--glow-strong' as string]: `0 0 38px ${colorGlow}90, inset 0 0 0 1px ${colorGlow}60`,
+      } as React.CSSProperties}
+    >
       {/* Patrón ornamental de fondo */}
       <div style={{
         position: 'absolute', inset: 8,
@@ -73,6 +82,13 @@ export default function CartaDorso({ size = 'lg' }: Props) {
         @keyframes shimmer-dorso {
           0%   { background-position: 200% center; }
           100% { background-position: -200% center; }
+        }
+        .dorso-pulsante {
+          animation: pulso-dorso 1.3s ease-in-out infinite;
+        }
+        @keyframes pulso-dorso {
+          0%, 100% { box-shadow: var(--glow-soft); }
+          50%      { box-shadow: var(--glow-strong); }
         }
       `}</style>
     </div>

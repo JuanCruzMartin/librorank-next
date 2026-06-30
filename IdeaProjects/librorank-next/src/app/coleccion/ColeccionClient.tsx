@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CARTAS, RAREZAS, type Carta, type Rareza } from '@/lib/cartas'
 import CartaPersonaje from '@/components/CartaPersonaje'
 import CartaDorso from '@/components/CartaDorso'
@@ -24,6 +24,14 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
   const [ampliada, setAmpliada] = useState<Carta | null>(null)
 
   const totalObtenidas = new Set(coleccion).size
+
+  // Comunes y raras se revelan solas — no hace falta tocarlas
+  useEffect(() => {
+    if (reveal && !reveal.revelada && (reveal.carta.rareza === 'comun' || reveal.carta.rareza === 'raro')) {
+      const t = setTimeout(() => setReveal(r => (r ? { ...r, revelada: true } : r)), 550)
+      return () => clearTimeout(t)
+    }
+  }, [reveal])
 
   async function tirar() {
     if (tiradas <= 0 || tirando) return
@@ -163,22 +171,70 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
       {reveal && (
         <div
           style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)',
+            position: 'fixed', inset: 0,
             zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            overflow: 'hidden',
           }}
           onClick={() => reveal.revelada && setReveal(null)}
         >
-          <div onClick={e => e.stopPropagation()} style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem',
-          }}>
+          {(() => {
+            const esEspecial = reveal.carta.rareza === 'legendario' || reveal.carta.rareza === 'mitico'
+            const esAlta = esEspecial || reveal.carta.rareza === 'epico'
+            const fanfarria = reveal.revelada && esEspecial
+            const colorAmbiente = reveal.revelada ? reveal.carta.color : '#d4af37'
+            return (
+          <>
+            {/* Fondo atmosférico: vignette + polvo + rayos de luz */}
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 0,
+              background: `radial-gradient(circle at 50% 45%, ${colorAmbiente}22 0%, #0a0806 55%, #050403 100%)`,
+              transition: 'background 0.6s ease',
+            }} />
+            <div
+              className="rayos-luz"
+              style={{
+                position: 'absolute', inset: '-25%', zIndex: 1,
+                background: `conic-gradient(from 0deg, transparent 0deg, ${colorAmbiente}1a 8deg, transparent 16deg, transparent 40deg, ${colorAmbiente}1a 48deg, transparent 56deg, transparent 90deg, ${colorAmbiente}1a 98deg, transparent 106deg, transparent 140deg, ${colorAmbiente}1a 148deg, transparent 156deg, transparent 190deg, ${colorAmbiente}1a 198deg, transparent 206deg, transparent 230deg, ${colorAmbiente}1a 238deg, transparent 246deg, transparent 280deg, ${colorAmbiente}1a 288deg, transparent 296deg, transparent 320deg, ${colorAmbiente}1a 328deg, transparent 336deg)`,
+                opacity: reveal.revelada ? 0.9 : 0.5,
+                transition: 'opacity 0.5s ease',
+              }}
+            />
+            <div className="polvo-flotante" style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: 0.5 }} />
+          <div
+            onClick={e => e.stopPropagation()}
+            className={fanfarria ? 'modal-shake' : undefined}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem', position: 'relative',
+              zIndex: 2,
+            }}
+          >
             <p style={{
               fontSize: '0.72rem', fontWeight: 700, letterSpacing: 2,
               textTransform: 'uppercase',
               color: !reveal.revelada ? 'rgba(255,255,255,0.4)' : reveal.esNueva ? '#4cd137' : 'rgba(255,255,255,0.3)',
               minHeight: '1em',
             }}>
-              {!reveal.revelada ? 'Tocá la carta para revelar' : reveal.esNueva ? '✨ ¡Carta nueva!' : '🔁 Duplicada'}
+              {!reveal.revelada
+                ? esAlta ? '✨ Algo especial está brillando...' : ''
+                : reveal.esNueva ? '✨ ¡Carta nueva!' : '🔁 Duplicada'}
             </p>
+
+            {/* Texto fanfarria para Legendario/Mítico */}
+            {fanfarria && (
+              <div style={{
+                position: 'absolute', top: '38%', left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 20, pointerEvents: 'none',
+                fontFamily: 'Georgia, serif', fontWeight: 900,
+                fontSize: '2.2rem', textTransform: 'uppercase', letterSpacing: 2,
+                color: reveal.carta.color,
+                textShadow: `0 0 20px ${reveal.carta.color}, 0 0 40px ${reveal.carta.color}aa`,
+                animation: 'fanfarria-text 1.6s ease-out forwards',
+                whiteSpace: 'nowrap',
+              }}>
+                {reveal.carta.rareza === 'mitico' ? '¡MÍTICO!' : '¡LEGENDARIO!'}
+              </div>
+            )}
 
             {/* Flip card */}
             <div
@@ -219,7 +275,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                 transform: reveal.revelada ? 'rotateY(180deg)' : 'rotateY(0deg)',
               }}>
                 <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden' }}>
-                  <CartaDorso size="lg" />
+                  <CartaDorso size="lg" glowColor={esAlta ? reveal.carta.color : undefined} pulsar={esAlta} />
                 </div>
                 <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
                   <CartaPersonaje carta={reveal.carta} obtenida size="lg" numero={CARTAS.findIndex(c => c.id === reveal.carta.id) + 1} total={CARTAS.length} />
@@ -260,6 +316,9 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
               </>
             )}
           </div>
+          </>
+            )
+          })()}
         </div>
       )}
 
@@ -307,6 +366,46 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
         @keyframes particula-fly {
           0%   { opacity: 1; transform: translate(-50%, -50%) rotate(var(--ang)) translateX(0px) scale(1); }
           100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--ang)) translateX(110px) scale(0.2); }
+        }
+        @keyframes fanfarria-text {
+          0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+          15%  { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+          25%  { transform: translate(-50%, -50%) scale(1); }
+          80%  { opacity: 1; }
+          100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+        @keyframes modal-shake {
+          0%, 100% { transform: translateX(0); }
+          15%      { transform: translateX(-8px); }
+          30%      { transform: translateX(7px); }
+          45%      { transform: translateX(-5px); }
+          60%      { transform: translateX(4px); }
+          75%      { transform: translateX(-2px); }
+        }
+        .modal-shake { animation: modal-shake 0.5s ease-out; }
+        .rayos-luz {
+          animation: girar-rayos 22s linear infinite;
+        }
+        @keyframes girar-rayos {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        .polvo-flotante {
+          background-image:
+            radial-gradient(1.5px 1.5px at 10% 20%, rgba(255,255,255,0.5), transparent),
+            radial-gradient(1px 1px at 25% 65%, rgba(255,255,255,0.35), transparent),
+            radial-gradient(1.5px 1.5px at 40% 35%, rgba(255,255,255,0.4), transparent),
+            radial-gradient(1px 1px at 55% 80%, rgba(255,255,255,0.3), transparent),
+            radial-gradient(1.5px 1.5px at 70% 15%, rgba(255,255,255,0.45), transparent),
+            radial-gradient(1px 1px at 85% 55%, rgba(255,255,255,0.3), transparent),
+            radial-gradient(1.5px 1.5px at 95% 75%, rgba(255,255,255,0.4), transparent),
+            radial-gradient(1px 1px at 15% 90%, rgba(255,255,255,0.3), transparent);
+          background-repeat: no-repeat;
+          animation: flotar-polvo 9s ease-in-out infinite;
+        }
+        @keyframes flotar-polvo {
+          0%, 100% { transform: translateY(0); opacity: 0.4; }
+          50%      { transform: translateY(-14px); opacity: 0.7; }
         }
       `}</style>
     </div>

@@ -228,7 +228,7 @@ export async function otorgarPuntos(usuarioId: number, monto: number, concepto: 
       `INSERT INTO movimientos_moneda (usuario_id, tipo, concepto, monto, saldo_resultante) VALUES (?, 'GANANCIA', ?, ?, ?)`,
       [usuarioId, concepto, monto, saldoNuevo]
     )
-    // Tiradas de cartas: cada 500 puntos acumulados = +3 tiradas
+    // Tiradas de cartas: cada 500 puntos acumulados = +1 tirada
     const hitoActual = row0?.puntos_hito_ultimo ?? 0
     const nuevoHito = Math.floor(saldoNuevo / 500) * 500
     if (nuevoHito > hitoActual) {
