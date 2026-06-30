@@ -18,12 +18,14 @@ export interface Carta {
   anio: number
   posicionX: number
   posicionY: number
+  fondo?: string
 }
 
 interface CartaOverride {
   imagen?: string
   posicionX?: number
   posicionY?: number
+  fondo?: string
 }
 
 export const RAREZAS: Record<Rareza, { label: string; letra: string; color: string; peso: number; glow: boolean }> = {
@@ -222,6 +224,7 @@ export const CARTAS: Carta[] = CARTAS_BASE.map(c => {
     imagen: o?.imagen ?? c.imagen,
     posicionX: o?.posicionX ?? 50,
     posicionY: o?.posicionY ?? 20,
+    fondo: o?.fondo,
   }
 })
 

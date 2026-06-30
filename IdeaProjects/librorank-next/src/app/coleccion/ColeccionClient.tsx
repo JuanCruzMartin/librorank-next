@@ -22,16 +22,38 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
   const [tirando, setTirando] = useState(false)
   const [reveal, setReveal] = useState<{ carta: Carta; esNueva: boolean; revelada: boolean } | null>(null)
   const [ampliada, setAmpliada] = useState<Carta | null>(null)
+  const [fase, setFase] = useState<'fondo' | 'cuenta' | 'carta'>('carta')
+  const [cuenta, setCuenta] = useState<number | null>(null)
 
   const totalObtenidas = new Set(coleccion).size
 
+  // Si la carta tiene fondo temático (Épico+), mostramos el fondo a pantalla completa
+  // y una cuenta regresiva antes de que aparezca la carta
+  useEffect(() => {
+    if (!reveal) return
+    const esAlta = reveal.carta.rareza === 'epico' || reveal.carta.rareza === 'legendario' || reveal.carta.rareza === 'mitico'
+    if (esAlta && reveal.carta.fondo) {
+      setFase('fondo')
+      const t = setTimeout(() => { setFase('cuenta'); setCuenta(3) }, 900)
+      return () => clearTimeout(t)
+    }
+    setFase('carta')
+  }, [reveal?.carta.id])
+
+  useEffect(() => {
+    if (fase !== 'cuenta' || cuenta === null) return
+    if (cuenta <= 0) { setFase('carta'); return }
+    const t = setTimeout(() => setCuenta(c => (c !== null ? c - 1 : null)), 800)
+    return () => clearTimeout(t)
+  }, [fase, cuenta])
+
   // Comunes y raras se revelan solas — no hace falta tocarlas
   useEffect(() => {
-    if (reveal && !reveal.revelada && (reveal.carta.rareza === 'comun' || reveal.carta.rareza === 'raro')) {
+    if (fase === 'carta' && reveal && !reveal.revelada && (reveal.carta.rareza === 'comun' || reveal.carta.rareza === 'raro')) {
       const t = setTimeout(() => setReveal(r => (r ? { ...r, revelada: true } : r)), 550)
       return () => clearTimeout(t)
     }
-  }, [reveal])
+  }, [reveal, fase])
 
   async function tirar() {
     if (tiradas <= 0 || tirando) return
@@ -184,10 +206,44 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
             const colorAmbiente = reveal.revelada ? reveal.carta.color : '#d4af37'
             return (
           <>
+            {/* Imagen de fondo temática a pantalla completa — solo Épico+ */}
+            {esAlta && reveal.carta.fondo && (
+              <div style={{
+                position: 'absolute', inset: 0, zIndex: 0,
+                backgroundImage: `url(${reveal.carta.fondo})`,
+                backgroundSize: 'cover', backgroundPosition: 'center',
+                filter: fase === 'carta' ? 'blur(2px) brightness(0.4) saturate(1.2)' : 'brightness(0.75) saturate(1.15)',
+                transform: fase === 'carta' ? 'scale(1.08)' : 'scale(1)',
+                opacity: fase === 'fondo' ? 0 : 1,
+                animation: fase === 'fondo' ? 'fondo-aparecer 0.9s ease forwards' : undefined,
+                transition: 'filter 0.8s ease, transform 0.8s ease',
+              }} />
+            )}
+
+            {/* Cuenta regresiva 3-2-1 */}
+            {fase === 'cuenta' && cuenta !== null && cuenta > 0 && (
+              <div style={{
+                position: 'absolute', inset: 0, zIndex: 15,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                pointerEvents: 'none',
+              }}>
+                <span
+                  key={cuenta}
+                  style={{
+                    fontFamily: 'Georgia, serif', fontWeight: 900,
+                    fontSize: '7rem', color: colorAmbiente,
+                    textShadow: `0 0 30px ${colorAmbiente}, 0 0 60px ${colorAmbiente}aa`,
+                    animation: 'cuenta-pop 0.8s cubic-bezier(0.2,0.8,0.3,1)',
+                  }}
+                >
+                  {cuenta}
+                </span>
+              </div>
+            )}
             {/* Fondo atmosférico: vignette + polvo + rayos de luz */}
             <div style={{
               position: 'absolute', inset: 0, zIndex: 0,
-              background: `radial-gradient(circle at 50% 45%, ${colorAmbiente}22 0%, #0a0806 55%, #050403 100%)`,
+              background: `radial-gradient(circle at 50% 45%, ${colorAmbiente}22 0%, ${esAlta && reveal.carta.fondo ? `${colorAmbiente}05` : '#0a0806'} 55%, #050403 100%)`,
               transition: 'background 0.6s ease',
             }} />
             <div
@@ -200,12 +256,13 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
               }}
             />
             <div className="polvo-flotante" style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: 0.5 }} />
+          {fase === 'carta' && (
           <div
             onClick={e => e.stopPropagation()}
             className={fanfarria ? 'modal-shake' : undefined}
             style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem', position: 'relative',
-              zIndex: 2,
+              zIndex: 2, animation: 'fade-in-bg 0.4s ease',
             }}
           >
             <p style={{
@@ -316,6 +373,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
               </>
             )}
           </div>
+          )}
           </>
             )
           })()}
@@ -381,6 +439,17 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
           45%      { transform: translateX(-5px); }
           60%      { transform: translateX(4px); }
           75%      { transform: translateX(-2px); }
+        }
+        @keyframes fondo-aparecer {
+          from { opacity: 0; transform: scale(1.15); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+        @keyframes cuenta-pop {
+          0%   { opacity: 0; transform: scale(0.3); }
+          30%  { opacity: 1; transform: scale(1.25); }
+          50%  { transform: scale(1); }
+          80%  { opacity: 1; }
+          100% { opacity: 0; transform: scale(0.85); }
         }
         .modal-shake { animation: modal-shake 0.5s ease-out; }
         .rayos-luz {

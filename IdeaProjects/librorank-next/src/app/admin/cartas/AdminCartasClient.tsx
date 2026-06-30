@@ -7,10 +7,12 @@ import CartaPersonaje from '@/components/CartaPersonaje'
 export default function AdminCartasClient() {
   const [seleccionada, setSeleccionada] = useState<Carta>(CARTAS[0])
   const [imagenUrl, setImagenUrl] = useState(seleccionada.imagen)
+  const [fondoUrl, setFondoUrl] = useState(seleccionada.fondo ?? '')
   const [posX, setPosX] = useState(seleccionada.posicionX)
   const [posY, setPosY] = useState(seleccionada.posicionY)
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
+  const esAlta = seleccionada.rareza === 'epico' || seleccionada.rareza === 'legendario' || seleccionada.rareza === 'mitico'
 
   const frameRef = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)
@@ -19,6 +21,7 @@ export default function AdminCartasClient() {
   function seleccionar(carta: Carta) {
     setSeleccionada(carta)
     setImagenUrl(carta.imagen)
+    setFondoUrl(carta.fondo ?? '')
     setPosX(carta.posicionX)
     setPosY(carta.posicionY)
     setMensaje('')
@@ -53,7 +56,7 @@ export default function AdminCartasClient() {
       const res = await fetch('/api/admin/cartas-posicion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: seleccionada.id, imagen: imagenUrl, posicionX: posX, posicionY: posY }),
+        body: JSON.stringify({ id: seleccionada.id, imagen: imagenUrl, fondo: fondoUrl || undefined, posicionX: posX, posicionY: posY }),
       })
       if (!res.ok) { setMensaje('Error al guardar'); return }
       setMensaje('✓ Guardado — recargá la página de colección para verlo')
@@ -96,6 +99,28 @@ export default function AdminCartasClient() {
               Tip: poné tus imágenes generadas en <code>public/cartas/</code> y usá <code>/cartas/nombre.jpg</code>
             </p>
           </div>
+
+          {esAlta && (
+            <div>
+              <label style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: 4 }}>
+                URL de fondo temático (Épico+)
+              </label>
+              <input
+                type="text"
+                value={fondoUrl}
+                onChange={e => setFondoUrl(e.target.value)}
+                placeholder="https://... o /cartas-fondos/archivo.jpg"
+                style={{
+                  width: '100%', padding: '0.5rem 0.75rem',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: 8, color: '#fff', fontSize: '0.78rem',
+                }}
+              />
+              <p style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>
+                Se muestra de fondo (borroso) en el momento de revelar esta carta
+              </p>
+            </div>
+          )}
 
           {/* Frame de drag */}
           <div>

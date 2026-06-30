@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Solo disponible en desarrollo local' }, { status: 403 })
   }
 
-  const { id, imagen, posicionX, posicionY } = await req.json()
+  const { id, imagen, fondo, posicionX, posicionY } = await req.json()
   if (!id) return NextResponse.json({ error: 'Falta id' }, { status: 400 })
 
   const raw = await fs.readFile(OVERRIDES_PATH, 'utf-8').catch(() => '{}')
@@ -18,6 +18,7 @@ export async function POST(req: Request) {
   overrides[id] = {
     ...(overrides[id] ?? {}),
     ...(imagen !== undefined ? { imagen } : {}),
+    ...(fondo !== undefined ? { fondo } : {}),
     ...(posicionX !== undefined ? { posicionX } : {}),
     ...(posicionY !== undefined ? { posicionY } : {}),
   }
