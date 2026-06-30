@@ -384,16 +384,33 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
       {ampliada && (
         <div
           style={{
-            position: 'fixed', inset: 0, background: 'rgba(10,8,5,0.82)',
-            backdropFilter: 'blur(3px)',
+            position: 'fixed', inset: 0,
+            background: ampliada.fondo ? undefined : 'rgba(10,8,5,0.82)',
+            backdropFilter: ampliada.fondo ? undefined : 'blur(3px)',
             zIndex: 9998, display: 'flex', alignItems: 'center', justifyContent: 'center',
             animation: 'fade-in-bg 0.2s ease',
+            overflow: 'hidden',
           }}
           onClick={() => setAmpliada(null)}
         >
+          {ampliada.fondo && (
+            <>
+              <div style={{
+                position: 'absolute', inset: 0, zIndex: 0,
+                backgroundImage: `url(${ampliada.fondo})`,
+                backgroundSize: 'cover', backgroundPosition: 'center',
+                filter: 'blur(2px) brightness(0.4) saturate(1.2)',
+                transform: 'scale(1.08)',
+              }} />
+              <div style={{
+                position: 'absolute', inset: 0, zIndex: 0,
+                background: `radial-gradient(circle at 50% 45%, ${ampliada.color}15 0%, transparent 55%, rgba(0,0,0,0.55) 100%)`,
+              }} />
+            </>
+          )}
           <div
             onClick={e => e.stopPropagation()}
-            style={{ animation: 'zoom-in-carta 0.3s cubic-bezier(0.22,1,0.36,1)', position: 'relative' }}
+            style={{ animation: 'zoom-in-carta 0.3s cubic-bezier(0.22,1,0.36,1)', position: 'relative', zIndex: 1 }}
           >
             <CartaPersonaje carta={ampliada} obtenida size="lg" numero={CARTAS.findIndex(c => c.id === ampliada.id) + 1} total={CARTAS.length} />
             <button
