@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import type { Club } from '@/lib/dao/clubDAO'
+import ClubesClient from '@/app/clubes/ClubesClient'
 
 interface UserCard {
   id: number
@@ -102,7 +104,9 @@ function UserCardComp({ user, esAmigo, onAgregar, onEliminar }: {
 }
 
 export default function AmigosPage() {
-  const [tab, setTab] = useState<'amigos' | 'descubrir'>('amigos')
+  const [tab, setTab] = useState<'amigos' | 'descubrir' | 'clubes'>('amigos')
+  const [clubes, setClubes] = useState<Club[]>([])
+  const [loadingClubes, setLoadingClubes] = useState(false)
   const [amigos, setAmigos] = useState<UserCard[]>([])
   const [sugerencias, setSugerencias] = useState<UserCard[]>([])
   const [todos, setTodos] = useState<UserCard[]>([])
@@ -119,6 +123,15 @@ export default function AmigosPage() {
       setLoading(false)
     })
   }, [])
+
+  useEffect(() => {
+    if (tab !== 'clubes' || clubes.length > 0 || loadingClubes) return
+    setLoadingClubes(true)
+    fetch('/api/clubes')
+      .then(r => r.json())
+      .then(data => { setClubes(Array.isArray(data) ? data : []); setLoadingClubes(false) })
+      .catch(() => setLoadingClubes(false))
+  }, [tab])
 
   const buscarGlobal = useCallback(async (q: string) => {
     if (q.length < 2) { setResultados([]); return }
@@ -213,12 +226,15 @@ export default function AmigosPage() {
       </div>
 
       {/* Tabs */}
-      <div className="d-flex gap-2 mb-4 justify-content-center">
+      <div className="d-flex gap-2 mb-4 justify-content-center flex-wrap">
         <button style={tabStyle(tab === 'amigos')} onClick={() => setTab('amigos')}>
           🤝 Mis amigos ({amigos.length})
         </button>
         <button style={tabStyle(tab === 'descubrir')} onClick={() => setTab('descubrir')}>
           🌎 Descubrí lectores ({todos.length})
+        </button>
+        <button style={tabStyle(tab === 'clubes')} onClick={() => setTab('clubes')}>
+          📖 Clubes de lectura
         </button>
       </div>
 
@@ -356,6 +372,18 @@ export default function AmigosPage() {
             </>
           )}
         </div>
+      )}
+
+      {/* ── TAB: Clubes ── */}
+      {tab === 'clubes' && (
+        loadingClubes ? (
+          <div className="text-muted py-5 text-center">
+            <div className="spinner-border spinner-border-sm me-2" role="status" />
+            Cargando clubes...
+          </div>
+        ) : (
+          <ClubesClient clubesIniciales={clubes} />
+        )
       )}
 
     </div>

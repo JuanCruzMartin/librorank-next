@@ -9,6 +9,7 @@ import BannerExplicativo from '@/components/BannerExplicativo'
 import Toast from '@/components/Toast'
 import { GENEROS } from '@/lib/generos'
 import { getLiga } from '@/lib/ligas'
+import RecomendacionesClient from '@/app/recomendaciones/RecomendacionesClient'
 
 const ESTADOS = ['PENDIENTE', 'LEYENDO', 'LEIDO', 'PAUSA']
 const MOODS = ['Relajado', 'Aventurero', 'Emotivo', 'Intelectual', 'Nostálgico', 'Inspirador', 'Oscuro', 'Divertido']
@@ -23,9 +24,12 @@ interface Props {
   paginas: number
   usuario: Usuario
   soloLectura?: boolean
+  topGeneros?: string[]
+  moodFavorito?: string
 }
 
-export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido, mejorCalificado, paginas, usuario, soloLectura = false }: Props) {
+export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido, mejorCalificado, paginas, usuario, soloLectura = false, topGeneros = [], moodFavorito = 'Relajado' }: Props) {
+  const [seccion, setSeccion] = useState<'biblioteca' | 'recomendaciones'>('biblioteca')
   const [libros, setLibros] = useState(librosIniciales)
   const [filtro, setFiltro] = useState('TODOS')
   const [filtroGenero, setFiltroGenero] = useState('TODOS')
@@ -432,6 +436,41 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
       </header>
 
       <main className="container my-5">
+
+        {/* Selector de sección — solo visible cuando es la propia biblioteca */}
+        {!soloLectura && (
+          <div className="d-flex gap-2 mb-4 justify-content-center">
+            {([
+              { key: 'biblioteca',      label: '📚 Mi Biblioteca' },
+              { key: 'recomendaciones', label: '✨ Para vos' },
+            ] as const).map(s => (
+              <button
+                key={s.key}
+                onClick={() => setSeccion(s.key)}
+                style={{
+                  padding: '0.45rem 1.3rem',
+                  borderRadius: 24,
+                  border: seccion === s.key ? '2px solid #d4af37' : '2px solid rgba(255,255,255,0.1)',
+                  background: seccion === s.key ? 'rgba(212,175,55,0.14)' : 'rgba(255,255,255,0.04)',
+                  color: seccion === s.key ? '#d4af37' : 'rgba(255,255,255,0.55)',
+                  fontWeight: 700, fontSize: '0.85rem',
+                  cursor: 'pointer', transition: 'all 0.18s',
+                }}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Sección Para vos */}
+        {seccion === 'recomendaciones' && !soloLectura && (
+          <RecomendacionesClient moodFavorito={moodFavorito} topGeneros={topGeneros} />
+        )}
+
+        {/* Sección Biblioteca */}
+        {(seccion === 'biblioteca' || soloLectura) && (
+        <>
         {!soloLectura && (
           <BannerExplicativo
             icon="📚"
@@ -715,6 +754,8 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
               )
             })}
           </div>
+        )}
+        </>
         )}
       </main>
 

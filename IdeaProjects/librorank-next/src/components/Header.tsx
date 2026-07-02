@@ -51,16 +51,12 @@ interface HeaderProps {
 }
 
 const NAV_ITEMS = [
-  { href: '/biblioteca',      label: '📚 Biblioteca' },
-  { href: '/recomendaciones', label: '✨ Para vos' },
-  { href: '/misiones',        label: '🎯 Misiones' },
-  { href: '/bingo',           label: '🎲 Bingo' },
-  { href: '/retos',           label: '⚔️ Retos' },
-  { href: '/cuento',          label: '✍️ Cuento' },
-  { href: '/coleccion',       label: '📖 Colección' },
-  { href: '/ranking',         label: '🏆 Ranking' },
-  { href: '/clubes',          label: '📚 Clubes' },
-  { href: '/amigos',          label: '👥 Comunidad' },
+  { href: '/biblioteca', label: '📚 Biblioteca' },
+  { href: '/desafios',   label: '🎯 Desafíos' },
+  { href: '/coleccion',  label: '📖 Colección' },
+  { href: '/ranking',    label: '🏆 Ranking' },
+  { href: '/amigos',     label: '👥 Comunidad' },
+  { href: '/cuento',     label: '✍️ Cuento' },
 ]
 
 export default function Header({ user }: HeaderProps) {
@@ -181,8 +177,8 @@ export default function Header({ user }: HeaderProps) {
           <nav className="header-nav-desktop">
             <ul className="d-flex list-unstyled gap-3 mb-0 align-items-center">
               {NAV_ITEMS.map(item => {
-                const esMisiones = item.href === '/misiones'
-                const tieneGlow = esMisiones && misionesPendientes > 0
+                const esDesafios = item.href === '/desafios'
+                const tieneGlow = esDesafios && misionesPendientes > 0
                 return (
                   <li key={item.href} style={{ position: 'relative' }}>
                     <Link
@@ -408,8 +404,8 @@ export default function Header({ user }: HeaderProps) {
           <nav style={{ flex: 1 }}>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
               {NAV_ITEMS.map(item => {
-                const esMisiones = item.href === '/misiones'
-                const tieneGlow = esMisiones && misionesPendientes > 0
+                const esDesafios = item.href === '/desafios'
+                const tieneGlow = esDesafios && misionesPendientes > 0
                 const activo = pathname.startsWith(item.href)
                 return (
                   <li key={item.href}>
