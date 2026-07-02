@@ -25,6 +25,16 @@ function FilaInfo({ label, valor, dark }: { label: string; valor: string; dark?:
   )
 }
 
+function FilaInfoDark({ label, valor }: { label: string; valor: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, fontSize: '0.58rem' }}>
+      <span style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 700, letterSpacing: 0.5, whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ flex: 1, borderBottom: '1px dotted rgba(255,255,255,0.15)', transform: 'translateY(-2px)' }} />
+      <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600, textAlign: 'right' }}>{valor}</span>
+    </div>
+  )
+}
+
 const ESQUINAS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const
 
 function Esquina({ pos, color, size }: { pos: typeof ESQUINAS[number]; color: string; size: number }) {
@@ -113,6 +123,78 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
     )
   }
 
+  const wrapperStyle: React.CSSProperties = {
+    width: dims.w,
+    height: dims.h,
+    borderRadius: 10,
+    border: `3px double ${rareza.color}70`,
+    boxShadow: rareza.glow
+      ? `0 0 16px ${rareza.color}40, inset 0 0 0 1px rgba(58,42,26,0.15)`
+      : 'inset 0 0 0 1px rgba(58,42,26,0.1)',
+    overflow: 'hidden',
+    position: 'relative',
+    flexShrink: 0,
+    transformStyle: 'preserve-3d',
+    transition: 'transform 0.15s ease-out, filter 0.15s ease-out',
+    willChange: 'transform',
+    filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.25))',
+  }
+
+  // ── FULL ART (Legendario / Mítico con imagen de carta completa) ──────────
+  if (carta.fullArt) {
+    return (
+      <div ref={cardRef} className="carta-personaje" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}
+        style={{ ...wrapperStyle, background: '#0a0806' }}
+      >
+        {/* Imagen de fondo cubriendo toda la carta */}
+        {!imgError ? (
+          <Image
+            src={carta.imagen} alt={carta.nombre} fill
+            style={{ objectFit: 'cover', objectPosition: '50% 50%' }}
+            unoptimized onError={() => setImgError(true)}
+          />
+        ) : (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', opacity: 0.3 }}>📜</div>
+        )}
+
+        {/* Glow cursor */}
+        <div ref={glowRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 4, opacity: 0, transition: 'opacity 0.3s ease', mixBlendMode: 'overlay' }} />
+
+        {/* Esquinas ornamentadas */}
+        {esEspecial && ESQUINAS.map(pos => (
+          <Esquina key={pos} pos={pos} color={rareza.color} size={size === 'sm' ? 12 : 18} />
+        ))}
+
+        {/* Badge rareza */}
+        <div style={{
+          position: 'absolute', top: size === 'sm' ? 6 : 8, right: size === 'sm' ? 6 : 8, zIndex: 2,
+          width: size === 'sm' ? 18 : 22, height: size === 'sm' ? 18 : 22, borderRadius: '50%',
+          background: rareza.color, border: '1.5px solid rgba(255,255,255,0.4)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: size === 'sm' ? '0.6rem' : '0.7rem', fontWeight: 800, color: '#fff',
+          fontFamily: 'Georgia, serif',
+        }}>
+          {rareza.letra}
+        </div>
+        {numero !== undefined && total !== undefined && (
+          <div style={{ position: 'absolute', bottom: size === 'sm' ? 6 : 8, right: size === 'sm' ? 6 : 8, zIndex: 2, fontSize: size === 'sm' ? '0.44rem' : '0.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>
+            №{String(numero).padStart(2, '0')}/{total}
+          </div>
+        )}
+
+        {/* Shimmer */}
+        {rareza.glow && (
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 3,
+            background: `linear-gradient(105deg, transparent 40%, ${rareza.color}1a 50%, transparent 60%)`,
+            backgroundSize: '200% 100%', animation: 'shimmer-carta 3.5s infinite',
+          }} />
+        )}
+        <style>{`@keyframes shimmer-carta { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }`}</style>
+      </div>
+    )
+  }
+
+  // ── CARTA ESTÁNDAR ────────────────────────────────────────────────────────
   return (
     <div
       ref={cardRef}
@@ -120,23 +202,10 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
-        width: dims.w,
-        height: dims.h,
-        borderRadius: 10,
-        border: `3px double ${rareza.color}70`,
-        boxShadow: rareza.glow
-          ? `0 0 16px ${rareza.color}40, inset 0 0 0 1px rgba(58,42,26,0.15)`
-          : 'inset 0 0 0 1px rgba(58,42,26,0.1)',
+        ...wrapperStyle,
         background: 'linear-gradient(155deg, #f3e8d0 0%, #e9dab8 55%, #ecdfc0 100%)',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
-        position: 'relative',
-        flexShrink: 0,
-        transformStyle: 'preserve-3d',
-        transition: 'transform 0.15s ease-out, filter 0.15s ease-out',
-        willChange: 'transform',
-        filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.25))',
       }}
     >
       {/* Glow que sigue al cursor */}

@@ -19,6 +19,7 @@ export interface Carta {
   posicionX: number
   posicionY: number
   fondo?: string
+  fullArt?: boolean
 }
 
 interface CartaOverride {
@@ -204,6 +205,7 @@ const CARTAS_BASE: CartaBase[] = [
     imagen: fp('Faust und Mephisto.jpg'),
     simbolo: 'El pacto firmado con sangre',
     cita: '«Detente, eres tan hermoso»',
+    fullArt: true,
   },
 
   // MÍTICO (1)
@@ -214,6 +216,7 @@ const CARTAS_BASE: CartaBase[] = [
     imagen: fp('Shakespeare.jpg'),
     simbolo: 'La pluma que creó mil almas',
     cita: '«Todo el mundo es un escenario»',
+    fullArt: true,
   },
 ]
 
@@ -225,6 +228,7 @@ export const CARTAS: Carta[] = CARTAS_BASE.map(c => {
     posicionX: o?.posicionX ?? 50,
     posicionY: o?.posicionY ?? 20,
     fondo: o?.fondo,
+    fullArt: c.fullArt,
   }
 })
 
