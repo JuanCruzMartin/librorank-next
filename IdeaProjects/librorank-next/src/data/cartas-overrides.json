@@ -17,6 +17,6 @@
   "dracula": { "imagen": "/cartas/dracula.png", "fondo": "/cartas-fondos/dracula.png" },
   "frankenstein": { "imagen": "/cartas/frankenstein.png", "fondo": "/cartas-fondos/frankenstein.png" },
   "capitan-ahab": { "imagen": "/cartas/capitan-ahab.png", "fondo": "/cartas-fondos/capitan-ahab.png" },
-  "fausto": { "imagen": "/cartas/fausto.png" },
-  "shakespeare": { "imagen": "/cartas/shakespeare.png" }
+  "fausto": { "imagen": "/cartas/fausto.png", "fondo": "/cartas-fondos/fausto.png" },
+  "shakespeare": { "imagen": "/cartas/shakespeare.png", "fondo": "/cartas-fondos/shakespeare.png" }
 }
