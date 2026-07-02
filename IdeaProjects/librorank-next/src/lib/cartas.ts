@@ -20,6 +20,7 @@ export interface Carta {
   posicionY: number
   fondo?: string
   fullArt?: boolean
+  dorso?: string
 }
 
 interface CartaOverride {
@@ -196,6 +197,184 @@ const CARTAS_BASE: CartaBase[] = [
     simbolo: 'La pierna de marfil y el arpón',
     cita: '«Hasta el último aliento lucharé contigo»',
   },
+
+  // ── HARRY POTTER ─────────────────────────────────────────────────────────
+
+  // COMÚN HP (7)
+  {
+    id: 'ron-weasley', nombre: 'Ron Weasley', epiteto: 'El Leal Amigo', concepto: 'Lealtad',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'comun', anio: 1997, color: '#c8102e',
+    imagen: fp('Ron Weasley.jpg'),
+    simbolo: 'Las piezas de ajedrez y la rata Scabbers',
+    cita: '«¿Qué es el amor sin un amigo que te acompañe?»',
+    dorso: '/dorso-hp.png',
+  },
+  {
+    id: 'ginny-weasley', nombre: 'Ginny Weasley', epiteto: 'La Chaser', concepto: 'Valentía',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'comun', anio: 1997, color: '#c8102e',
+    imagen: fp('Ginny Weasley.jpg'),
+    simbolo: 'El Bludger y el sortilegio Reducto',
+    cita: '«No soy cualquier chica de La Madriguera»',
+    dorso: '/dorso-hp.png',
+  },
+  {
+    id: 'neville-longbottom', nombre: 'Neville Longbottom', epiteto: 'El Inesperado Héroe', concepto: 'Coraje',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'comun', anio: 1997, color: '#7a5c2e',
+    imagen: fp('Neville Longbottom.jpg'),
+    simbolo: 'La espada de Gryffindor y la Mandrágora',
+    cita: '«Se necesita mucho valor para enfrentarse a tus enemigos, pero igual de importante es enfrentarse a tus amigos»',
+    dorso: '/dorso-hp.png',
+  },
+  {
+    id: 'cho-chang', nombre: 'Cho Chang', epiteto: 'La Seeker', concepto: 'Gracia',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'comun', anio: 1997, color: '#1a3a5a',
+    imagen: fp('Cho Chang.jpg'),
+    simbolo: 'La escoba de quidditch de Ravenclaw',
+    cita: '«Ravenclaw no es solo inteligencia, es sabiduría»',
+    dorso: '/dorso-hp.png',
+  },
+  {
+    id: 'cedric-diggory', nombre: 'Cedric Diggory', epiteto: 'El Campeón', concepto: 'Honor',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'comun', anio: 1997, color: '#c8a000',
+    imagen: fp('Cedric Diggory.jpg'),
+    simbolo: 'La copa del Torneo de los Tres Magos',
+    cita: '«Sé leal a lo que verdaderamente importa»',
+    dorso: '/dorso-hp.png',
+  },
+  {
+    id: 'fred-george', nombre: 'Fred y George Weasley', epiteto: 'Los Gemelos', concepto: 'Humor',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'comun', anio: 1997, color: '#c8102e',
+    imagen: fp('Fred George Weasley.jpg'),
+    simbolo: 'Los fuegos de artificio y el Pasatiempos Weasley',
+    cita: '«La vida es demasiado corta para ser aburrida»',
+    dorso: '/dorso-hp.png',
+  },
+  {
+    id: 'luna-lovegood', nombre: 'Luna Lovegood', epiteto: 'La Vidente', concepto: 'Originalidad',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'comun', anio: 1997, color: '#87ceeb',
+    imagen: fp('Luna Lovegood.jpg'),
+    simbolo: 'Los lentes de Percepto y el Quibbler',
+    cita: '«Los que te quieren de verdad nunca te dejan del todo»',
+    dorso: '/dorso-hp.png',
+  },
+
+  // RARO HP (7)
+  {
+    id: 'hermione-granger', nombre: 'Hermione Granger', epiteto: 'La Bruja Más Lista', concepto: 'Inteligencia',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'raro', anio: 1997, color: '#c8102e',
+    imagen: fp('Hermione Granger.jpg'),
+    simbolo: 'El giratiempo y la varita de vid',
+    cita: '«Soy una bruja, no una bruja mala»',
+    dorso: '/dorso-hp.png',
+  },
+  {
+    id: 'draco-malfoy', nombre: 'Draco Malfoy', epiteto: 'El Príncipe de Slytherin', concepto: 'Ambición',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'raro', anio: 1997, color: '#1a6b3c',
+    imagen: fp('Draco Malfoy.jpg'),
+    simbolo: 'La Marca Tenebrosa y el Gabinete Vanishing',
+    cita: '«No deberías haber venido esta noche»',
+    dorso: '/dorso-hp.png',
+  },
+  {
+    id: 'rubeus-hagrid', nombre: 'Rubeus Hagrid', epiteto: 'El Guardabosques', concepto: 'Bondad',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'raro', anio: 1997, color: '#6b4f3e',
+    imagen: fp('Rubeus Hagrid.jpg'),
+    simbolo: 'La paraguas rosa y Norberto el dragón',
+    cita: '«Lo que está hecho, está hecho»',
+    dorso: '/dorso-hp.png',
+  },
+  {
+    id: 'sirius-black', nombre: 'Sirius Black', epiteto: 'El Animago Fugitivo', concepto: 'Sacrificio',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'raro', anio: 1997, color: '#4a4a6a',
+    imagen: fp('Sirius Black.jpg'),
+    simbolo: 'La moto voladora y el perro negro',
+    cita: '«El que no tiene nada que perder es el más peligroso»',
+    dorso: '/dorso-hp.png',
+  },
+  {
+    id: 'severus-snape', nombre: 'Severus Snape', epiteto: 'El Príncipe Mestizo', concepto: 'Redención',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'raro', anio: 1997, color: '#2d2d2d',
+    imagen: fp('Severus Snape.jpg'),
+    simbolo: 'La doe patronus y el libro anotado',
+    cita: '«Siempre»',
+    dorso: '/dorso-hp.png',
+  },
+  {
+    id: 'bellatrix-lestrange', nombre: 'Bellatrix Lestrange', epiteto: 'La Fiel Seguidora', concepto: 'Fanatismo',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'raro', anio: 1997, color: '#8b0000',
+    imagen: fp('Bellatrix Lestrange.jpg'),
+    simbolo: 'La varita de saúco robada y Azkaban',
+    cita: '«La muerte no es nada comparada con la deslealtad»',
+    dorso: '/dorso-hp.png',
+  },
+  {
+    id: 'dobby', nombre: 'Dobby', epiteto: 'El Elfo Libre', concepto: 'Libertad',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'raro', anio: 1997, color: '#3d6b94',
+    imagen: fp('Dobby.jpg'),
+    simbolo: 'El calcetín de la libertad',
+    cita: '«Dobby es libre»',
+    dorso: '/dorso-hp.png',
+  },
+
+  // LEGENDARIO HP (3) — full-art
+  {
+    id: 'harry-potter', nombre: 'Harry Potter', epiteto: 'El Niño Que Sobrevivió', concepto: 'Destino',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'legendario', anio: 1997, color: '#c8102e',
+    imagen: fp('Harry Potter.jpg'),
+    simbolo: 'La cicatriz en forma de rayo y la varita de acebo',
+    cita: '«No soy nada especial, en realidad»',
+    fullArt: true,
+    dorso: '/dorso-hp.png',
+  },
+  {
+    id: 'albus-dumbledore', nombre: 'Albus Dumbledore', epiteto: 'El Gran Mago', concepto: 'Sabiduría',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'legendario', anio: 1997, color: '#6b3d8e',
+    imagen: fp('Albus Dumbledore.jpg'),
+    simbolo: 'La varita de saúco y el Fénix Fawkes',
+    cita: '«La felicidad se puede encontrar hasta en los momentos más oscuros, si uno recuerda encender la luz»',
+    fullArt: true,
+    dorso: '/dorso-hp.png',
+  },
+  {
+    id: 'lord-voldemort', nombre: 'Lord Voldemort', epiteto: 'El Que No Debe Ser Nombrado', concepto: 'Poder',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'legendario', anio: 1997, color: '#2d5a27',
+    imagen: fp('Lord Voldemort.jpg'),
+    simbolo: 'Los Horrocruxes y la varita de tejo',
+    cita: '«No hay bien ni mal, solo poder y los demasiado débiles para buscarlo»',
+    fullArt: true,
+    dorso: '/dorso-hp.png',
+  },
+
+  // MÍTICO HP (1) — full-art
+  {
+    id: 'reliquias-muerte', nombre: 'Las Reliquias de la Muerte', epiteto: 'El Triángulo Sagrado', concepto: 'Inmortalidad',
+    obra: 'Harry Potter', autor: 'J.K. Rowling', origen: 'Gran Bretaña',
+    rareza: 'mitico', anio: 2007, color: '#c0c0c0',
+    imagen: fp('Deathly Hallows.jpg'),
+    simbolo: 'La varita de saúco, la piedra de la resurrección y la capa de invisibilidad',
+    cita: '«El hombre más poderoso del mundo sería el dueño de las tres Reliquias de la Muerte»',
+    fullArt: true,
+    dorso: '/dorso-hp.png',
+  },
+
+  // ── LITERATURA CLÁSICA (continuación) ────────────────────────────────────
 
   // LEGENDARIO (1)
   {

@@ -1,14 +1,39 @@
 'use client'
 
+import Image from 'next/image'
+
 interface Props {
   size?: 'sm' | 'md' | 'lg'
   glowColor?: string
   pulsar?: boolean
+  imagen?: string
 }
 
-export default function CartaDorso({ size = 'lg', glowColor, pulsar }: Props) {
+export default function CartaDorso({ size = 'lg', glowColor, pulsar, imagen }: Props) {
   const dims = size === 'sm' ? { w: 168, h: 268 } : size === 'lg' ? { w: 300, h: 480 } : { w: 220, h: 352 }
   const colorGlow = glowColor ?? '#d4af37'
+
+  if (imagen) {
+    return (
+      <div
+        className={pulsar ? 'dorso-pulsante' : undefined}
+        style={{
+          width: dims.w, height: dims.h, borderRadius: 10,
+          border: `3px double ${colorGlow}aa`,
+          boxShadow: `0 0 20px ${colorGlow}40`,
+          overflow: 'hidden', position: 'relative', flexShrink: 0,
+          ['--glow-soft' as string]: `0 0 20px ${colorGlow}40`,
+          ['--glow-strong' as string]: `0 0 38px ${colorGlow}90`,
+        } as React.CSSProperties}
+      >
+        <Image src={imagen} alt="dorso" fill style={{ objectFit: 'cover' }} unoptimized />
+        <style>{`
+          .dorso-pulsante { animation: pulso-dorso 1.3s ease-in-out infinite; }
+          @keyframes pulso-dorso { 0%, 100% { box-shadow: var(--glow-soft); } 50% { box-shadow: var(--glow-strong); } }
+        `}</style>
+      </div>
+    )
+  }
 
   return (
     <div

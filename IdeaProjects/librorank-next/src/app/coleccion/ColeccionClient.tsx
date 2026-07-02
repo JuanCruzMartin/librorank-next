@@ -66,9 +66,12 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
   useEffect(() => {
     if (!reveal) return
     const esAlta = reveal.carta.rareza === 'epico' || reveal.carta.rareza === 'legendario' || reveal.carta.rareza === 'mitico'
-    if (esAlta && reveal.carta.fondo) {
+    if (reveal.carta.fondo) {
       setFase('fondo')
-      const t = setTimeout(() => { setFase('cuenta'); setCuenta(3) }, 900)
+      const t = setTimeout(() => {
+        if (esAlta) { setFase('cuenta'); setCuenta(3) }
+        else { setFase('carta') }
+      }, 900)
       return () => clearTimeout(t)
     }
     setFase('carta')
@@ -270,8 +273,8 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
             const colorAmbiente = reveal.revelada ? reveal.carta.color : '#d4af37'
             return (
           <>
-            {/* Imagen de fondo temática a pantalla completa — solo Épico+ */}
-            {esAlta && reveal.carta.fondo && (
+            {/* Imagen de fondo temática a pantalla completa */}
+            {reveal.carta.fondo && (
               <div style={{
                 position: 'absolute', inset: 0, zIndex: 0,
                 backgroundImage: `url(${reveal.carta.fondo})`,
@@ -396,7 +399,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                 transform: reveal.revelada ? 'rotateY(180deg)' : 'rotateY(0deg)',
               }}>
                 <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden' }}>
-                  <CartaDorso size="lg" glowColor={esAlta ? reveal.carta.color : undefined} pulsar={esAlta} />
+                  <CartaDorso size="lg" glowColor={esAlta ? reveal.carta.color : undefined} pulsar={esAlta} imagen={reveal.carta.dorso} />
                 </div>
                 <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
                   <CartaPersonaje carta={reveal.carta} obtenida size="lg" numero={CARTAS.findIndex(c => c.id === reveal.carta.id) + 1} total={CARTAS.length} />
