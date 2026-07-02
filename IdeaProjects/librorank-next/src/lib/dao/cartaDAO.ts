@@ -31,3 +31,23 @@ export async function usarTirada(usuarioId: number): Promise<boolean> {
   )
   return res.affectedRows > 0
 }
+
+export async function verificarTiradaDiaria(usuarioId: number): Promise<{ otorgada: boolean; proxima: Date }> {
+  const row = await queryOne<{ ultima_tirada_gratis: Date | null }>(
+    'SELECT ultima_tirada_gratis FROM usuarios WHERE id = ?',
+    [usuarioId]
+  )
+  const ultima = row?.ultima_tirada_gratis ? new Date(row.ultima_tirada_gratis) : null
+  const ahora = new Date()
+  const proxima = ultima ? new Date(ultima.getTime() + 24 * 60 * 60 * 1000) : ahora
+
+  if (!ultima || ahora >= proxima) {
+    await execute(
+      'UPDATE usuarios SET tiradas_disponibles = tiradas_disponibles + 1, ultima_tirada_gratis = NOW() WHERE id = ?',
+      [usuarioId]
+    )
+    return { otorgada: true, proxima: new Date(ahora.getTime() + 24 * 60 * 60 * 1000) }
+  }
+
+  return { otorgada: false, proxima }
+}

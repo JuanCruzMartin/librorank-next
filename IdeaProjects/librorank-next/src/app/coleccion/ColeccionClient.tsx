@@ -24,8 +24,42 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
   const [ampliada, setAmpliada] = useState<Carta | null>(null)
   const [fase, setFase] = useState<'fondo' | 'cuenta' | 'carta'>('carta')
   const [cuenta, setCuenta] = useState<number | null>(null)
+  const [bannerDiario, setBannerDiario] = useState(false)
+  const [proximaDiaria, setProximaDiaria] = useState<Date | null>(null)
+  const [countdown, setCountdown] = useState('')
 
   const totalObtenidas = new Set(coleccion).size
+
+  // Tirada diaria: verificar al montar
+  useEffect(() => {
+    fetch('/api/cartas/tirada-diaria', { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.otorgada) {
+          setTiradas(t => t + 1)
+          setBannerDiario(true)
+          setTimeout(() => setBannerDiario(false), 4000)
+        }
+        setProximaDiaria(new Date(data.proxima))
+      })
+      .catch(() => {})
+  }, [])
+
+  // Countdown hasta la próxima tirada diaria
+  useEffect(() => {
+    if (!proximaDiaria) return
+    function actualizar() {
+      const diff = proximaDiaria!.getTime() - Date.now()
+      if (diff <= 0) { setCountdown(''); return }
+      const h = Math.floor(diff / 3600000)
+      const m = Math.floor((diff % 3600000) / 60000)
+      const s = Math.floor((diff % 60000) / 1000)
+      setCountdown(`${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`)
+    }
+    actualizar()
+    const id = setInterval(actualizar, 1000)
+    return () => clearInterval(id)
+  }, [proximaDiaria])
 
   // Si la carta tiene fondo temático (Épico+), mostramos el fondo a pantalla completa
   // y una cuenta regresiva antes de que aparezca la carta
@@ -72,6 +106,31 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
 
   return (
     <div className="container py-4" style={{ maxWidth: 860 }}>
+
+      {/* Banner tirada diaria */}
+      {bannerDiario && (
+        <div style={{
+          background: 'linear-gradient(90deg, #a8821f22, #d4af3744, #a8821f22)',
+          border: '1px solid rgba(212,175,55,0.5)',
+          borderRadius: 12,
+          padding: '0.75rem 1.25rem',
+          marginBottom: '1rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          animation: 'banner-diario 4s ease forwards',
+        }}>
+          <span style={{ fontSize: '1.4rem' }}>🎴</span>
+          <div>
+            <p style={{ fontWeight: 800, color: 'var(--accent-gold)', fontSize: '0.9rem', marginBottom: 2 }}>
+              ¡Tirada diaria desbloqueada!
+            </p>
+            <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>
+              Volvé mañana para conseguir otra gratis
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Header álbum */}
       <div style={{
@@ -121,7 +180,12 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
           >
             {tirando ? 'Revelando...' : tiradas > 0 ? '✨ Tirar carta' : 'Sin tiradas'}
           </button>
-          {tiradas <= 0 && (
+          {tiradas <= 0 && countdown && (
+            <p style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.25)', textAlign: 'right', maxWidth: 180 }}>
+              🕐 Gratis en {countdown}
+            </p>
+          )}
+          {tiradas <= 0 && !countdown && (
             <p style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.25)', textAlign: 'right', maxWidth: 180 }}>
               1 tirada cada 500 puntos acumulados
             </p>
@@ -492,6 +556,12 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
         @keyframes flotar-polvo {
           0%, 100% { transform: translateY(0); opacity: 0.4; }
           50%      { transform: translateY(-14px); opacity: 0.7; }
+        }
+        @keyframes banner-diario {
+          0%   { opacity: 0; transform: translateY(-8px); }
+          10%  { opacity: 1; transform: translateY(0); }
+          80%  { opacity: 1; }
+          100% { opacity: 0; }
         }
       `}</style>
     </div>
