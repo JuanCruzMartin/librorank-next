@@ -398,10 +398,10 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                 transition: 'transform 0.7s cubic-bezier(0.4,0.2,0.2,1)',
                 transform: reveal.revelada ? 'rotateY(180deg)' : 'rotateY(0deg)',
               }}>
-                <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden' }}>
+                <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', borderRadius: 10, overflow: 'hidden' }}>
                   <CartaDorso size="lg" glowColor={esAlta ? reveal.carta.color : undefined} pulsar={esAlta} imagen={reveal.carta.dorso} />
                 </div>
-                <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+                <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', borderRadius: 10, overflow: 'hidden' }}>
                   <CartaPersonaje carta={reveal.carta} obtenida size="lg" numero={CARTAS.findIndex(c => c.id === reveal.carta.id) + 1} total={CARTAS.length} />
                 </div>
               </div>

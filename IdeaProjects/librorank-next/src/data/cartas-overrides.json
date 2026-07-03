@@ -36,5 +36,25 @@
   "harry-potter": { "imagen": "/cartas/harry-potter.png", "fondo": "/cartas-fondos/harry-potter.png" },
   "albus-dumbledore": { "imagen": "/cartas/albus-dumbledore.png", "fondo": "/cartas-fondos/albus-dumbledore.png" },
   "lord-voldemort": { "imagen": "/cartas/lord-voldemort.png", "fondo": "/cartas-fondos/lord-voldemort.png" },
-  "reliquias-muerte": { "imagen": "/cartas/reliquias-muerte.png", "fondo": "/cartas-fondos/reliquias-muerte.png" }
+  "reliquias-muerte": { "imagen": "/cartas/reliquias-muerte.png", "fondo": "/cartas-fondos/reliquias-muerte.png" },
+
+  "grima":        { "imagen": "/cartas/grima.png",        "fondo": "/cartas-fondos/sda-general.png" },
+  "boromir":      { "imagen": "/cartas/boromir.png",      "fondo": "/cartas-fondos/sda-general.png" },
+  "barbol":       { "imagen": "/cartas/barbol.png",       "fondo": "/cartas-fondos/sda-general.png" },
+  "theoden":      { "imagen": "/cartas/theoden.png",      "fondo": "/cartas-fondos/sda-general.png" },
+  "eomer":        { "imagen": "/cartas/eomer.png",        "fondo": "/cartas-fondos/sda-general.png" },
+  "bilbo-bolson": { "imagen": "/cartas/bilbo-bolson.png", "fondo": "/cartas-fondos/sda-general.png" },
+  "meriadoc":     { "imagen": "/cartas/meriadoc.png",     "fondo": "/cartas-fondos/sda-general.png" },
+  "samsagaz":     { "imagen": "/cartas/samsagaz.png",     "fondo": "/cartas-fondos/sda-general.png" },
+  "gimli":        { "imagen": "/cartas/gimli.png",        "fondo": "/cartas-fondos/sda-general.png" },
+  "faramir":      { "imagen": "/cartas/faramir.png",      "fondo": "/cartas-fondos/sda-general.png" },
+  "aragorn":      { "imagen": "/cartas/aragorn.png",      "fondo": "/cartas-fondos/sda-general.png" },
+  "legolas":      { "imagen": "/cartas/legolas.png",      "fondo": "/cartas-fondos/sda-general.png" },
+  "arwen":        { "imagen": "/cartas/arwen.png",        "fondo": "/cartas-fondos/sda-general.png" },
+  "galadriel":    { "imagen": "/cartas/galadriel.png",    "fondo": "/cartas-fondos/sda-general.png" },
+  "eowyn":        { "imagen": "/cartas/eowyn.png",        "fondo": "/cartas-fondos/sda-general.png" },
+  "frodo-bolson": { "imagen": "/cartas/frodo-bolson.png", "fondo": "/cartas-fondos/frodo-bolson.png" },
+  "gandalf":      { "imagen": "/cartas/gandalf.png",      "fondo": "/cartas-fondos/gandalf.png" },
+  "saruman":      { "imagen": "/cartas/saruman.png",      "fondo": "/cartas-fondos/saruman.png" },
+  "sauron":       { "imagen": "/cartas/sauron.png",       "fondo": "/cartas-fondos/sauron.png" }
 }

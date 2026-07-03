@@ -22,11 +22,12 @@ export default function CartaDorso({ size = 'lg', glowColor, pulsar, imagen }: P
           border: `3px double ${colorGlow}aa`,
           boxShadow: `0 0 20px ${colorGlow}40`,
           overflow: 'hidden', position: 'relative', flexShrink: 0,
+          background: '#0a0806',
           ['--glow-soft' as string]: `0 0 20px ${colorGlow}40`,
           ['--glow-strong' as string]: `0 0 38px ${colorGlow}90`,
         } as React.CSSProperties}
       >
-        <Image src={imagen} alt="dorso" fill style={{ objectFit: 'cover' }} unoptimized />
+        <Image src={imagen} alt="dorso" fill style={{ objectFit: 'cover', objectPosition: 'center' }} unoptimized />
         <style>{`
           .dorso-pulsante { animation: pulso-dorso 1.3s ease-in-out infinite; }
           @keyframes pulso-dorso { 0%, 100% { box-shadow: var(--glow-soft); } 50% { box-shadow: var(--glow-strong); } }
