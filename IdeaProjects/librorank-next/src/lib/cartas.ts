@@ -738,6 +738,129 @@ const CARTAS_BASE: CartaBase[] = [
     dorso: '/dorso-got.png',
   },
 
+  // ── EL PRINCIPITO ────────────────────────────────────────────────────────
+
+  // COMÚN PRINCIPITO (3)
+  {
+    id: 'el-bebedor', nombre: 'El Bebedor', epiteto: 'El Avergonzado', concepto: 'Evasión',
+    obra: 'El Principito', autor: 'Antoine de Saint-Exupéry', origen: 'Francia',
+    rareza: 'comun', anio: 1943, color: '#7a4a2e',
+    imagen: fp('The Little Prince - bebedor.jpg'),
+    simbolo: 'Las botellas vacías y la vergüenza',
+    cita: '«Bebo para olvidar que me avergüenzo de beber»',
+    dorso: '/dorso-principito.png',
+  },
+  {
+    id: 'el-vanidoso', nombre: 'El Vanidoso', epiteto: 'El que Quiere ser Admirado', concepto: 'Vanidad',
+    obra: 'El Principito', autor: 'Antoine de Saint-Exupéry', origen: 'Francia',
+    rareza: 'comun', anio: 1943, color: '#c8a000',
+    imagen: fp('The Little Prince - vanidoso.jpg'),
+    simbolo: 'El sombrero y los aplausos inexistentes',
+    cita: '«¿Me admiras mucho, verdad?»',
+    dorso: '/dorso-principito.png',
+  },
+  {
+    id: 'el-baobab', nombre: 'Los Baobabs', epiteto: 'La Amenaza Silenciosa', concepto: 'Descuido',
+    obra: 'El Principito', autor: 'Antoine de Saint-Exupéry', origen: 'Francia',
+    rareza: 'comun', anio: 1943, color: '#5a8a2a',
+    imagen: fp('The Little Prince - baobab.jpg'),
+    simbolo: 'Las raíces que devoran el planeta',
+    cita: '«Es una cuestión de disciplina»',
+    dorso: '/dorso-principito.png',
+  },
+
+  // RARO PRINCIPITO (3)
+  {
+    id: 'el-rey', nombre: 'El Rey', epiteto: 'El Monarca Sin Súbditos', concepto: 'Autoridad',
+    obra: 'El Principito', autor: 'Antoine de Saint-Exupéry', origen: 'Francia',
+    rareza: 'raro', anio: 1943, color: '#c8102e',
+    imagen: fp('The Little Prince - rey.jpg'),
+    simbolo: 'La corona y el manto de armiño',
+    cita: '«Ordeno que te vayas»',
+    dorso: '/dorso-principito.png',
+  },
+  {
+    id: 'el-farolero', nombre: 'El Farolero', epiteto: 'El Fiel a su Consigna', concepto: 'Deber',
+    obra: 'El Principito', autor: 'Antoine de Saint-Exupéry', origen: 'Francia',
+    rareza: 'raro', anio: 1943, color: '#3d6b94',
+    imagen: fp('The Little Prince - farolero.jpg'),
+    simbolo: 'El farol y la noche que no termina',
+    cita: '«Las consignas son las consignas»',
+    dorso: '/dorso-principito.png',
+  },
+  {
+    id: 'el-hombre-de-negocios', nombre: 'El Hombre de Negocios', epiteto: 'El Contador de Estrellas', concepto: 'Codicia',
+    obra: 'El Principito', autor: 'Antoine de Saint-Exupéry', origen: 'Francia',
+    rareza: 'raro', anio: 1943, color: '#8b6914',
+    imagen: fp('The Little Prince - hombre negocios.jpg'),
+    simbolo: 'Los números y las estrellas contadas',
+    cita: '«Yo poseo las estrellas porque nadie antes pensó en poseerlas»',
+    dorso: '/dorso-principito.png',
+  },
+
+  // ÉPICO PRINCIPITO (3)
+  {
+    id: 'el-aviador', nombre: 'El Aviador', epiteto: 'El Narrador del Desierto', concepto: 'Nostalgia',
+    obra: 'El Principito', autor: 'Antoine de Saint-Exupéry', origen: 'Francia',
+    rareza: 'epico', anio: 1943, color: '#c07830',
+    imagen: fp('The Little Prince - aviador.jpg'),
+    simbolo: 'El avión caído y el dibujo de la boa',
+    cita: '«Todas las personas grandes fueron primero niños, aunque pocas lo recuerdan»',
+    dorso: '/dorso-principito.png',
+  },
+  {
+    id: 'el-geografo', nombre: 'El Geógrafo', epiteto: 'El Sabio Inmóvil', concepto: 'Conocimiento',
+    obra: 'El Principito', autor: 'Antoine de Saint-Exupéry', origen: 'Francia',
+    rareza: 'epico', anio: 1943, color: '#1a4a7a',
+    imagen: fp('The Little Prince - geografo.jpg'),
+    simbolo: 'Los mapas y los libros sin actualizar',
+    cita: '«Los geógrafos no van a contar las ciudades»',
+    dorso: '/dorso-principito.png',
+  },
+  {
+    id: 'la-serpiente', nombre: 'La Serpiente', epiteto: 'La que Sabe el Secreto', concepto: 'Misterio',
+    obra: 'El Principito', autor: 'Antoine de Saint-Exupéry', origen: 'Francia',
+    rareza: 'epico', anio: 1943, color: '#2d5a27',
+    imagen: fp('The Little Prince - serpiente.jpg'),
+    simbolo: 'El anillo dorado en la arena del desierto',
+    cita: '«Puedo devolverte a la tierra de donde viniste»',
+    dorso: '/dorso-principito.png',
+  },
+
+  // LEGENDARIO PRINCIPITO (2) — full-art
+  {
+    id: 'el-zorro', nombre: 'El Zorro', epiteto: 'El que Enseña a Domesticar', concepto: 'Amistad',
+    obra: 'El Principito', autor: 'Antoine de Saint-Exupéry', origen: 'Francia',
+    rareza: 'legendario', anio: 1943, color: '#c8a000',
+    imagen: fp('The Little Prince - zorro.jpg'),
+    simbolo: 'El trigo dorado y los vínculos del corazón',
+    cita: '«Solo se ve bien con el corazón; lo esencial es invisible a los ojos»',
+    fullArt: true,
+    dorso: '/dorso-principito.png',
+  },
+  {
+    id: 'la-rosa', nombre: 'La Rosa', epiteto: 'La Única en el Mundo', concepto: 'Amor',
+    obra: 'El Principito', autor: 'Antoine de Saint-Exupéry', origen: 'Francia',
+    rareza: 'legendario', anio: 1943, color: '#c8102e',
+    imagen: fp('The Little Prince - rosa.jpg'),
+    simbolo: 'Los cuatro espinas y la campana de cristal',
+    cita: '«Es el tiempo que le has dedicado a tu rosa lo que la hace tan importante»',
+    fullArt: true,
+    dorso: '/dorso-principito.png',
+  },
+
+  // MÍTICO PRINCIPITO (1) — full-art
+  {
+    id: 'el-principito', nombre: 'El Principito', epiteto: 'El Pequeño Príncipe', concepto: 'Inocencia',
+    obra: 'El Principito', autor: 'Antoine de Saint-Exupéry', origen: 'Francia',
+    rareza: 'mitico', anio: 1943, color: '#f4d03f',
+    imagen: fp('The Little Prince.jpg'),
+    simbolo: 'La estrella B-612 y la bufanda al viento',
+    cita: '«Quizás al mirar el cielo de noche sentirás que todas las estrellas ríen»',
+    fullArt: true,
+    dorso: '/dorso-principito.png',
+  },
+
   // ── LITERATURA CLÁSICA (continuación) ────────────────────────────────────
 
   // LEGENDARIO (1)
