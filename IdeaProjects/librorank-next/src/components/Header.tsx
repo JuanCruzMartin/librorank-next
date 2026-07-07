@@ -53,8 +53,9 @@ interface HeaderProps {
 const NAV_ITEMS = [
   { href: '/biblioteca', label: '📚 Biblioteca' },
   { href: '/desafios',   label: '🎯 Desafíos' },
-  { href: '/coleccion',  label: '📖 Colección' },
-  { href: '/ranking',    label: '🏆 Ranking' },
+  { href: '/coleccion',    label: '📖 Colección' },
+  { href: '/intercambios', label: '🔄 Intercambios' },
+  { href: '/ranking',      label: '🏆 Ranking' },
   { href: '/amigos',     label: '👥 Comunidad' },
   { href: '/cuento',     label: '✍️ Cuento' },
 ]
