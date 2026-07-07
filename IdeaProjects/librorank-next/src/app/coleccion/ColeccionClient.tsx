@@ -239,55 +239,56 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
       {/* Layout flex: sidebar + contenido */}
       <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-start' }}>
 
-        {/* Sidebar sticky álbumes (solo en vista colección) */}
-        {vista === 'coleccion' && (
-          <div style={{
-            width: 165, flexShrink: 0,
-            position: 'sticky', top: '1rem',
-            background: 'var(--bg-card)',
-            border: '1px solid rgba(212,175,55,0.15)',
-            borderRadius: 12,
-            padding: '0.75rem 0.5rem',
+        {/* Sidebar sticky álbumes — siempre visible */}
+        <div style={{
+          width: 165, flexShrink: 0,
+          position: 'sticky', top: '1rem',
+          background: 'var(--bg-card)',
+          border: '1px solid rgba(212,175,55,0.15)',
+          borderRadius: 12,
+          padding: '0.75rem 0.5rem',
+        }}>
+          <p style={{
+            fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', fontWeight: 700,
+            letterSpacing: 1, textTransform: 'uppercase',
+            marginBottom: '0.5rem', paddingLeft: '0.4rem',
           }}>
-            <p style={{
-              fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', fontWeight: 700,
-              letterSpacing: 1, textTransform: 'uppercase',
-              marginBottom: '0.5rem', paddingLeft: '0.4rem',
-            }}>
-              Álbumes
-            </p>
-            {COLECCIONES_DEF.map(col => {
-              const cartasCol = CARTAS.filter(c => getColeccionId(c) === col.id)
-              const obtenidas = cartasCol.filter(c => coleccion.includes(c.id)).length
-              const completa = obtenidas === cartasCol.length
-              return (
-                <button
-                  key={col.id}
-                  onClick={() => scrollToColeccion(col.id)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 7,
-                    width: '100%', textAlign: 'left',
-                    padding: '0.45rem 0.4rem',
-                    borderRadius: 8, border: 'none',
-                    background: 'transparent',
-                    color: 'rgba(255,255,255,0.72)',
-                    fontSize: '0.74rem', fontWeight: 600, cursor: 'pointer',
-                    marginBottom: 2,
-                  }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = `${col.color}20`; (e.currentTarget as HTMLButtonElement).style.color = col.color }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.72)' }}
-                >
-                  <span style={{ fontSize: '1rem' }}>{col.emoji}</span>
-                  <span style={{ flex: 1, lineHeight: 1.25 }}>{col.nombre}</span>
-                  {completa
-                    ? <span style={{ fontSize: '0.6rem', color: col.color }}>✓</span>
-                    : <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)' }}>{obtenidas}/{cartasCol.length}</span>
-                  }
-                </button>
-              )
-            })}
-          </div>
-        )}
+            Álbumes
+          </p>
+          {COLECCIONES_DEF.map(col => {
+            const cartasCol = CARTAS.filter(c => getColeccionId(c) === col.id)
+            const obtenidas = cartasCol.filter(c => coleccion.includes(c.id)).length
+            const completa = obtenidas === cartasCol.length
+            return (
+              <button
+                key={col.id}
+                onClick={() => {
+                  if (vista !== 'coleccion') setVista('coleccion')
+                  setTimeout(() => scrollToColeccion(col.id), vista !== 'coleccion' ? 50 : 0)
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 7,
+                  width: '100%', textAlign: 'left',
+                  padding: '0.45rem 0.4rem',
+                  borderRadius: 8, border: 'none',
+                  background: 'transparent',
+                  color: 'rgba(255,255,255,0.72)',
+                  fontSize: '0.74rem', fontWeight: 600, cursor: 'pointer',
+                  marginBottom: 2,
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = `${col.color}20`; (e.currentTarget as HTMLButtonElement).style.color = col.color }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.72)' }}
+              >
+                <span style={{ fontSize: '1rem' }}>{col.emoji}</span>
+                <span style={{ flex: 1, lineHeight: 1.25 }}>{col.nombre}</span>
+                {completa
+                  ? <span style={{ fontSize: '0.6rem', color: col.color }}>✓</span>
+                  : <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)' }}>{obtenidas}/{cartasCol.length}</span>
+                }
+              </button>
+            )
+          })}
+        </div>
 
         {/* Contenido principal */}
         <div style={{ flex: 1, minWidth: 0 }}>
