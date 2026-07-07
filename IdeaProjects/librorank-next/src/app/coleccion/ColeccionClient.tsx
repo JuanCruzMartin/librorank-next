@@ -345,7 +345,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                       return (
                         <div
                           key={carta.id}
-                          title={tengo ? `${carta.nombre} — ${carta.obra}` : '???'}
+                          title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`}
                           onClick={() => tengo && setAmpliada(carta)}
                           style={{ cursor: tengo ? 'pointer' : 'default' }}
                         >
@@ -425,7 +425,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                     return (
                       <div
                         key={carta.id}
-                        title={tengo ? `${carta.nombre} — ${carta.obra}` : '???'}
+                        title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`}
                         onClick={() => tengo && setAmpliada(carta)}
                         style={{ cursor: tengo ? 'pointer' : 'default' }}
                       >

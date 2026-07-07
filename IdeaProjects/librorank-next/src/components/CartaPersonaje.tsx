@@ -98,31 +98,6 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
     if (glowRef.current) glowRef.current.style.opacity = '0'
   }
 
-  if (!obtenida) {
-    return (
-      <div style={{
-        width: dims.w, height: dims.h,
-        borderRadius: 10,
-        border: `1.5px dashed ${rareza.color}40`,
-        background: `${rareza.color}08`,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
-        flexShrink: 0,
-      }}>
-        <div style={{
-          width: size === 'sm' ? 36 : 48, height: size === 'sm' ? 36 : 48, borderRadius: '50%',
-          background: `${rareza.color}15`, border: `1px solid ${rareza.color}30`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: size === 'sm' ? '1.1rem' : '1.4rem', color: `${rareza.color}80`,
-        }}>
-          ?
-        </div>
-        <div style={{ fontSize: '0.58rem', fontWeight: 700, color: `${rareza.color}60`, textTransform: 'uppercase', letterSpacing: 1 }}>
-          {rareza.label}
-        </div>
-      </div>
-    )
-  }
-
   const wrapperStyle: React.CSSProperties = {
     width: dims.w,
     height: dims.h,
@@ -137,13 +112,17 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
     transformStyle: 'preserve-3d',
     transition: 'transform 0.15s ease-out, filter 0.15s ease-out',
     willChange: 'transform',
-    filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.25))',
+    filter: obtenida ? 'drop-shadow(0px 4px 8px rgba(0,0,0,0.25))' : 'grayscale(1) brightness(0.45)',
+    opacity: obtenida ? 1 : 0.7,
+    cursor: obtenida ? undefined : 'default',
   }
 
   // ── FULL ART (Legendario / Mítico con imagen de carta completa) ──────────
   if (carta.fullArt) {
     return (
-      <div ref={cardRef} className="carta-personaje" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}
+      <div ref={cardRef} className="carta-personaje"
+        onMouseMove={obtenida ? handleMouseMove : undefined}
+        onMouseLeave={obtenida ? handleMouseLeave : undefined}
         style={{ ...wrapperStyle, background: '#0a0806' }}
       >
         {/* Imagen de fondo cubriendo toda la carta */}
@@ -199,8 +178,8 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
     <div
       ref={cardRef}
       className="carta-personaje"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      onMouseMove={obtenida ? handleMouseMove : undefined}
+      onMouseLeave={obtenida ? handleMouseLeave : undefined}
       style={{
         ...wrapperStyle,
         background: 'linear-gradient(155deg, #f3e8d0 0%, #e9dab8 55%, #ecdfc0 100%)',
