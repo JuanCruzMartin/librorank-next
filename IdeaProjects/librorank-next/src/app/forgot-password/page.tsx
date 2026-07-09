@@ -22,6 +22,8 @@ export default function ForgotPasswordPage() {
       const json = await res.json()
       if (!res.ok) setError(json.error || 'Error al enviar el email')
       else setEnviado(true)
+    } catch {
+      setError('Error de conexión. Intentá de nuevo.')
     } finally {
       setLoading(false)
     }
