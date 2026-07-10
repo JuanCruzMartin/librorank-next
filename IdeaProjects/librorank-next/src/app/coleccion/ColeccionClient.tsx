@@ -237,10 +237,10 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
       </div>
 
       {/* Layout flex: sidebar + contenido */}
-      <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-start' }}>
+      <div className="coleccion-layout" style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-start' }}>
 
         {/* Sidebar sticky álbumes — siempre visible */}
-        <div style={{
+        <div className="coleccion-sidebar" style={{
           width: 165, flexShrink: 0,
           position: 'sticky', top: '1rem',
           background: 'var(--bg-card)',
@@ -302,7 +302,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
             const completa = faltantes.length === 0
 
             return (
-              <div key={col.id} id={`col-${col.id}`} style={{
+              <div key={col.id} id={`col-${col.id}`} className="coleccion-seccion" style={{
                 marginBottom: '2rem',
                 background: 'var(--bg-card)',
                 border: `1px solid ${col.color}30`,
@@ -337,8 +337,8 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                   </div>
                 </div>
 
-                <div style={{ padding: '1rem 1.25rem' }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: faltantes.length > 0 ? '1rem' : 0 }}>
+                <div className="coleccion-seccion-inner" style={{ padding: '1rem 1.25rem' }}>
+                  <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: faltantes.length > 0 ? '1rem' : 0 }}>
                     {cartasCol.map(carta => {
                       const tengo = coleccion.includes(carta.id)
                       const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
@@ -418,7 +418,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                   )}
                 </div>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.85rem' }}>
+                <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.85rem' }}>
                   {cartasDeRareza.map(carta => {
                     const tengo = coleccion.includes(carta.id)
                     const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
