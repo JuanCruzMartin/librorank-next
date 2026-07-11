@@ -3,6 +3,7 @@ import { getAuthUser } from '@/lib/auth'
 import * as usuarioDAO from '@/lib/dao/usuarioDAO'
 import * as libroDAO from '@/lib/dao/libroDAO'
 import * as logroDAO from '@/lib/dao/logroDAO'
+import * as cartaDAO from '@/lib/dao/cartaDAO'
 import { calcularPersonaje } from '@/lib/personaje'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -15,7 +16,7 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
   const params = await searchParams
   const targetId = params.id ? Number(params.id) : authUser.id
 
-  const [usuario, usuarioTarget, stats, ultimasLecturas, logros, leidosEsteAnio, totalLeidos, topGeneros, resenasPublicas, paginasLeidas, librosDestacados, promedioEstrellas, totalResenas, generosDistintos] = await Promise.all([
+  const [usuario, usuarioTarget, stats, ultimasLecturas, logros, leidosEsteAnio, totalLeidos, topGeneros, resenasPublicas, paginasLeidas, librosDestacados, promedioEstrellas, totalResenas, generosDistintos, coleccionCartas] = await Promise.all([
     usuarioDAO.buscarPorId(authUser.id),
     usuarioDAO.buscarPorId(targetId),
     libroDAO.obtenerStatsPorUsuario(targetId),
@@ -30,6 +31,7 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
     libroDAO.obtenerPromedioEstrellas(targetId),
     libroDAO.contarResenasTotal(targetId),
     libroDAO.contarGenerosDistintos(targetId),
+    cartaDAO.obtenerColeccion(targetId),
   ])
 
   if (!usuario || !usuarioTarget) redirect('/login')
@@ -61,6 +63,7 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
           librosDestacados={librosDestacados}
           promedioEstrellas={promedioEstrellas}
           personaje={personaje}
+          coleccionCartas={coleccionCartas}
         />
       </main>
       <Footer />

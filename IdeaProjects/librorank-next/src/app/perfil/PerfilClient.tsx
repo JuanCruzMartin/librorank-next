@@ -9,6 +9,8 @@ import type { Libro, PerfilStats, LibroFavorito } from '@/lib/dao/libroDAO'
 import type { Logro } from '@/lib/dao/logroDAO'
 import type { Personaje } from '@/lib/personaje'
 import PersonajeCard from '@/components/PersonajeCard'
+import CartaPersonaje from '@/components/CartaPersonaje'
+import { CARTAS, RAREZAS } from '@/lib/cartas'
 
 interface WrappedData {
   anio: number
@@ -58,15 +60,16 @@ interface Props {
   librosDestacados: LibroFavorito[]
   promedioEstrellas: number
   personaje: Personaje
+  coleccionCartas: string[]
 }
 
 export default function PerfilClient({
   usuario, stats, ultimasLecturas, logros,
   leidosEsteAnio, totalLeidos, nivelInfo, esMiPerfil, topGeneros, resenasPublicas,
-  paginasLeidas, librosDestacados, promedioEstrellas, personaje,
+  paginasLeidas, librosDestacados, promedioEstrellas, personaje, coleccionCartas,
 }: Props) {
   const router = useRouter()
-  const [tab, setTab] = useState<'resumen' | 'anio' | 'config' | 'personaje'>('resumen')
+  const [tab, setTab] = useState<'resumen' | 'anio' | 'config' | 'personaje' | 'coleccion'>('resumen')
   const [wrapped, setWrapped] = useState<WrappedData | null>(null)
   const [loadingWrapped, setLoadingWrapped] = useState(false)
   const [mensaje, setMensaje] = useState('')
@@ -328,23 +331,26 @@ export default function PerfilClient({
         ══════════════════════════════ */}
         <div className="perfil-main">
 
-          {/* Tabs — solo 2 */}
-          {esMiPerfil && (
-            <div className="inventory-tabs mb-4">
-              <button onClick={() => setTab('resumen')} className={`tab-btn ${tab === 'resumen' ? 'active' : ''}`}>
-                ✨ Resumen
-              </button>
+          {/* Tabs */}
+          <div className="inventory-tabs mb-4">
+            <button onClick={() => setTab('resumen')} className={`tab-btn ${tab === 'resumen' ? 'active' : ''}`}>
+              ✨ Resumen
+            </button>
+            <button onClick={() => setTab('coleccion')} className={`tab-btn ${tab === 'coleccion' ? 'active' : ''}`}>
+              🃏 Colección
+            </button>
+            {esMiPerfil && <>
               <button onClick={() => { setTab('anio'); cargarWrapped() }} className={`tab-btn ${tab === 'anio' ? 'active' : ''}`}>
                 🎬 Mi Año
               </button>
               <button onClick={() => setTab('config')} className={`tab-btn ${tab === 'config' ? 'active' : ''}`}>
-                ⚙️ Editar Cuenta
+                ⚙️ Editar
               </button>
               <button onClick={() => setTab('personaje')} className={`tab-btn ${tab === 'personaje' ? 'active' : ''}`}>
                 ⚔️ Personaje
               </button>
-            </div>
-          )}
+            </>}
+          </div>
 
           {/* ── RESUMEN ── */}
           {tab === 'resumen' && (
@@ -974,6 +980,64 @@ export default function PerfilClient({
               <PersonajeCard personaje={personaje} username={usuario.username} />
             </div>
           )}
+
+          {/* ── COLECCIÓN DE CARTAS ── */}
+          {tab === 'coleccion' && (() => {
+            const colSet = new Set(coleccionCartas)
+            const total = CARTAS.length
+            const obtenidas = colSet.size
+            const pct = (obtenidas / total) * 100
+            const ORDEN_RAREZA = ['comun', 'raro', 'epico', 'legendario', 'mitico'] as const
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                {/* Header progreso */}
+                <div style={{
+                  background: 'var(--bg-card)', border: '1px solid rgba(212,175,55,0.2)',
+                  borderRadius: 14, padding: '1rem 1.25rem',
+                  display: 'flex', alignItems: 'center', gap: '1rem',
+                }}>
+                  <span style={{ fontSize: '1.8rem' }}>🃏</span>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontWeight: 800, color: 'var(--accent-gold)', fontSize: '0.9rem', marginBottom: 4 }}>
+                      {obtenidas} de {total} cartas
+                    </p>
+                    <div style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 99, height: 5, overflow: 'hidden' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', background: 'var(--accent-gold)', borderRadius: 99, transition: 'width 0.5s ease' }} />
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>
+                    {Math.round(pct)}%
+                  </span>
+                </div>
+
+                {/* Cards por rareza */}
+                {ORDEN_RAREZA.map(rareza => {
+                  const cartasRareza = CARTAS.filter(c => c.rareza === rareza)
+                  const obtenidasRareza = cartasRareza.filter(c => colSet.has(c.id)).length
+                  const r = RAREZAS[rareza]
+                  return (
+                    <div key={rareza}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.75rem', paddingBottom: '0.5rem', borderBottom: `1px solid ${r.color}30` }}>
+                        <span style={{ fontWeight: 800, color: r.color, fontSize: '0.88rem' }}>{r.label}</span>
+                        <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)' }}>{obtenidasRareza}/{cartasRareza.length}</span>
+                      </div>
+                      <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        {cartasRareza.map(carta => {
+                          const tengo = colSet.has(carta.id)
+                          const idx = CARTAS.findIndex(c => c.id === carta.id) + 1
+                          return (
+                            <div key={carta.id} title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`}>
+                              <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={idx} total={total} />
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })()}
         </div>
       </div>
     </div>
