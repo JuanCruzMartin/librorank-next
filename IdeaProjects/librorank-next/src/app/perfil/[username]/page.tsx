@@ -36,7 +36,7 @@ export default async function PerfilUsernamePage({ params }: Props) {
   const usuarioTarget = await usuarioDAO.buscarPorUsername(username)
   if (!usuarioTarget) notFound()
 
-  const [authUsuario, stats, ultimasLecturas, logros, leidosEsteAnio, totalLeidos, topGeneros, resenasPublicas, paginasLeidas, librosDestacados, promedioEstrellas, totalResenas, generosDistintos, coleccionCartas] = await Promise.all([
+  const [authUsuario, stats, ultimasLecturas, logros, leidosEsteAnio, totalLeidos, topGeneros, resenasPublicas, paginasLeidas, librosDestacados, promedioEstrellas, totalResenas, generosDistintos, coleccionCartas, leyendoAhora] = await Promise.all([
     authUser ? usuarioDAO.buscarPorId(authUser.id) : Promise.resolve(null),
     libroDAO.obtenerStatsPorUsuario(usuarioTarget.id),
     libroDAO.obtenerUltimasLecturas(usuarioTarget.id, 5),
@@ -51,6 +51,7 @@ export default async function PerfilUsernamePage({ params }: Props) {
     libroDAO.contarResenasTotal(usuarioTarget.id),
     libroDAO.contarGenerosDistintos(usuarioTarget.id),
     cartaDAO.obtenerColeccion(usuarioTarget.id),
+    libroDAO.obtenerLeyendoAhora(usuarioTarget.id),
   ])
 
   const personaje = calcularPersonaje(
@@ -80,6 +81,7 @@ export default async function PerfilUsernamePage({ params }: Props) {
           promedioEstrellas={promedioEstrellas}
           personaje={personaje}
           coleccionCartas={coleccionCartas}
+          leyendoAhora={leyendoAhora}
         />
       </main>
       <Footer />

@@ -61,12 +61,13 @@ interface Props {
   promedioEstrellas: number
   personaje: Personaje
   coleccionCartas: string[]
+  leyendoAhora: Libro[]
 }
 
 export default function PerfilClient({
   usuario, stats, ultimasLecturas, logros,
   leidosEsteAnio, totalLeidos, nivelInfo, esMiPerfil, topGeneros, resenasPublicas,
-  paginasLeidas, librosDestacados, promedioEstrellas, personaje, coleccionCartas,
+  paginasLeidas, librosDestacados, promedioEstrellas, personaje, coleccionCartas, leyendoAhora,
 }: Props) {
   const router = useRouter()
   const [tab, setTab] = useState<'resumen' | 'anio' | 'config' | 'personaje' | 'coleccion'>('resumen')
@@ -355,6 +356,36 @@ export default function PerfilClient({
           {/* ── RESUMEN ── */}
           {tab === 'resumen' && (
             <>
+              {/* Leyendo ahora */}
+              {leyendoAhora.length > 0 && (
+                <div className="card p-4 mb-4">
+                  <h5 className="font-title mb-3" style={{ color: '#5dade2', fontSize: '0.95rem' }}>
+                    📖 Leyendo ahora
+                  </h5>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {leyendoAhora.map(l => (
+                      <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+                        {l.portada_url ? (
+                          <img
+                            src={l.portada_url.replace('http://', 'https://')}
+                            alt={l.titulo}
+                            style={{ width: 44, height: 64, objectFit: 'cover', borderRadius: 6, flexShrink: 0, boxShadow: '0 4px 10px rgba(0,0,0,0.4)' }}
+                          />
+                        ) : (
+                          <div style={{ width: 44, height: 64, background: 'rgba(93,173,226,0.1)', borderRadius: 6, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
+                            📖
+                          </div>
+                        )}
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.88rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.titulo}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.autor}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Stats hero */}
               <div className="perfil-datos-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
                 {[

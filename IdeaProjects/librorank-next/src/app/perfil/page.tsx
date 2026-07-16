@@ -16,7 +16,7 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
   const params = await searchParams
   const targetId = params.id ? Number(params.id) : authUser.id
 
-  const [usuario, usuarioTarget, stats, ultimasLecturas, logros, leidosEsteAnio, totalLeidos, topGeneros, resenasPublicas, paginasLeidas, librosDestacados, promedioEstrellas, totalResenas, generosDistintos, coleccionCartas] = await Promise.all([
+  const [usuario, usuarioTarget, stats, ultimasLecturas, logros, leidosEsteAnio, totalLeidos, topGeneros, resenasPublicas, paginasLeidas, librosDestacados, promedioEstrellas, totalResenas, generosDistintos, coleccionCartas, leyendoAhora] = await Promise.all([
     usuarioDAO.buscarPorId(authUser.id),
     usuarioDAO.buscarPorId(targetId),
     libroDAO.obtenerStatsPorUsuario(targetId),
@@ -32,6 +32,7 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
     libroDAO.contarResenasTotal(targetId),
     libroDAO.contarGenerosDistintos(targetId),
     cartaDAO.obtenerColeccion(targetId),
+    libroDAO.obtenerLeyendoAhora(targetId),
   ])
 
   if (!usuario || !usuarioTarget) redirect('/login')
@@ -64,6 +65,7 @@ export default async function PerfilPage({ searchParams }: { searchParams: Promi
           promedioEstrellas={promedioEstrellas}
           personaje={personaje}
           coleccionCartas={coleccionCartas}
+          leyendoAhora={leyendoAhora}
         />
       </main>
       <Footer />
