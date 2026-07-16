@@ -62,12 +62,13 @@ interface Props {
   personaje: Personaje
   coleccionCartas: string[]
   leyendoAhora: Libro[]
+  totalAmigos: number
 }
 
 export default function PerfilClient({
   usuario, stats, ultimasLecturas, logros,
   leidosEsteAnio, totalLeidos, nivelInfo, esMiPerfil, topGeneros, resenasPublicas,
-  paginasLeidas, librosDestacados, promedioEstrellas, personaje, coleccionCartas, leyendoAhora,
+  paginasLeidas, librosDestacados, promedioEstrellas, personaje, coleccionCartas, leyendoAhora, totalAmigos,
 }: Props) {
   const router = useRouter()
   const [tab, setTab] = useState<'resumen' | 'anio' | 'config' | 'personaje' | 'coleccion'>('resumen')
@@ -236,7 +237,10 @@ export default function PerfilClient({
 
             <div className="mt-3 text-muted small">
               <div className="fw-bold text-white">Nivel {nivelInfo.nivel} · {usuario.puntos ?? 0} <span style={{ color: 'var(--accent-gold)' }}>⭐</span></div>
-              <div className="mt-1">Total leídos: <strong className="text-white">{totalLeidos}</strong></div>
+              <div className="mt-1" style={{ display: 'flex', justifyContent: 'center', gap: '1.25rem' }}>
+                <span>📚 <strong className="text-white">{totalLeidos}</strong> leídos</span>
+                <span>🤝 <strong className="text-white">{totalAmigos}</strong> amigos</span>
+              </div>
             </div>
 
             {usuario.bio && (

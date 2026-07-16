@@ -94,6 +94,11 @@ export async function obtenerTodosLectores(usuarioId: number) {
   )
 }
 
+export async function contarAmigos(usuarioId: number): Promise<number> {
+  const row = await queryOne<{ total: number }>('SELECT COUNT(*) AS total FROM amigos WHERE usuario_id=?', [usuarioId])
+  return row?.total ?? 0
+}
+
 export async function esSonAmigos(id1: number, id2: number): Promise<boolean> {
   const row = await queryOne<{ cnt: number }>(
     'SELECT COUNT(*) as cnt FROM amigos WHERE usuario_id=? AND amigo_id=?', [id1, id2]
