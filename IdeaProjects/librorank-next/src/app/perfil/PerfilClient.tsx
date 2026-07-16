@@ -33,6 +33,21 @@ interface WrappedData {
   frase: string
 }
 
+const BANNER_NIVEL: Record<number, string> = {
+  1:  'linear-gradient(135deg, #0d1117 0%, #1a2030 100%)',
+  2:  'linear-gradient(135deg, #0d1117 0%, #0f2744 100%)',
+  3:  'linear-gradient(135deg, #0d1a24 0%, #0d4a6e 100%)',
+  4:  'linear-gradient(135deg, #0d1f11 0%, #145a32 100%)',
+  5:  'linear-gradient(135deg, #1a0a2e 0%, #512e87 100%)',
+  6:  'linear-gradient(135deg, #200838 0%, #6c2fa0 100%)',
+  7:  'linear-gradient(135deg, #0a1628 0%, #154360 50%, #512e87 100%)',
+  8:  'linear-gradient(135deg, #150525 0%, #4a235a 50%, #7d5a00 100%)',
+  9:  'linear-gradient(135deg, #1f1500 0%, #7d5a00 50%, #d4af37 100%)',
+  10: 'linear-gradient(135deg, #1a1000 0%, #a07800 50%, #f1c40f 100%)',
+  11: 'linear-gradient(135deg, #0d0900 0%, #b8860b 50%, #f1c40f 100%)',
+  12: 'linear-gradient(135deg, #0a0500 0%, #b8860b 30%, #ffd700 60%, #b8860b 100%)',
+}
+
 const AVATARES = [
   '/img/avatar_explorador/avatar_explorador_0.png',
   '/img/avatar_explorador/avatar_explorador_1.png',
@@ -82,6 +97,7 @@ export default function PerfilClient({
   const [cropPreviewUrl, setCropPreviewUrl] = useState<string | null>(null)
   const [cropPos, setCropPos] = useState({ x: 50, y: 50 })
   const [avatarHover, setAvatarHover] = useState(false)
+  const [hoveredFav, setHoveredFav] = useState<number | null>(null)
   const isDragging = useRef(false)
   const lastDrag = useRef({ x: 0, y: 0 })
 
@@ -188,77 +204,90 @@ export default function PerfilClient({
         <aside className="perfil-side">
 
           {/* Card 1 — Datos del usuario */}
-          <div className="card p-4 text-center">
-            <div className="user-avatar" style={{ position: 'relative', boxShadow: '0 0 0 3px rgba(212,175,55,0.45), 0 0 24px rgba(212,175,55,0.15)' }}>
-              <img
-                src={avatarActual}
-                alt="Avatar"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                onError={e => { (e.target as HTMLImageElement).src = '/img/personajes/personaje_1.png' }}
-              />
-              {esMiPerfil && (
-                <label
-                  style={{
-                    position: 'absolute', inset: 0,
-                    borderRadius: '50%',
-                    background: avatarHover ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0)',
-                    display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'background 0.2s',
-                    gap: 4,
-                  }}
-                  onMouseEnter={() => setAvatarHover(true)}
-                  onMouseLeave={() => setAvatarHover(false)}
-                >
-                  <span style={{
-                    fontSize: '1.8rem', lineHeight: 1,
-                    filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.9))',
-                    opacity: avatarHover ? 1 : 0,
-                    transition: 'opacity 0.2s',
-                  }}>📷</span>
-                  <span style={{
-                    fontSize: '0.62rem', fontWeight: 700, color: '#fff',
-                    textTransform: 'uppercase', letterSpacing: '0.5px',
-                    textShadow: '0 1px 3px rgba(0,0,0,0.9)',
-                    opacity: avatarHover ? 1 : 0,
-                    transition: 'opacity 0.2s',
-                  }}>Cambiar foto</span>
-                  <input type="file" accept="image/*" className="d-none" onChange={abrirCrop} />
-                </label>
+          <div className="card" style={{ padding: 0, overflow: 'visible' }}>
+            {/* Banner por nivel */}
+            <div style={{
+              height: 80,
+              background: BANNER_NIVEL[nivelInfo.nivel] ?? BANNER_NIVEL[1],
+              borderRadius: '12px 12px 0 0',
+              position: 'relative',
+            }}>
+              {nivelInfo.nivel >= 9 && (
+                <div style={{ position: 'absolute', inset: 0, borderRadius: '12px 12px 0 0', background: 'radial-gradient(ellipse at 50% 120%, rgba(212,175,55,0.3) 0%, transparent 70%)' }} />
               )}
             </div>
 
-            <div className="user-meta mt-3">
-              <h1 className="user-name">{usuario.nombre}</h1>
-              <p className="user-handle text-muted">@{usuario.username}</p>
-              <span className="badge--level">{nivelInfo.emoji} {nivelInfo.titulo}</span>
-            </div>
-
-            <div className="mt-3 text-muted small">
-              <div className="fw-bold text-white">Nivel {nivelInfo.nivel} · {usuario.puntos ?? 0} <span style={{ color: 'var(--accent-gold)' }}>⭐</span></div>
-              <div className="mt-1" style={{ display: 'flex', justifyContent: 'center', gap: '1.25rem' }}>
-                <span>📚 <strong className="text-white">{totalLeidos}</strong> leídos</span>
-                <span>🤝 <strong className="text-white">{totalAmigos}</strong> amigos</span>
+            {/* Avatar superpuesto */}
+            <div style={{ textAlign: 'center', marginTop: -50 }}>
+              <div className="user-avatar" style={{ position: 'relative', display: 'inline-flex', boxShadow: '0 0 0 4px var(--bg-card), 0 0 0 7px rgba(212,175,55,0.4), 0 8px 24px rgba(0,0,0,0.5)' }}>
+                <img
+                  src={avatarActual}
+                  alt="Avatar"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={e => { (e.target as HTMLImageElement).src = '/img/personajes/personaje_1.png' }}
+                />
+                {esMiPerfil && (
+                  <label
+                    style={{
+                      position: 'absolute', inset: 0, borderRadius: '50%',
+                      background: avatarHover ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0)',
+                      display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', transition: 'background 0.2s', gap: 4,
+                    }}
+                    onMouseEnter={() => setAvatarHover(true)}
+                    onMouseLeave={() => setAvatarHover(false)}
+                  >
+                    <span style={{ fontSize: '1.8rem', lineHeight: 1, filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.9))', opacity: avatarHover ? 1 : 0, transition: 'opacity 0.2s' }}>📷</span>
+                    <span style={{ fontSize: '0.62rem', fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.5px', textShadow: '0 1px 3px rgba(0,0,0,0.9)', opacity: avatarHover ? 1 : 0, transition: 'opacity 0.2s' }}>Cambiar foto</span>
+                    <input type="file" accept="image/*" className="d-none" onChange={abrirCrop} />
+                  </label>
+                )}
               </div>
             </div>
 
-            {usuario.bio && (
-              <p className="text-muted small mt-3 mb-0" style={{ fontStyle: 'italic', fontSize: '0.85rem' }}>
-                &ldquo;{usuario.bio}&rdquo;
-              </p>
-            )}
+            {/* Contenido */}
+            <div style={{ padding: '0.75rem 1.5rem 1.5rem', textAlign: 'center' }}>
+              <div className="user-meta">
+                <h1 className="user-name">{usuario.nombre}</h1>
+                <p className="user-handle text-muted">@{usuario.username}</p>
+                <span className="badge--level">{nivelInfo.emoji} {nivelInfo.titulo}</span>
+              </div>
 
-            {topGeneros.length > 0 && (
-              <div className="mt-3">
-                <p style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: '0.4rem' }}>
-                  📚 Géneros más leídos
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#fff' }}>{totalLeidos}</div>
+                  <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 1 }}>leídos</div>
+                </div>
+                <div style={{ width: 1, background: 'rgba(255,255,255,0.08)' }} />
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#fff' }}>{totalAmigos}</div>
+                  <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 1 }}>amigos</div>
+                </div>
+                <div style={{ width: 1, background: 'rgba(255,255,255,0.08)' }} />
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--accent-gold)' }}>{usuario.puntos ?? 0}</div>
+                  <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 1 }}>pts</div>
+                </div>
+              </div>
+
+              {usuario.bio && (
+                <p className="text-muted small mt-3 mb-0" style={{ fontStyle: 'italic', fontSize: '0.82rem' }}>
+                  &ldquo;{usuario.bio}&rdquo;
                 </p>
-                {topGeneros.map(g => (
-                  <span key={g} className="badge-cozy me-1 mb-1" style={{ display: 'inline-block' }}>{g}</span>
-                ))}
-              </div>
-            )}
+              )}
+
+              {topGeneros.length > 0 && (
+                <div className="mt-3">
+                  <p style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: '0.4rem' }}>
+                    Géneros más leídos
+                  </p>
+                  {topGeneros.map(g => (
+                    <span key={g} className="badge-cozy me-1 mb-1" style={{ display: 'inline-block' }}>{g}</span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Card 2 — Progreso de lectura */}
@@ -426,21 +455,34 @@ export default function PerfilClient({
                   </h5>
                   <div style={{ display: 'flex', gap: '0.6rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
                     {librosDestacados.map((l, i) => (
-                      <div key={i} style={{ flexShrink: 0, width: 64, position: 'relative' }} title={`${l.titulo} — ${l.autor}`}>
+                      <div
+                        key={i}
+                        style={{ flexShrink: 0, width: 64, position: 'relative', cursor: 'default' }}
+                        onMouseEnter={() => setHoveredFav(i)}
+                        onMouseLeave={() => setHoveredFav(null)}
+                      >
                         {l.portada_url ? (
                           <img
                             src={l.portada_url.replace('http://', 'https://')}
                             alt={l.titulo}
-                            style={{ width: 64, height: 92, objectFit: 'cover', borderRadius: 8, display: 'block', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}
+                            style={{ width: 64, height: 92, objectFit: 'cover', borderRadius: 8, display: 'block', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', transition: 'transform 0.15s ease', transform: hoveredFav === i ? 'scale(1.06)' : 'scale(1)' }}
                           />
                         ) : (
                           <div style={{ width: 64, height: 92, background: 'rgba(212,175,55,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
                             📚
                           </div>
                         )}
-                        {l.estrellas === 5 && (
-                          <div style={{ position: 'absolute', top: 4, right: 4, fontSize: '0.6rem', background: '#d4af37', color: '#000', borderRadius: 99, padding: '1px 4px', fontWeight: 800 }}>
-                            5⭐
+                        {/* Overlay con info al hover */}
+                        {hoveredFav === i && (
+                          <div style={{
+                            position: 'absolute', inset: 0, borderRadius: 8,
+                            background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 55%, transparent 100%)',
+                            display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+                            padding: '5px 5px 5px',
+                            pointerEvents: 'none',
+                          }}>
+                            <div style={{ fontSize: '0.52rem', fontWeight: 700, color: '#fff', lineHeight: 1.25, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>{l.titulo}</div>
+                            {(l.estrellas ?? 0) > 0 && <div style={{ fontSize: '0.48rem', marginTop: 2, color: '#f1c40f' }}>{'★'.repeat(l.estrellas ?? 0)}</div>}
                           </div>
                         )}
                       </div>
