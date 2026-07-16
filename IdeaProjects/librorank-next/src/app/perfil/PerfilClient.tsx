@@ -189,7 +189,7 @@ export default function PerfilClient({
 
           {/* Card 1 — Datos del usuario */}
           <div className="card p-4 text-center">
-            <div className="user-avatar" style={{ position: 'relative' }}>
+            <div className="user-avatar" style={{ position: 'relative', boxShadow: '0 0 0 3px rgba(212,175,55,0.45), 0 0 24px rgba(212,175,55,0.15)' }}>
               <img
                 src={avatarActual}
                 alt="Avatar"
@@ -399,15 +399,20 @@ export default function PerfilClient({
                   { icon: '⭐', valor: promedioEstrellas > 0 ? promedioEstrellas : '—', label: 'nota media', color: '#f39c12' },
                 ].map(s => (
                   <div key={s.label} style={{
-                    background: `${s.color}0d`,
-                    border: `1px solid ${s.color}25`,
-                    borderRadius: 12, padding: '0.9rem 1rem',
-                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    background: `${s.color}12`,
+                    border: `1px solid ${s.color}35`,
+                    borderRadius: 14, padding: '1rem 1.1rem',
+                    display: 'flex', alignItems: 'center', gap: '0.85rem',
                   }}>
-                    <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{s.icon}</span>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                      background: `${s.color}18`, border: `1px solid ${s.color}30`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '1.2rem',
+                    }}>{s.icon}</div>
                     <div>
-                      <div style={{ fontSize: '1.4rem', fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.valor}</div>
-                      <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, marginTop: 2 }}>{s.label}</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.valor}</div>
+                      <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.38)', textTransform: 'uppercase', letterSpacing: 1.2, marginTop: 3 }}>{s.label}</div>
                     </div>
                   </div>
                 ))}
@@ -475,7 +480,10 @@ export default function PerfilClient({
                 ) : (
                   <div className="d-flex flex-column gap-2">
                     {ultimasLecturas.map(l => (
-                      <div key={l.id} className="card-lectura-mini">
+                      <div key={l.id} className="card-lectura-mini" style={{
+                        borderLeft: `3px solid ${l.estado === 'LEIDO' ? 'rgba(39,174,96,0.6)' : l.estado === 'LEYENDO' ? 'rgba(93,173,226,0.6)' : 'rgba(255,255,255,0.12)'}`,
+                        paddingLeft: '0.75rem',
+                      }}>
                         {l.portada_url ? (
                           <img
                             src={l.portada_url}
@@ -592,7 +600,8 @@ export default function PerfilClient({
                                 textAlign: 'center',
                                 transition: 'transform 0.15s ease',
                                 cursor: 'default',
-                                opacity: l.desbloqueado ? 1 : 0.5,
+                                filter: l.desbloqueado ? 'none' : 'grayscale(1)',
+                                opacity: l.desbloqueado ? 1 : 0.35,
                               }}>
                                 {/* Brillo dorado en desbloqueados */}
                                 {l.desbloqueado && (
