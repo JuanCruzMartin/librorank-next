@@ -12,7 +12,6 @@ import Footer from '@/components/Footer'
 import FeedClient from './FeedClient'
 import LigaNotif from '@/components/LigaNotif'
 import MisionesWidget from './MisionesWidget'
-import PreguntaDiariaWidget from './PreguntaDiariaWidget'
 
 
 export default async function HomePage() {
@@ -146,7 +145,6 @@ export default async function HomePage() {
               </div>
 
               <MisionesWidget misionesIniciales={misiones} />
-              <PreguntaDiariaWidget />
             </div>
 
             {/* Columna Derecha: Feed Social */}
