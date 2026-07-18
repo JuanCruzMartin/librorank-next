@@ -15,7 +15,8 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props) {
-  const { username } = await params
+  const { username: rawUsername } = await params
+  const username = decodeURIComponent(rawUsername)
   const usuario = await usuarioDAO.buscarPorUsername(username)
   if (!usuario) return { title: 'Usuario no encontrado — LibroRank' }
   return {
@@ -25,11 +26,11 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function PerfilUsernamePage({ params }: Props) {
-  const { username } = await params
+  const { username: rawUsername } = await params
+  const username = decodeURIComponent(rawUsername)
 
   const authUser = await getAuthUser()
 
-  // Si el username es el propio usuario logueado, redirigir a /perfil
   if (authUser && authUser.username === username) {
     redirect('/perfil')
   }
