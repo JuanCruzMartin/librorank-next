@@ -454,39 +454,55 @@ export default function PerfilClient({
                     ⭐ Libros favoritos
                   </h5>
                   <div style={{ display: 'flex', gap: '0.6rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
-                    {librosDestacados.map((l, i) => (
-                      <div
-                        key={i}
-                        style={{ flexShrink: 0, width: 64, position: 'relative', cursor: 'default' }}
-                        onMouseEnter={() => setHoveredFav(i)}
-                        onMouseLeave={() => setHoveredFav(null)}
-                      >
-                        {l.portada_url ? (
-                          <img
-                            src={l.portada_url.replace('http://', 'https://')}
-                            alt={l.titulo}
-                            style={{ width: 64, height: 92, objectFit: 'cover', borderRadius: 8, display: 'block', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', transition: 'transform 0.15s ease', transform: hoveredFav === i ? 'scale(1.06)' : 'scale(1)' }}
-                          />
-                        ) : (
-                          <div style={{ width: 64, height: 92, background: 'rgba(212,175,55,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
-                            📚
-                          </div>
-                        )}
-                        {/* Overlay con info al hover */}
-                        {hoveredFav === i && (
-                          <div style={{
-                            position: 'absolute', inset: 0, borderRadius: 8,
-                            background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 55%, transparent 100%)',
-                            display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-                            padding: '5px 5px 5px',
-                            pointerEvents: 'none',
-                          }}>
-                            <div style={{ fontSize: '0.52rem', fontWeight: 700, color: '#fff', lineHeight: 1.25, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>{l.titulo}</div>
-                            {(l.estrellas ?? 0) > 0 && <div style={{ fontSize: '0.48rem', marginTop: 2, color: '#f1c40f' }}>{'★'.repeat(l.estrellas ?? 0)}</div>}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                    {librosDestacados.map((l, i) => {
+                      const inner = (
+                        <>
+                          {l.portada_url ? (
+                            <img
+                              src={l.portada_url.replace('http://', 'https://')}
+                              alt={l.titulo}
+                              style={{ width: 64, height: 92, objectFit: 'cover', borderRadius: 8, display: 'block', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', transition: 'transform 0.15s ease', transform: hoveredFav === i ? 'scale(1.06)' : 'scale(1)' }}
+                            />
+                          ) : (
+                            <div style={{ width: 64, height: 92, background: 'rgba(212,175,55,0.1)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
+                              📚
+                            </div>
+                          )}
+                          {hoveredFav === i && (
+                            <div style={{
+                              position: 'absolute', inset: 0, borderRadius: 8,
+                              background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 55%, transparent 100%)',
+                              display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+                              padding: '5px 5px 5px',
+                              pointerEvents: 'none',
+                            }}>
+                              <div style={{ fontSize: '0.52rem', fontWeight: 700, color: '#fff', lineHeight: 1.25, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>{l.titulo}</div>
+                              {(l.estrellas ?? 0) > 0 && <div style={{ fontSize: '0.48rem', marginTop: 2, color: '#f1c40f' }}>{'★'.repeat(l.estrellas ?? 0)}</div>}
+                            </div>
+                          )}
+                        </>
+                      )
+                      return l.libro_global_id ? (
+                        <Link
+                          key={i}
+                          href={`/libro/${l.libro_global_id}`}
+                          style={{ flexShrink: 0, width: 64, position: 'relative', display: 'block', textDecoration: 'none' }}
+                          onMouseEnter={() => setHoveredFav(i)}
+                          onMouseLeave={() => setHoveredFav(null)}
+                        >
+                          {inner}
+                        </Link>
+                      ) : (
+                        <div
+                          key={i}
+                          style={{ flexShrink: 0, width: 64, position: 'relative', cursor: 'default' }}
+                          onMouseEnter={() => setHoveredFav(i)}
+                          onMouseLeave={() => setHoveredFav(null)}
+                        >
+                          {inner}
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}
@@ -521,35 +537,47 @@ export default function PerfilClient({
                   <p className="text-muted small mb-0">Aún no hay libros leídos.</p>
                 ) : (
                   <div className="d-flex flex-column gap-2">
-                    {ultimasLecturas.map(l => (
-                      <div key={l.id} className="card-lectura-mini" style={{
+                    {ultimasLecturas.map(l => {
+                      const rowContent = (
+                        <>
+                          {l.portada_url ? (
+                            <img
+                              src={l.portada_url}
+                              alt={l.titulo}
+                              style={{ width: 50, height: 72, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }}
+                            />
+                          ) : (
+                            <div style={{ width: 50, height: 72, background: 'rgba(212,175,55,0.1)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1.4rem' }}>
+                              📚
+                            </div>
+                          )}
+                          <div className="flex-grow-1 min-w-0">
+                            <h4 className="text-truncate mb-0">{l.titulo}</h4>
+                            <p className="text-truncate">{l.autor}</p>
+                          </div>
+                          <span className="badge-cozy flex-shrink-0" style={{
+                            background: l.estado === 'LEIDO' ? 'rgba(39,174,96,0.15)' : 'rgba(212,175,55,0.1)',
+                            color: l.estado === 'LEIDO' ? '#27ae60' : 'var(--accent-gold)',
+                            border: l.estado === 'LEIDO' ? '1px solid rgba(39,174,96,0.4)' : '1px solid rgba(212,175,55,0.3)',
+                          }}>
+                            {l.estado === 'LEIDO' ? '✓ LEÍDO' : l.estado}
+                          </span>
+                        </>
+                      )
+                      const baseStyle = {
                         borderLeft: `3px solid ${l.estado === 'LEIDO' ? 'rgba(39,174,96,0.6)' : l.estado === 'LEYENDO' ? 'rgba(93,173,226,0.6)' : 'rgba(255,255,255,0.12)'}`,
                         paddingLeft: '0.75rem',
-                      }}>
-                        {l.portada_url ? (
-                          <img
-                            src={l.portada_url}
-                            alt={l.titulo}
-                            style={{ width: 50, height: 72, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }}
-                          />
-                        ) : (
-                          <div style={{ width: 50, height: 72, background: 'rgba(212,175,55,0.1)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1.4rem' }}>
-                            📚
-                          </div>
-                        )}
-                        <div className="flex-grow-1 min-w-0">
-                          <h4 className="text-truncate mb-0">{l.titulo}</h4>
-                          <p className="text-truncate">{l.autor}</p>
+                      }
+                      return l.libro_global_id ? (
+                        <Link key={l.id} href={`/libro/${l.libro_global_id}`} className="card-lectura-mini" style={{ ...baseStyle, textDecoration: 'none' }}>
+                          {rowContent}
+                        </Link>
+                      ) : (
+                        <div key={l.id} className="card-lectura-mini" style={baseStyle}>
+                          {rowContent}
                         </div>
-                        <span className="badge-cozy flex-shrink-0" style={{
-                          background: l.estado === 'LEIDO' ? 'rgba(39,174,96,0.15)' : 'rgba(212,175,55,0.1)',
-                          color: l.estado === 'LEIDO' ? '#27ae60' : 'var(--accent-gold)',
-                          border: l.estado === 'LEIDO' ? '1px solid rgba(39,174,96,0.4)' : '1px solid rgba(212,175,55,0.3)',
-                        }}>
-                          {l.estado === 'LEIDO' ? '✓ LEÍDO' : l.estado}
-                        </span>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </div>

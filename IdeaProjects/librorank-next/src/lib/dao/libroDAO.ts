@@ -254,6 +254,7 @@ export interface LibroFavorito {
   estrellas: number
   genero: string | null
   portada_url: string | null
+  libro_global_id: number | null
 }
 
 export interface LibroAmigo {
@@ -267,7 +268,7 @@ export interface LibroAmigo {
 
 export async function obtenerLibrosFavoritos(usuarioId: number, limite = 5): Promise<LibroFavorito[]> {
   return query<LibroFavorito>(
-    `SELECT titulo, autor, estrellas, genero, portada_url
+    `SELECT titulo, autor, estrellas, genero, portada_url, libro_global_id
      FROM libros_usuario
      WHERE usuario_id = ? AND estrellas >= 4
      ORDER BY estrellas DESC, id DESC
