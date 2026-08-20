@@ -1,30 +1,34 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { getAuthUser } from '@/lib/auth'
 import { buscarPorId } from '@/lib/dao/usuarioDAO'
 import { obtenerFeedAmigos } from '@/lib/dao/actividadDAO'
 import { obtenerCitaAleatoria } from '@/lib/dao/citaDAO'
 import { obtenerLeyendoAhora, contarLeidosEsteAnio } from '@/lib/dao/libroDAO'
 import { obtenerMisionesConProgreso } from '@/lib/dao/misionDAO'
+import { crearTabla, obtenerLogsHoy } from '@/lib/dao/registroLecturaDAO'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import FeedClient from './FeedClient'
 import LigaNotif from '@/components/LigaNotif'
 import MisionesWidget from './MisionesWidget'
+import LeyendoAhoraWidget from './LeyendoAhoraWidget'
 
 
 export default async function HomePage() {
   const authUser = await getAuthUser()
   if (!authUser) redirect('/login')
 
-  const [usuario, feed, citaDelDia, librosLeyendo, leidosEsteAnio, misiones] = await Promise.all([
+  await crearTabla()
+
+  const [usuario, feed, citaDelDia, librosLeyendo, leidosEsteAnio, misiones, logsHoy] = await Promise.all([
     buscarPorId(authUser.id),
     obtenerFeedAmigos(authUser.id),
     obtenerCitaAleatoria(authUser.id),
     obtenerLeyendoAhora(authUser.id),
     contarLeidosEsteAnio(authUser.id),
     obtenerMisionesConProgreso(authUser.id),
+    obtenerLogsHoy(authUser.id),
   ])
 
   if (!usuario) redirect('/login')
@@ -97,30 +101,7 @@ export default async function HomePage() {
                   <>
                     <hr className="my-3 opacity-10" />
                     <div className="text-start">
-                      <p className="small text-muted mb-2 fw-bold text-uppercase" style={{ letterSpacing: '0.8px', fontSize: '0.65rem' }}>
-                        📖 Leyendo ahora
-                      </p>
-                      <div className="d-flex flex-column gap-2">
-                        {librosLeyendo.map(libro => (
-                          <div key={libro.id} className="d-flex gap-2 align-items-center">
-                            {libro.portada_url ? (
-                              <Image
-                                src={libro.portada_url.replace('http://', 'https://')}
-                                alt={libro.titulo}
-                                width={32}
-                                height={46}
-                                style={{ objectFit: 'cover', borderRadius: 4, flexShrink: 0 }}
-                              />
-                            ) : (
-                              <div style={{ width: 32, height: 46, background: 'rgba(212,175,55,0.1)', borderRadius: 4, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem' }}>📚</div>
-                            )}
-                            <div className="text-start" style={{ minWidth: 0 }}>
-                              <div className="text-white fw-bold text-truncate" style={{ fontSize: '0.75rem' }}>{libro.titulo}</div>
-                              <div className="text-muted text-truncate" style={{ fontSize: '0.65rem' }}>{libro.autor}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <LeyendoAhoraWidget libros={librosLeyendo} logsHoy={logsHoy} />
                     </div>
                   </>
                 )}

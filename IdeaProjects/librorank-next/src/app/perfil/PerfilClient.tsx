@@ -48,17 +48,6 @@ const BANNER_NIVEL: Record<number, string> = {
   12: 'linear-gradient(135deg, #0a0500 0%, #b8860b 30%, #ffd700 60%, #b8860b 100%)',
 }
 
-const AVATARES = [
-  '/img/avatar_explorador/avatar_explorador_0.png',
-  '/img/avatar_explorador/avatar_explorador_1.png',
-  '/img/avatar_explorador/avatar_explorador_2.png',
-  '/img/avatar_explorador/avatar_explorador_3.png',
-  '/img/avatar_maestro/avatar_maestro_0.png',
-  '/img/avatar_maestro/avatar_maestro_1.png',
-  '/img/avatar_maestro/avatar_maestro_2.png',
-  '/img/avatar_maestro/avatar_maestro_3.png',
-]
-
 
 interface Props {
   usuario: Usuario
@@ -123,15 +112,6 @@ export default function PerfilClient({
     const json = await res.json()
     setWrapped(json)
     setLoadingWrapped(false)
-  }
-
-  async function seleccionarAvatar(url: string) {
-    await fetch('/api/perfil', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ avatar_url: url }),
-    })
-    setAvatarActual(url)
-    router.refresh()
   }
 
   function abrirCrop(e: React.ChangeEvent<HTMLInputElement>) {
@@ -1028,14 +1008,6 @@ export default function PerfilClient({
                     {subiendo ? 'Subiendo...' : '📷 Subir foto'}
                     <input type="file" accept="image/*" className="d-none" onChange={abrirCrop} />
                   </label>
-                  {AVATARES.map(av => (
-                    <button key={av} onClick={() => seleccionarAvatar(av)} style={{
-                      border: usuario.avatar_url === av ? '2px solid var(--accent-gold)' : '2px solid transparent',
-                      borderRadius: 8, padding: 2, background: 'transparent', cursor: 'pointer',
-                    }}>
-                      <img src={av} alt="avatar" style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 6 }} />
-                    </button>
-                  ))}
                 </div>
               </div>
 
