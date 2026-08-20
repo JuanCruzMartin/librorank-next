@@ -132,7 +132,7 @@ export async function responder(dueloId: number, usuarioId: number, respuesta: n
 
   // Verificar si los dos respondieron
   const actualizado = await obtenerDueloPorId(dueloId)
-  if (actualizado?.respuesta_retador !== null && actualizado?.respuesta_rival !== null) {
+  if (actualizado && actualizado.respuesta_retador !== null && actualizado.respuesta_rival !== null) {
     await resolverDuelo(dueloId, actualizado)
     return { ok: true, dueloTerminado: true }
   }
