@@ -438,6 +438,27 @@ export default function Header({ user }: HeaderProps) {
               })}
               <li>
                 <Link
+                  href="/chat"
+                  onClick={() => setMenuAbierto(false)}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '0.85rem 1rem', borderRadius: 10,
+                    fontWeight: 700, fontSize: '1rem', textDecoration: 'none',
+                    background: pathname.startsWith('/chat') ? 'rgba(212,175,55,0.12)' : 'transparent',
+                    color: pathname.startsWith('/chat') ? '#d4af37' : 'rgba(255,255,255,0.8)',
+                    borderLeft: pathname.startsWith('/chat') ? '3px solid #d4af37' : '3px solid transparent',
+                  }}
+                >
+                  <span>💬 Chat</span>
+                  {mensajesNoLeidos > 0 && (
+                    <span style={{ background: '#e74c3c', color: '#fff', borderRadius: 99, fontSize: '0.65rem', fontWeight: 700, padding: '2px 7px' }}>
+                      {mensajesNoLeidos}
+                    </span>
+                  )}
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/perfil"
                   onClick={() => setMenuAbierto(false)}
                   style={{
