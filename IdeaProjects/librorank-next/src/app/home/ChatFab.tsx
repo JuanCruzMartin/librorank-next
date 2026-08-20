@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { ChatCircleDots } from '@phosphor-icons/react'
 
 export default function ChatFab() {
   const [noLeidos, setNoLeidos] = useState(0)
@@ -68,7 +69,7 @@ export default function ChatFab() {
           transition: 'transform 0.2s',
         }}
       >
-        <span style={{ fontSize: '1.1rem' }}>💬</span>
+        <ChatCircleDots size={20} weight="duotone" />
         {noLeidos > 0 ? (
           <span style={{
             background: '#e74c3c', color: '#fff', borderRadius: '50%',

@@ -2,7 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import {
+  Books, Sword, Cards, ArrowsLeftRight, Trophy,
+  UsersThree, PencilLine, Bell, UserCircle, Fire, Star,
+} from '@phosphor-icons/react'
 
 interface Notificacion {
   id: number
@@ -50,14 +54,14 @@ interface HeaderProps {
   } | null
 }
 
-const NAV_ITEMS = [
-  { href: '/biblioteca', label: '📚 Biblioteca' },
-  { href: '/desafios',   label: '🎯 Desafíos' },
-  { href: '/coleccion',    label: '📖 Colección' },
-  { href: '/intercambios', label: '🔄 Intercambios' },
-  { href: '/ranking',      label: '🏆 Ranking' },
-  { href: '/amigos',     label: '👥 Comunidad' },
-  { href: '/cuento',     label: '✍️ Cuento' },
+const NAV_ITEMS: { href: string; label: string; icon: React.ReactNode }[] = [
+  { href: '/biblioteca',  label: 'Biblioteca',   icon: <Books size={16} weight="duotone" /> },
+  { href: '/desafios',    label: 'Desafíos',     icon: <Sword size={16} weight="duotone" /> },
+  { href: '/coleccion',   label: 'Colección',    icon: <Cards size={16} weight="duotone" /> },
+  { href: '/intercambios',label: 'Intercambios', icon: <ArrowsLeftRight size={16} weight="duotone" /> },
+  { href: '/ranking',     label: 'Ranking',      icon: <Trophy size={16} weight="duotone" /> },
+  { href: '/amigos',      label: 'Comunidad',    icon: <UsersThree size={16} weight="duotone" /> },
+  { href: '/cuento',      label: 'Cuento',       icon: <PencilLine size={16} weight="duotone" /> },
 ]
 
 export default function Header({ user }: HeaderProps) {
@@ -185,8 +189,9 @@ export default function Header({ user }: HeaderProps) {
                     <Link
                       href={item.href}
                       className={`${isActive(item.href)}${tieneGlow ? ' nav-mision-glow' : ''}`}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                     >
+                      {item.icon}
                       {item.label}
                       {tieneGlow && (
                         <span className="mision-glow-dot" title={`${misionesPendientes} recompensa${misionesPendientes !== 1 ? 's' : ''} por reclamar`}>
@@ -209,7 +214,7 @@ export default function Header({ user }: HeaderProps) {
               color: '#ff6b35',
               border: '1px solid rgba(255,69,0,0.3)',
             }}>
-              🔥 {user.racha_actual ?? 0}
+              <Fire size={13} weight="fill" /> {user.racha_actual ?? 0}
             </span>
 
             {/* Puntos — oculta en mobile */}
@@ -218,7 +223,7 @@ export default function Header({ user }: HeaderProps) {
               color: '#d4af37',
               border: '1px solid rgba(212,175,55,0.35)',
             }}>
-              ⭐ {user.puntos ?? 0}
+              <Star size={13} weight="fill" /> {user.puntos ?? 0}
             </span>
 
             {/* Campana de notificaciones */}
@@ -232,7 +237,7 @@ export default function Header({ user }: HeaderProps) {
                 }}
                 title="Notificaciones"
               >
-                🔔
+                <Bell size={20} weight="duotone" />
                 {noLeidas > 0 && (
                   <span style={{
                     position: 'absolute', top: -2, right: -2,
@@ -320,8 +325,9 @@ export default function Header({ user }: HeaderProps) {
             <Link href="/perfil" className="btn-gold header-perfil-desktop" style={{
               fontSize: '0.72rem', padding: '0.3rem 0.8rem',
               borderRadius: 8, fontWeight: 700, textDecoration: 'none',
+              display: 'inline-flex', alignItems: 'center', gap: 5,
             }}>
-              👤 Perfil
+              <UserCircle size={15} weight="duotone" /> Perfil
             </Link>
 
             {/* Salir — oculto en mobile */}
@@ -426,7 +432,9 @@ export default function Header({ user }: HeaderProps) {
                         transition: 'all 0.15s',
                       }}
                     >
-                      <span>{item.label}</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                        {item.icon}{item.label}
+                      </span>
                       {tieneGlow && (
                         <span className="mision-glow-dot">
                           {misionesPendientes}
@@ -449,12 +457,9 @@ export default function Header({ user }: HeaderProps) {
                     borderLeft: pathname.startsWith('/chat') ? '3px solid #d4af37' : '3px solid transparent',
                   }}
                 >
-                  <span>💬 Chat</span>
-                  {mensajesNoLeidos > 0 && (
-                    <span style={{ background: '#e74c3c', color: '#fff', borderRadius: 99, fontSize: '0.65rem', fontWeight: 700, padding: '2px 7px' }}>
-                      {mensajesNoLeidos}
-                    </span>
-                  )}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                    💬 Chat
+                  </span>
                 </Link>
               </li>
               <li>
