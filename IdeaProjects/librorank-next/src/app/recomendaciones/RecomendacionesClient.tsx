@@ -4,21 +4,10 @@ import { useState, useEffect } from 'react'
 import type { LibroRecomendado } from '@/app/api/recomendaciones/route'
 import type { LibroAmigo } from '@/lib/dao/libroDAO'
 
-const MOODS: { key: string; emoji: string; descripcion: string; color: string }[] = [
-  { key: 'Relajado',    emoji: '☕', descripcion: 'Algo tranquilo y cómodo',     color: '#4a9e7a' },
-  { key: 'Aventurero',  emoji: '🗺️', descripcion: 'Acción, aventura, adrenalina', color: '#e67e22' },
-  { key: 'Emotivo',     emoji: '💛', descripcion: 'Algo que me llegue adentro',   color: '#f39c12' },
-  { key: 'Intelectual', emoji: '🧠', descripcion: 'Para pensar y aprender',       color: '#8e44ad' },
-  { key: 'Nostálgico',  emoji: '🌅', descripcion: 'Clásicos y recuerdos',         color: '#c0392b' },
-  { key: 'Inspirador',  emoji: '🔥', descripcion: 'Que me motive y mueva',        color: '#d4af37' },
-  { key: 'Oscuro',      emoji: '🌑', descripcion: 'Thriller, horror, suspenso',   color: '#2c3e50' },
-  { key: 'Divertido',   emoji: '😂', descripcion: 'Humor y ligereza',             color: '#1abc9c' },
-]
 
 const TABS = [
-  { key: 'mood',       label: '🎭 Tu mood',          desc: 'Según cómo te sentís hoy' },
-  { key: 'favoritos',  label: '⭐ Tus favoritos',     desc: 'Más libros de tus autores preferidos' },
-  { key: 'amigos',     label: '👥 Tus amigos leen',   desc: 'Lo que leyeron quienes seguís' },
+  { key: 'favoritos', label: '📖 Tus autores',    desc: 'Más libros de los autores que leés', color: '#d4af37' },
+  { key: 'amigos',    label: '👥 Tus amigos leen', desc: 'Lo que leyeron quienes seguís',      color: '#3498db' },
 ]
 
 interface Props {
@@ -26,9 +15,9 @@ interface Props {
   topGeneros: string[]
 }
 
-export default function RecomendacionesClient({ moodFavorito, topGeneros }: Props) {
-  const [tab, setTab] = useState<'mood' | 'favoritos' | 'amigos'>('mood')
-  const [moodSeleccionado, setMoodSeleccionado] = useState(moodFavorito || 'Relajado')
+export default function RecomendacionesClient({ moodFavorito: _moodFavorito, topGeneros: _topGeneros }: Props) {
+  const [tab, setTab] = useState<'favoritos' | 'amigos'>('favoritos')
+  const [moodSeleccionado] = useState('Relajado')
   const [libros, setLibros] = useState<LibroRecomendado[]>([])
   const [librosAmigos, setLibrosAmigos] = useState<LibroAmigo[]>([])
   const [autoresBase, setAutoresBase] = useState<string[]>([])
@@ -37,12 +26,10 @@ export default function RecomendacionesClient({ moodFavorito, topGeneros }: Prop
   const [yaAgregados, setYaAgregados] = useState<Set<string>>(new Set())
   const [agregando, setAgregando] = useState<string | null>(null)
 
-  const moodActual = MOODS.find(m => m.key === moodSeleccionado) || MOODS[0]
-
   useEffect(() => {
     cargar()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, moodSeleccionado])
+  }, [tab])
 
   async function cargar() {
     setCargando(true)
@@ -50,9 +37,7 @@ export default function RecomendacionesClient({ moodFavorito, topGeneros }: Prop
     setLibrosAmigos([])
     setSinFavoritos(false)
     try {
-      const url = tab === 'mood'
-        ? `/api/recomendaciones?tipo=mood&mood=${encodeURIComponent(moodSeleccionado)}`
-        : `/api/recomendaciones?tipo=${tab}`
+      const url = `/api/recomendaciones?tipo=${tab}`
       const res = await fetch(url)
       const data = await res.json()
       if (tab === 'amigos') {
@@ -103,95 +88,56 @@ export default function RecomendacionesClient({ moodFavorito, topGeneros }: Prop
         padding: '2.5rem 0 0',
       }}>
         <div className="container">
-          <div className="text-center mb-4">
-            <h1 className="font-title display-5 mb-2" style={{ color: '#fff' }}>Recomendaciones</h1>
+          <div className="text-center mb-5">
+            <h1 className="font-title display-5 mb-2" style={{ color: '#fff' }}>Para vos</h1>
             <p className="text-muted" style={{ fontSize: '1rem', maxWidth: 480, margin: '0 auto' }}>
-              Descubrí tu próxima lectura de tres formas distintas
+              Libros que te pueden gustar, basados en lo que ya leés
             </p>
           </div>
 
-          {/* Tabs */}
-          <div className="d-flex justify-content-center gap-2 mb-0" style={{ flexWrap: 'wrap' }}>
-            {TABS.map(t => (
-              <button
-                key={t.key}
-                onClick={() => setTab(t.key as typeof tab)}
-                style={{
-                  padding: '0.7rem 1.4rem',
-                  borderRadius: '12px 12px 0 0',
-                  border: 'none',
-                  background: tab === t.key
-                    ? 'rgba(212,175,55,0.12)'
-                    : 'transparent',
-                  borderBottom: tab === t.key
-                    ? '3px solid #d4af37'
-                    : '3px solid transparent',
-                  color: tab === t.key ? '#d4af37' : 'rgba(255,255,255,0.45)',
-                  cursor: 'pointer',
-                  fontWeight: tab === t.key ? 700 : 400,
-                  fontSize: '0.88rem',
-                  transition: 'all 0.15s',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {t.label}
-              </button>
-            ))}
+          {/* Tabs grandes */}
+          <div className="d-flex justify-content-center gap-3 mb-0" style={{ flexWrap: 'wrap' }}>
+            {TABS.map(t => {
+              const activo = tab === t.key
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key as typeof tab)}
+                  style={{
+                    padding: '1rem 2rem',
+                    borderRadius: '16px 16px 0 0',
+                    border: 'none',
+                    background: activo
+                      ? `linear-gradient(180deg, ${t.color}22 0%, ${t.color}0a 100%)`
+                      : 'rgba(255,255,255,0.03)',
+                    borderBottom: activo ? `3px solid ${t.color}` : '3px solid transparent',
+                    color: activo ? t.color : 'rgba(255,255,255,0.4)',
+                    cursor: 'pointer',
+                    fontWeight: activo ? 800 : 500,
+                    fontSize: '1rem',
+                    transition: 'all 0.18s',
+                    whiteSpace: 'nowrap',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.2rem',
+                  }}
+                >
+                  <span style={{ fontSize: '1.05rem' }}>{t.label}</span>
+                  <span style={{ fontSize: '0.7rem', opacity: 0.65, fontWeight: 400 }}>{t.desc}</span>
+                </button>
+              )
+            })}
           </div>
         </div>
       </div>
 
       <div className="container py-4">
 
-        {/* ── TAB: MOOD ── */}
-        {tab === 'mood' && (
-          <>
-            <div className="text-center mb-4">
-              <p className="text-muted small">¿Cómo te sentís hoy?</p>
-              {topGeneros.length > 0 && (
-                <p style={{ fontSize: '0.78rem', color: 'rgba(212,175,55,0.7)' }}>
-                  ✦ Combinado con tus géneros: {topGeneros.join(', ')}
-                </p>
-              )}
-            </div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-              gap: '0.65rem',
-              maxWidth: 750,
-              margin: '0 auto 2rem',
-            }}>
-              {MOODS.map(m => {
-                const activo = m.key === moodSeleccionado
-                return (
-                  <button key={m.key} onClick={() => setMoodSeleccionado(m.key)} style={{
-                    background: activo ? `linear-gradient(135deg, ${m.color}33, ${m.color}18)` : 'rgba(255,255,255,0.04)',
-                    border: activo ? `2px solid ${m.color}` : '2px solid rgba(255,255,255,0.08)',
-                    borderRadius: 12,
-                    padding: '0.8rem 0.6rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    textAlign: 'center',
-                    transform: activo ? 'translateY(-3px)' : 'none',
-                    boxShadow: activo ? `0 8px 20px ${m.color}30` : 'none',
-                  }}>
-                    <div style={{ fontSize: '1.5rem', lineHeight: 1, marginBottom: '0.3rem' }}>{m.emoji}</div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: activo ? '#fff' : 'rgba(255,255,255,0.6)', marginBottom: '0.15rem' }}>{m.key}</div>
-                    <div style={{ fontSize: '0.6rem', color: activo ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.3)', lineHeight: 1.3 }}>{m.descripcion}</div>
-                  </button>
-                )
-              })}
-            </div>
-          </>
-        )}
-
         {/* ── TAB: FAVORITOS ── */}
         {tab === 'favoritos' && !cargando && (
           <div className="text-center mb-4">
             {sinFavoritos ? (
               <div style={{ padding: '2rem', color: 'rgba(255,255,255,0.45)', fontSize: '0.9rem' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>⭐</div>
-                Calificá libros con 4 o 5 estrellas para obtener recomendaciones basadas en tus autores favoritos.
+                <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>📖</div>
+                Agregá libros a tu biblioteca para obtener recomendaciones de tus autores.
               </div>
             ) : autoresBase.length > 0 && (
               <p style={{ fontSize: '0.8rem', color: 'rgba(212,175,55,0.7)' }}>
@@ -213,13 +159,8 @@ export default function RecomendacionesClient({ moodFavorito, topGeneros }: Prop
         {(tab !== 'amigos' || librosAmigos.length > 0) && (tab !== 'favoritos' || !sinFavoritos) && (
           <div className="d-flex align-items-center justify-content-between mb-3">
             <div>
-              {tab === 'mood' && (
-                <h2 className="font-title h5 mb-1" style={{ color: '#fff' }}>
-                  {moodActual.emoji} Para cuando estás {moodSeleccionado.toLowerCase()}
-                </h2>
-              )}
-              {tab === 'favoritos' && <h2 className="font-title h5 mb-1" style={{ color: '#fff' }}>Más de tus autores favoritos</h2>}
-              {tab === 'amigos' && <h2 className="font-title h5 mb-1" style={{ color: '#fff' }}>Lo que leen tus amigos</h2>}
+              {tab === 'favoritos' && <h2 className="font-title h5 mb-1" style={{ color: '#fff' }}>📖 Más de los autores que leés</h2>}
+              {tab === 'amigos' && <h2 className="font-title h5 mb-1" style={{ color: '#fff' }}>👥 Lo que leen tus amigos</h2>}
               {!cargando && (tab === 'amigos' ? librosAmigos.length : libros.length) > 0 && (
                 <p className="text-muted small mb-0">{tab === 'amigos' ? librosAmigos.length : libros.length} resultados</p>
               )}

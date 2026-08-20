@@ -439,27 +439,51 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
 
         {/* Selector de sección — solo visible cuando es la propia biblioteca */}
         {!soloLectura && (
-          <div className="d-flex gap-2 mb-4 justify-content-center">
-            {([
-              { key: 'biblioteca',      label: '📚 Mi Biblioteca' },
-              { key: 'recomendaciones', label: '✨ Para vos' },
-            ] as const).map(s => (
-              <button
-                key={s.key}
-                onClick={() => setSeccion(s.key)}
-                style={{
-                  padding: '0.45rem 1.3rem',
-                  borderRadius: 24,
-                  border: seccion === s.key ? '2px solid #d4af37' : '2px solid rgba(255,255,255,0.1)',
-                  background: seccion === s.key ? 'rgba(212,175,55,0.14)' : 'rgba(255,255,255,0.04)',
-                  color: seccion === s.key ? '#d4af37' : 'rgba(255,255,255,0.55)',
-                  fontWeight: 700, fontSize: '0.85rem',
-                  cursor: 'pointer', transition: 'all 0.18s',
-                }}
-              >
-                {s.label}
-              </button>
-            ))}
+          <div className="d-flex gap-2 mb-4 justify-content-center align-items-center">
+            <button
+              onClick={() => setSeccion('biblioteca')}
+              style={{
+                padding: '0.45rem 1.3rem',
+                borderRadius: 24,
+                border: seccion === 'biblioteca' ? '2px solid #d4af37' : '2px solid rgba(255,255,255,0.1)',
+                background: seccion === 'biblioteca' ? 'rgba(212,175,55,0.14)' : 'rgba(255,255,255,0.04)',
+                color: seccion === 'biblioteca' ? '#d4af37' : 'rgba(255,255,255,0.55)',
+                fontWeight: 700, fontSize: '0.85rem',
+                cursor: 'pointer', transition: 'all 0.18s',
+              }}
+            >
+              📚 Mi Biblioteca
+            </button>
+
+            <button
+              onClick={() => setSeccion('recomendaciones')}
+              className={seccion !== 'recomendaciones' ? 'para-vos-glow' : ''}
+              style={{
+                padding: '0.5rem 1.4rem',
+                borderRadius: 24,
+                border: seccion === 'recomendaciones' ? '2px solid #d4af37' : '2px solid rgba(212,175,55,0.45)',
+                background: seccion === 'recomendaciones'
+                  ? 'rgba(212,175,55,0.18)'
+                  : 'linear-gradient(135deg, rgba(212,175,55,0.1), rgba(180,140,20,0.06))',
+                color: seccion === 'recomendaciones' ? '#d4af37' : '#e8c84a',
+                fontWeight: 800, fontSize: '0.88rem',
+                cursor: 'pointer', transition: 'all 0.18s',
+                boxShadow: seccion !== 'recomendaciones' ? '0 0 12px rgba(212,175,55,0.25)' : '0 0 16px rgba(212,175,55,0.35)',
+                letterSpacing: '0.2px',
+              }}
+            >
+              ✨ Para vos
+            </button>
+
+            <style>{`
+              @keyframes para-vos-pulse {
+                0%, 100% { box-shadow: 0 0 10px rgba(212,175,55,0.2); }
+                50% { box-shadow: 0 0 20px rgba(212,175,55,0.5), 0 0 32px rgba(212,175,55,0.2); }
+              }
+              .para-vos-glow {
+                animation: para-vos-pulse 2.2s ease-in-out infinite;
+              }
+            `}</style>
           </div>
         )}
 

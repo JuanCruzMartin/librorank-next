@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUserFromRequest } from '@/lib/auth'
-import { obtenerConteoPorGenero, buscarPorUsuario, obtenerLibrosFavoritos, obtenerLibrosAmigos } from '@/lib/dao/libroDAO'
+import { obtenerConteoPorGenero, buscarPorUsuario, obtenerLibrosAmigos } from '@/lib/dao/libroDAO'
 
 // Mapeo mood → queries para Google Books
 const MOOD_QUERIES: Record<string, string[]> = {
@@ -99,23 +99,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ libros: librosAmigos, tipo: 'amigos' })
   }
 
-  // ── Sección: Basado en tus favoritos (autores de libros ≥4 estrellas) ───
+  // ── Sección: Basado en los autores que leés ─────────────────────────────
   if (tipo === 'favoritos') {
-    const favoritos = await obtenerLibrosFavoritos(user.id)
-    if (favoritos.length === 0) {
+    // Usa misLibros (ya cargado), no solo los de 4+ estrellas
+    const autoresUnicos = Array.from(new Set(misLibros.map(l => l.autor).filter(Boolean))).slice(0, 5)
+    if (autoresUnicos.length === 0) {
       return NextResponse.json({ libros: [], tipo: 'favoritos', sinFavoritos: true })
     }
 
-    // Por cada autor único, buscar otros libros suyos en Google Books
-    const autoresUnicos = Array.from(new Set(favoritos.map(f => f.autor))).slice(0, 4)
+    // Por cada autor, buscar más libros suyos en Google Books
     const queries = autoresUnicos.map(a => `inauthor:"${a}"`)
-
-    // Complementar con géneros de los favoritos
-    const generosUnicos = Array.from(new Set(favoritos.map(f => f.genero).filter(Boolean))) as string[]
-    if (generosUnicos[0]) {
-      const subject = GENERO_SUBJECT[generosUnicos[0]] || 'fiction'
-      queries.push(`subject:${subject}`)
-    }
 
     const resultados = await Promise.all(queries.map(q => buscarEnGoogleBooks(q, apiKey)))
 
@@ -132,7 +125,7 @@ export async function GET(req: NextRequest) {
       if (libros.length >= 20) break
     }
 
-    return NextResponse.json({ libros, tipo: 'favoritos', autoresBase: autoresUnicos })
+    return NextResponse.json({ libros, tipo: 'favoritos', autoresBase: autoresUnicos.slice(0, 4) })
   }
 
   // ── Sección: Por mood (comportamiento original) ──────────────────────────
