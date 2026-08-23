@@ -31,6 +31,14 @@ export async function obtenerTotalPaginasPorLibro(libroUsuarioId: number): Promi
   return row?.total ?? 0
 }
 
+export async function obtenerTotalPaginasUsuario(usuarioId: number): Promise<number> {
+  const row = await queryOne<{ total: number }>(
+    'SELECT COALESCE(SUM(paginas), 0) AS total FROM registro_lectura WHERE usuario_id=?',
+    [usuarioId]
+  )
+  return row?.total ?? 0
+}
+
 export async function registrarSesion(usuarioId: number, libroUsuarioId: number, paginas: number): Promise<void> {
   const hoy = new Date().toISOString().slice(0, 10)
   await execute(

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUserFromRequest } from '@/lib/auth'
-import { crearTabla, obtenerLogsHoy, registrarSesion } from '@/lib/dao/registroLecturaDAO'
+import { crearTabla, obtenerLogsHoy, registrarSesion, obtenerTotalPaginasUsuario } from '@/lib/dao/registroLecturaDAO'
 import { actualizarRacha } from '@/lib/dao/usuarioDAO'
 import { otorgarPuntos } from '@/lib/dao/libroDAO'
+import { otorgarCofre, crearTabla as crearTablaCofres } from '@/lib/dao/cofreDAO'
 
 export async function GET(req: NextRequest) {
   const user = await getAuthUserFromRequest(req)
@@ -23,7 +24,23 @@ export async function POST(req: NextRequest) {
   }
 
   await crearTabla()
+  await crearTablaCofres()
+
+  // Total de páginas ANTES de registrar esta sesión
+  const totalAntes = await obtenerTotalPaginasUsuario(user.id)
+
   await registrarSesion(user.id, Number(libroUsuarioId), Number(paginas))
+
+  const totalDespues = totalAntes + Number(paginas)
+
+  // Cofre por cada hito de 100 páginas que se cruce en esta sesión
+  const hitosAntes = Math.floor(totalAntes / 100)
+  const hitosDespues = Math.floor(totalDespues / 100)
+  let cofresGanados = 0
+  for (let i = hitosAntes; i < hitosDespues; i++) {
+    await otorgarCofre(user.id, 'comun')
+    cofresGanados++
+  }
 
   // Actualizar racha (si ya fue actualizada hoy, devuelve el estado sin cambios)
   const rachaResult = await actualizarRacha(user.id)
@@ -38,5 +55,6 @@ export async function POST(req: NextRequest) {
     racha: rachaResult?.nuevaRacha ?? 0,
     escudoGanado: rachaResult?.escudoGanado ?? false,
     milestoneAlcanzado: rachaResult?.milestoneAlcanzado ?? null,
+    cofresGanados,
   })
 }

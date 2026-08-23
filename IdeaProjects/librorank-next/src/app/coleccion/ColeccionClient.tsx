@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { CARTAS, RAREZAS, type Carta, type Rareza } from '@/lib/cartas'
 import CartaPersonaje from '@/components/CartaPersonaje'
 import CartaDorso from '@/components/CartaDorso'
+import type { TipoCofre, Cofre } from '@/lib/dao/cofreDAO'
 
 interface Props {
   coleccion: string[]
@@ -35,6 +36,12 @@ function getColeccionId(carta: Carta): string {
   return 'clasica'
 }
 
+const COFRE_CONFIG: Record<TipoCofre, { emoji: string; label: string; desc: string; color: string; glow: string }> = {
+  comun: { emoji: '📦', label: 'Cofre Común',  desc: 'Cualquier rareza',          color: '#7d8a6e', glow: 'rgba(125,138,110,0.4)' },
+  raro:  { emoji: '💎', label: 'Cofre Raro',   desc: 'Raro o superior garantizado', color: '#3d6b94', glow: 'rgba(61,107,148,0.5)' },
+  epico: { emoji: '✨', label: 'Cofre Épico',  desc: 'Épico o superior garantizado', color: '#6b3d8e', glow: 'rgba(107,61,142,0.6)' },
+}
+
 export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: tiradasIniciales }: Props) {
   const [coleccion, setColeccion] = useState<string[]>(coleccionInicial)
   const [tiradas, setTiradas] = useState(tiradasIniciales)
@@ -47,8 +54,18 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
   const [bannerDiario, setBannerDiario] = useState(false)
   const [proximaDiaria, setProximaDiaria] = useState<Date | null>(null)
   const [countdown, setCountdown] = useState('')
+  const [cofres, setCofres] = useState<Cofre[]>([])
+  const [abriendoCofre, setAbriendoCofre] = useState<number | null>(null)
+  const [cofreAbierto, setCofreAbierto] = useState(false)
 
   const totalObtenidas = new Set(coleccion).size
+
+  useEffect(() => {
+    fetch('/api/cofres')
+      .then(r => r.json())
+      .then(d => { if (d.cofres) setCofres(d.cofres) })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     fetch('/api/cartas/tirada-diaria', { method: 'POST' })
@@ -122,6 +139,31 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
     }
   }
 
+  async function abrirCofre(cofre: Cofre) {
+    if (abriendoCofre) return
+    setAbriendoCofre(cofre.id)
+    setCofreAbierto(false)
+    // Pequeño delay para animar antes de abrir
+    await new Promise(r => setTimeout(r, 600))
+    try {
+      const res = await fetch('/api/cofres', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cofreId: cofre.id }),
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      setCofreAbierto(true)
+      await new Promise(r => setTimeout(r, 400))
+      setCofres(cs => cs.filter(c => c.id !== cofre.id))
+      if (data.esNueva) setColeccion(c => [...c, data.carta.id])
+      setReveal({ carta: data.carta, esNueva: data.esNueva, revelada: false })
+    } finally {
+      setAbriendoCofre(null)
+      setCofreAbierto(false)
+    }
+  }
+
   function scrollToColeccion(id: string) {
     document.getElementById(`col-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
@@ -153,6 +195,81 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
           </div>
         </div>
       )}
+
+      {/* Sección cofres */}
+      {cofres.length > 0 && (
+        <div style={{
+          background: 'var(--bg-card)',
+          border: '1px solid rgba(212,175,55,0.2)',
+          borderRadius: 16,
+          padding: '1.25rem 1.5rem',
+          marginBottom: '1.5rem',
+        }}>
+          <h3 style={{ color: 'var(--accent-gold)', fontSize: '1rem', fontWeight: 800, marginBottom: '0.25rem' }}>
+            🎁 Mis Cofres
+          </h3>
+          <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', marginBottom: '1rem' }}>
+            Hacé clic en un cofre para abrirlo y descubrir tu carta
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+            {cofres.map(cofre => {
+              const cfg = COFRE_CONFIG[cofre.tipo]
+              const esteAbriendo = abriendoCofre === cofre.id
+              return (
+                <button
+                  key={cofre.id}
+                  onClick={() => abrirCofre(cofre)}
+                  disabled={!!abriendoCofre}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                    padding: '1rem 1.25rem',
+                    borderRadius: 14,
+                    border: `1.5px solid ${cfg.color}55`,
+                    background: esteAbriendo && cofreAbierto
+                      ? `radial-gradient(circle, ${cfg.glow} 0%, transparent 70%)`
+                      : `${cfg.color}15`,
+                    cursor: abriendoCofre ? 'default' : 'pointer',
+                    minWidth: 100,
+                    transition: 'all 0.3s ease',
+                    transform: esteAbriendo ? 'scale(1.1)' : 'scale(1)',
+                    boxShadow: esteAbriendo ? `0 0 24px ${cfg.glow}` : 'none',
+                    animation: esteAbriendo && !cofreAbierto ? 'cofre-shake 0.5s ease' : 'none',
+                  }}
+                >
+                  <img
+                    src={esteAbriendo && cofreAbierto ? '/cofre-abierto.jpg' : '/cofre-cerrado.jpg'}
+                    alt={cfg.label}
+                    style={{
+                      width: 72, height: 72,
+                      objectFit: 'cover',
+                      borderRadius: 10,
+                      filter: `drop-shadow(0 0 8px ${cfg.color}88)`,
+                      transition: 'all 0.3s ease',
+                      transform: esteAbriendo && !cofreAbierto ? 'rotate(-3deg)' : 'none',
+                    }}
+                  />
+                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: cfg.color }}>
+                    {cfg.label}
+                  </span>
+                  <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)', textAlign: 'center' }}>
+                    {esteAbriendo ? (cofreAbierto ? '¡Abierto!' : 'Abriendo...') : cfg.desc}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes cofre-shake {
+          0%,100% { transform: scale(1.1) rotate(0deg); }
+          20%      { transform: scale(1.1) rotate(-6deg); }
+          40%      { transform: scale(1.1) rotate(6deg); }
+          60%      { transform: scale(1.1) rotate(-4deg); }
+          80%      { transform: scale(1.1) rotate(4deg); }
+        }
+      `}</style>
 
       {/* Header álbum */}
       <div style={{

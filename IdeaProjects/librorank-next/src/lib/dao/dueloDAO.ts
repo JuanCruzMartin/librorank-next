@@ -187,17 +187,19 @@ async function resolverDuelo(dueloId: number, duelo: Duelo): Promise<void> {
   // Transferir carta: ganador se queda con la carta del perdedor
   if (ganadorId && perdedorId && cartaGanada && cartaPerdida) {
     await transaction(async conn => {
-      // Sacar carta del perdedor
       await conn.execute(
         'DELETE FROM cartas_usuario WHERE usuario_id=? AND carta_id=?',
         [perdedorId, cartaGanada]
       )
-      // Dar carta al ganador (INSERT IGNORE por si ya la tiene)
       await conn.execute(
         'INSERT IGNORE INTO cartas_usuario (usuario_id, carta_id) VALUES (?, ?)',
         [ganadorId, cartaGanada]
       )
     })
+    // Cofre común de recompensa para el ganador
+    const { otorgarCofre, crearTabla } = await import('@/lib/dao/cofreDAO')
+    await crearTabla()
+    await otorgarCofre(ganadorId, 'comun')
   }
 }
 
