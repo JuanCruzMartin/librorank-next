@@ -236,18 +236,28 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                     animation: esteAbriendo && !cofreAbierto ? 'cofre-shake 0.5s ease' : 'none',
                   }}
                 >
-                  <img
-                    src={esteAbriendo && cofreAbierto ? '/cofre-abierto.jpg' : '/cofre-cerrado.jpg'}
-                    alt={cfg.label}
-                    style={{
-                      width: 72, height: 72,
-                      objectFit: 'cover',
-                      borderRadius: 10,
-                      filter: `drop-shadow(0 0 8px ${cfg.color}88)`,
-                      transition: 'all 0.3s ease',
-                      transform: esteAbriendo && !cofreAbierto ? 'rotate(-3deg)' : 'none',
-                    }}
-                  />
+                  <div style={{
+                    width: 80, height: 80,
+                    borderRadius: 12,
+                    background: '#1a1a2e',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: `0 0 18px ${cfg.glow}, 0 0 40px ${cfg.glow}, inset 0 0 12px ${cfg.color}22`,
+                    animation: !esteAbriendo ? `cofre-glow-${cofre.tipo} 2s ease-in-out infinite` : 'none',
+                    transition: 'all 0.3s ease',
+                  }}>
+                    <img
+                      src={esteAbriendo && cofreAbierto ? '/cofre-abierto.jpg' : '/cofre-cerrado.jpg'}
+                      alt={cfg.label}
+                      style={{
+                        width: 64, height: 64,
+                        objectFit: 'contain',
+                        filter: `drop-shadow(0 0 6px ${cfg.color})`,
+                        transition: 'all 0.3s ease',
+                        transform: esteAbriendo && !cofreAbierto ? 'rotate(-5deg) scale(1.05)' : 'scale(1)',
+                        mixBlendMode: 'lighten',
+                      }}
+                    />
+                  </div>
                   <span style={{ fontSize: '0.68rem', fontWeight: 700, color: cfg.color }}>
                     {cfg.label}
                   </span>
@@ -268,6 +278,18 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
           40%      { transform: scale(1.1) rotate(6deg); }
           60%      { transform: scale(1.1) rotate(-4deg); }
           80%      { transform: scale(1.1) rotate(4deg); }
+        }
+        @keyframes cofre-glow-comun {
+          0%,100% { box-shadow: 0 0 12px rgba(125,138,110,0.4), 0 0 28px rgba(125,138,110,0.2); }
+          50%     { box-shadow: 0 0 22px rgba(125,138,110,0.7), 0 0 50px rgba(125,138,110,0.35); }
+        }
+        @keyframes cofre-glow-raro {
+          0%,100% { box-shadow: 0 0 14px rgba(61,107,148,0.5), 0 0 32px rgba(61,107,148,0.25); }
+          50%     { box-shadow: 0 0 26px rgba(61,107,148,0.85), 0 0 60px rgba(61,107,148,0.45); }
+        }
+        @keyframes cofre-glow-epico {
+          0%,100% { box-shadow: 0 0 16px rgba(107,61,142,0.6), 0 0 40px rgba(107,61,142,0.3); }
+          50%     { box-shadow: 0 0 30px rgba(107,61,142,1),   0 0 70px rgba(107,61,142,0.55); }
         }
       `}</style>
 
