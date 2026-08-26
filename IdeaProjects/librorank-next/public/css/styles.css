@@ -1902,6 +1902,15 @@ textarea.form-control {
     scrollbar-color: rgba(212,175,55,0.3) transparent;
     margin-bottom: 0 !important;
   }
+  /* Evitar que las cartas se compriman — necesario para que aparezca el scroll */
+  .cartas-grid > div {
+    flex-shrink: 0 !important;
+  }
+  /* Permitir que el scroll desborde el contenedor padre */
+  .coleccion-seccion,
+  .coleccion-seccion-inner {
+    overflow-x: visible !important;
+  }
   .cartas-grid::-webkit-scrollbar { height: 3px; }
   .cartas-grid::-webkit-scrollbar-track { background: transparent; }
   .cartas-grid::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.3); border-radius: 99px; }
