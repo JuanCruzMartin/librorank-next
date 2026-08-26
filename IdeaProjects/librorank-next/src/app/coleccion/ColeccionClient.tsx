@@ -484,6 +484,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                 </div>
 
                 <div className="coleccion-seccion-inner" style={{ padding: '1rem 1.25rem' }}>
+                  <div className="cartas-grid-wrapper">
                   <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: faltantes.length > 0 ? '1rem' : 0 }}>
                     {cartasCol.map(carta => {
                       const tengo = coleccion.includes(carta.id)
@@ -499,6 +500,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                         </div>
                       )
                     })}
+                  </div>
                   </div>
 
                   {faltantes.length > 0 && (
@@ -564,6 +566,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                   )}
                 </div>
 
+                <div className="cartas-grid-wrapper">
                 <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.85rem' }}>
                   {cartasDeRareza.map(carta => {
                     const tengo = coleccion.includes(carta.id)
@@ -579,6 +582,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                       </div>
                     )
                   })}
+                </div>
                 </div>
               </div>
             )

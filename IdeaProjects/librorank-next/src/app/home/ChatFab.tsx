@@ -47,6 +47,13 @@ export default function ChatFab() {
           box-shadow: 0 0 0 3px rgba(52,152,219,0.8), 0 8px 32px rgba(0,0,0,0.6) !important;
           transform: scale(1.06);
         }
+        .chat-fab-label {
+          display: inline;
+        }
+        @media (max-width: 640px) {
+          .chat-fab-label { display: none; }
+          .chat-fab-btn { padding: 0.75rem !important; border-radius: 50% !important; }
+        }
       `}</style>
 
       <Link
@@ -74,7 +81,7 @@ export default function ChatFab() {
           transition: 'transform 0.2s',
         }}
       >
-        <ChatCircleDots size={20} weight="duotone" />
+        <ChatCircleDots size={22} weight="duotone" />
         {noLeidos > 0 ? (
           <span style={{
             background: '#e74c3c', color: '#fff', borderRadius: '50%',
@@ -84,7 +91,7 @@ export default function ChatFab() {
             {noLeidos > 9 ? '9+' : noLeidos}
           </span>
         ) : (
-          <span>Mensajes</span>
+          <span className="chat-fab-label">Mensajes</span>
         )}
       </Link>
     </>

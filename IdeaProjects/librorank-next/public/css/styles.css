@@ -1886,30 +1886,33 @@ textarea.form-control {
   /* Ocultar el contador X/Y en los chips del sidebar mobile */
   .coleccion-sidebar > button > span:last-child { display: none; }
 
-  /* Sección de colección: permitir overflow para scroll horizontal */
-  .coleccion-seccion { overflow: visible !important; }
-  .coleccion-seccion-inner { padding: 0.75rem 0 0.75rem 0.75rem !important; }
+  /* Sección de colección: el scroll lo maneja cartas-grid-wrapper */
+  .coleccion-seccion { overflow: hidden !important; }
+  .coleccion-seccion-inner { padding: 0.5rem 0 0.5rem 0 !important; overflow: hidden !important; }
 
-  /* Cards: scroll horizontal en lugar de wrap */
+  /* Wrapper de scroll — contenedor real del scroll horizontal */
+  .cartas-grid-wrapper {
+    overflow-x: scroll !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    padding: 0.5rem 0.75rem 0.75rem 0.75rem !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .cartas-grid-wrapper::-webkit-scrollbar { display: none; }
+
+  /* Cards: fila sin wrap */
   .cartas-grid {
     flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 0.75rem !important;
-    padding-right: 0.75rem;
+    overflow: visible !important;
+    padding: 0 !important;
     gap: 0.5rem !important;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(212,175,55,0.3) transparent;
     margin-bottom: 0 !important;
+    width: max-content !important;
   }
-  /* Evitar que las cartas se compriman — necesario para que aparezca el scroll */
   .cartas-grid > div {
     flex-shrink: 0 !important;
-  }
-  /* Permitir que el scroll desborde el contenedor padre */
-  .coleccion-seccion,
-  .coleccion-seccion-inner {
-    overflow-x: visible !important;
   }
   .cartas-grid::-webkit-scrollbar { height: 3px; }
   .cartas-grid::-webkit-scrollbar-track { background: transparent; }
