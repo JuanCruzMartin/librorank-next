@@ -1886,33 +1886,30 @@ textarea.form-control {
   /* Ocultar el contador X/Y en los chips del sidebar mobile */
   .coleccion-sidebar > button > span:last-child { display: none; }
 
-  /* Sección de colección: el scroll lo maneja cartas-grid-wrapper */
+  /* Sección de colección: overflow normal */
   .coleccion-seccion { overflow: hidden !important; }
-  .coleccion-seccion-inner { padding: 0.5rem 0 0.5rem 0 !important; overflow: hidden !important; }
+  .coleccion-seccion-inner { padding: 0.75rem !important; }
 
-  /* Wrapper de scroll — contenedor real del scroll horizontal */
-  .cartas-grid-wrapper {
-    overflow-x: scroll !important;
-    overflow-y: visible !important;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-x;
-    padding: 0.5rem 0.75rem 0.75rem 0.75rem !important;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  .cartas-grid-wrapper::-webkit-scrollbar { display: none; }
+  /* Wrapper: sin scroll horizontal */
+  .cartas-grid-wrapper { width: 100%; }
 
-  /* Cards: fila sin wrap */
+  /* Cards: grilla de 2 por fila en mobile */
   .cartas-grid {
-    flex-wrap: nowrap !important;
-    overflow: visible !important;
-    padding: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    flex-wrap: unset !important;
     gap: 0.5rem !important;
-    margin-bottom: 0 !important;
-    width: max-content !important;
+    width: 100% !important;
+    overflow: visible !important;
   }
   .cartas-grid > div {
-    flex-shrink: 0 !important;
+    width: 100% !important;
+    flex-shrink: unset !important;
+  }
+  /* CartaPersonaje dentro del grid ocupa todo el ancho disponible */
+  .cartas-grid > div > * {
+    width: 100% !important;
+    max-width: 100% !important;
   }
   .cartas-grid::-webkit-scrollbar { height: 3px; }
   .cartas-grid::-webkit-scrollbar-track { background: transparent; }
