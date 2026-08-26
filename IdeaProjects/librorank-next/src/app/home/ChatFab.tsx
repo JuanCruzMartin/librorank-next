@@ -47,12 +47,15 @@ export default function ChatFab() {
           box-shadow: 0 0 0 3px rgba(52,152,219,0.8), 0 8px 32px rgba(0,0,0,0.6) !important;
           transform: scale(1.06);
         }
-        .chat-fab-label {
-          display: inline;
-        }
+        .chat-fab-label { display: inline; }
         @media (max-width: 640px) {
-          .chat-fab-label { display: none; }
-          .chat-fab-btn { padding: 0.75rem !important; border-radius: 50% !important; }
+          .chat-fab-btn {
+            padding: 0.7rem 1.2rem !important;
+            border-radius: 50px !important;
+            width: auto !important;
+            display: inline-flex !important;
+            align-self: flex-end !important;
+          }
         }
       `}</style>
 
@@ -79,6 +82,7 @@ export default function ChatFab() {
           textDecoration: 'none',
           boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
           transition: 'transform 0.2s',
+          width: 'fit-content',
         }}
       >
         <ChatCircleDots size={22} weight="duotone" />

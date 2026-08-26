@@ -1893,23 +1893,26 @@ textarea.form-control {
   /* Wrapper: sin scroll horizontal */
   .cartas-grid-wrapper { width: 100%; }
 
-  /* Cards: grilla de 2 por fila en mobile */
+  /* Cards: grilla de 3 por fila con zoom para escalar */
   .cartas-grid {
     display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(3, 1fr) !important;
     flex-wrap: unset !important;
-    gap: 0.5rem !important;
+    gap: 0.4rem !important;
     width: 100% !important;
     overflow: visible !important;
   }
   .cartas-grid > div {
-    width: 100% !important;
     flex-shrink: unset !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
   }
-  /* CartaPersonaje dentro del grid ocupa todo el ancho disponible */
-  .cartas-grid > div > * {
-    width: 100% !important;
-    max-width: 100% !important;
+  /* Escalar la carta al ancho de la celda del grid */
+  .cartas-grid > div > div {
+    zoom: 0.59 !important;
+    flex-shrink: 0 !important;
   }
   .cartas-grid::-webkit-scrollbar { height: 3px; }
   .cartas-grid::-webkit-scrollbar-track { background: transparent; }
