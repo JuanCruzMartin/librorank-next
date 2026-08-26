@@ -5,14 +5,18 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChatCircleDots } from '@phosphor-icons/react'
 
+const PAGINAS_AUTH = ['/login', '/signup', '/forgot-password', '/reset-password']
+
 export default function ChatFab() {
   const [noLeidos, setNoLeidos] = useState(0)
+  const [autenticado, setAutenticado] = useState(false)
   const pathname = usePathname()
 
   async function fetchNoLeidos() {
     try {
       const res = await fetch('/api/chat?tipo=noLeidos')
-      if (!res.ok) return
+      if (!res.ok) { setAutenticado(false); return }
+      setAutenticado(true)
       const data = await res.json()
       setNoLeidos(data.count ?? 0)
     } catch { /* silencioso */ }
@@ -24,8 +28,9 @@ export default function ChatFab() {
     return () => clearInterval(interval)
   }, [])
 
-  // En la página de chat no mostrar el FAB
+  if (!autenticado) return null
   if (pathname.startsWith('/chat')) return null
+  if (PAGINAS_AUTH.some(p => pathname.startsWith(p))) return null
 
   return (
     <>

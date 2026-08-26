@@ -237,26 +237,33 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                   }}
                 >
                   <div style={{
-                    width: 80, height: 80,
-                    borderRadius: 12,
-                    background: '#1a1a2e',
+                    width: 76, height: 76,
+                    borderRadius: 14,
+                    background: `radial-gradient(circle at 40% 35%, ${cfg.color}22, #0d0d1a)`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: `0 0 18px ${cfg.glow}, 0 0 40px ${cfg.glow}, inset 0 0 12px ${cfg.color}22`,
+                    boxShadow: `0 0 18px ${cfg.glow}, 0 0 40px ${cfg.glow}`,
                     animation: !esteAbriendo ? `cofre-glow-${cofre.tipo} 2s ease-in-out infinite` : 'none',
                     transition: 'all 0.3s ease',
                   }}>
-                    <img
-                      src={esteAbriendo && cofreAbierto ? '/cofre-abierto.jpg' : '/cofre-cerrado.jpg'}
-                      alt={cfg.label}
-                      style={{
-                        width: 64, height: 64,
-                        objectFit: 'contain',
-                        filter: `drop-shadow(0 0 6px ${cfg.color})`,
-                        transition: 'all 0.3s ease',
-                        transform: esteAbriendo && !cofreAbierto ? 'rotate(-5deg) scale(1.05)' : 'scale(1)',
-                        mixBlendMode: 'lighten',
-                      }}
-                    />
+                    {esteAbriendo && cofreAbierto ? (
+                      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                        <rect x="4" y="26" width="40" height="18" rx="3" fill={cfg.color} opacity="0.9"/>
+                        <rect x="4" y="16" width="40" height="12" rx="3" fill={cfg.color}/>
+                        <rect x="18" y="22" width="12" height="8" rx="2" fill="#0d0d1a" opacity="0.6"/>
+                        <path d="M24 4 L28 14 L38 14 L30 20 L33 30 L24 24 L15 30 L18 20 L10 14 L20 14 Z" fill="#FFD700" opacity="0.95"/>
+                      </svg>
+                    ) : (
+                      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                        <rect x="4" y="26" width="40" height="18" rx="3" fill={cfg.color} opacity="0.85"/>
+                        <rect x="4" y="16" width="40" height="12" rx="3" fill={cfg.color}/>
+                        <rect x="6" y="18" width="36" height="8" rx="2" fill="#0d0d1a" opacity="0.25"/>
+                        <rect x="18" y="22" width="12" height="8" rx="2" fill="#0d0d1a" opacity="0.5"/>
+                        <circle cx="24" cy="26" r="3" fill="#FFD700" opacity="0.9"/>
+                        <line x1="4" y1="26" x2="44" y2="26" stroke="#0d0d1a" strokeWidth="1.5" opacity="0.4"/>
+                        <rect x="8" y="30" width="6" height="10" rx="1" fill="#0d0d1a" opacity="0.15"/>
+                        <rect x="34" y="30" width="6" height="10" rx="1" fill="#0d0d1a" opacity="0.15"/>
+                      </svg>
+                    )}
                   </div>
                   <span style={{ fontSize: '0.68rem', fontWeight: 700, color: cfg.color }}>
                     {cfg.label}
