@@ -482,9 +482,8 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                   </div>
                 </div>
 
-                <div className="coleccion-seccion-inner" style={{ padding: '1rem 1.25rem' }}>
-                  <div className="cartas-grid-wrapper">
-                  <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: faltantes.length > 0 ? '1rem' : 0 }}>
+                <div className="coleccion-seccion-inner" style={{ padding: '1rem 0' }}>
+                  <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: faltantes.length > 0 ? '1rem' : 0, padding: '0 1.25rem' }}>
                     {cartasCol.map(carta => {
                       const tengo = coleccion.includes(carta.id)
                       const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
@@ -499,7 +498,6 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                         </div>
                       )
                     })}
-                  </div>
                   </div>
 
                   {faltantes.length > 0 && (
@@ -565,8 +563,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                   )}
                 </div>
 
-                <div className="cartas-grid-wrapper">
-                <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.85rem' }}>
+                <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.85rem', padding: '0 0.25rem' }}>
                   {cartasDeRareza.map(carta => {
                     const tengo = coleccion.includes(carta.id)
                     const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
@@ -581,7 +578,6 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                       </div>
                     )
                   })}
-                </div>
                 </div>
               </div>
             )
