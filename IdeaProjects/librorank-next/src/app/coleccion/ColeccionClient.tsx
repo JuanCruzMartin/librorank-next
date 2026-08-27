@@ -57,6 +57,17 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
   const [cofres, setCofres] = useState<Cofre[]>([])
   const [abriendoCofre, setAbriendoCofre] = useState<number | null>(null)
   const [cofreAbierto, setCofreAbierto] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [carouselIdx, setCarouselIdx] = useState<Record<string, number>>({})
+
+  const CARDS_PER_PAGE = 2
+
+  function prevPage(key: string) {
+    setCarouselIdx(p => ({ ...p, [key]: Math.max(0, (p[key] ?? 0) - CARDS_PER_PAGE) }))
+  }
+  function nextPage(key: string, total: number) {
+    setCarouselIdx(p => ({ ...p, [key]: Math.min(total - CARDS_PER_PAGE, (p[key] ?? 0) + CARDS_PER_PAGE) }))
+  }
 
   const totalObtenidas = new Set(coleccion).size
 
@@ -79,6 +90,13 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
         setProximaDiaria(new Date(data.proxima))
       })
       .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
   }, [])
 
   useEffect(() => {
@@ -482,25 +500,45 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                   </div>
                 </div>
 
-                <div className="coleccion-seccion-inner" style={{ padding: '1rem 0' }}>
-                  <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%', paddingBottom: 4 } as React.CSSProperties}>
-                  <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: faltantes.length > 0 ? '1rem' : 0, padding: '0 1.25rem' }}>
-                    {cartasCol.map(carta => {
-                      const tengo = coleccion.includes(carta.id)
-                      const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
-                      return (
-                        <div
-                          key={carta.id}
-                          title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`}
-                          onClick={() => tengo && setAmpliada(carta)}
-                          style={{ cursor: tengo ? 'pointer' : 'default' }}
-                        >
-                          <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} />
+                <div className="coleccion-seccion-inner" style={{ padding: '0.75rem 0' }}>
+                  {isMobile ? (() => {
+                    const idx = carouselIdx[col.id] ?? 0
+                    const pagina = cartasCol.slice(idx, idx + CARDS_PER_PAGE)
+                    return (
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0 0.75rem' }}>
+                          <button onClick={() => prevPage(col.id)} disabled={idx === 0} style={{ width: 40, height: 40, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.07)', color: '#fff', fontSize: '1.4rem', cursor: idx === 0 ? 'not-allowed' : 'pointer', opacity: idx === 0 ? 0.3 : 1, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+                          <div style={{ display: 'flex', gap: '0.5rem', flex: 1, justifyContent: 'center' }}>
+                            {pagina.map(carta => {
+                              const tengo = coleccion.includes(carta.id)
+                              const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
+                              return (
+                                <div key={carta.id} onClick={() => tengo && setAmpliada(carta)} style={{ cursor: tengo ? 'pointer' : 'default', zoom: 0.82 }}>
+                                  <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} />
+                                </div>
+                              )
+                            })}
+                          </div>
+                          <button onClick={() => nextPage(col.id, cartasCol.length)} disabled={idx + CARDS_PER_PAGE >= cartasCol.length} style={{ width: 40, height: 40, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.07)', color: '#fff', fontSize: '1.4rem', cursor: idx + CARDS_PER_PAGE >= cartasCol.length ? 'not-allowed' : 'pointer', opacity: idx + CARDS_PER_PAGE >= cartasCol.length ? 0.3 : 1, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
                         </div>
-                      )
-                    })}
-                  </div>
-                  </div>
+                        <p style={{ textAlign: 'center', fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>
+                          {idx + 1}–{Math.min(idx + CARDS_PER_PAGE, cartasCol.length)} de {cartasCol.length}
+                        </p>
+                      </div>
+                    )
+                  })() : (
+                    <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: faltantes.length > 0 ? '1rem' : 0, padding: '0 1.25rem' }}>
+                      {cartasCol.map(carta => {
+                        const tengo = coleccion.includes(carta.id)
+                        const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
+                        return (
+                          <div key={carta.id} title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`} onClick={() => tengo && setAmpliada(carta)} style={{ cursor: tengo ? 'pointer' : 'default' }}>
+                            <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
 
                   {faltantes.length > 0 && (
                     <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.75rem', padding: '0.75rem 1.25rem 0' }}>
@@ -565,24 +603,44 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                   )}
                 </div>
 
-                <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%', paddingBottom: 4 } as React.CSSProperties}>
-                <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.85rem' }}>
-                  {cartasDeRareza.map(carta => {
-                    const tengo = coleccion.includes(carta.id)
-                    const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
-                    return (
-                      <div
-                        key={carta.id}
-                        title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`}
-                        onClick={() => tengo && setAmpliada(carta)}
-                        style={{ cursor: tengo ? 'pointer' : 'default' }}
-                      >
-                        <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} />
+                {isMobile ? (() => {
+                  const idx = carouselIdx[rareza] ?? 0
+                  const pagina = cartasDeRareza.slice(idx, idx + CARDS_PER_PAGE)
+                  return (
+                    <div style={{ marginTop: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0 0.25rem' }}>
+                        <button onClick={() => prevPage(rareza)} disabled={idx === 0} style={{ width: 40, height: 40, borderRadius: '50%', border: `1px solid ${r.color}40`, background: `${r.color}15`, color: '#fff', fontSize: '1.4rem', cursor: idx === 0 ? 'not-allowed' : 'pointer', opacity: idx === 0 ? 0.3 : 1, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+                        <div style={{ display: 'flex', gap: '0.5rem', flex: 1, justifyContent: 'center' }}>
+                          {pagina.map(carta => {
+                            const tengo = coleccion.includes(carta.id)
+                            const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
+                            return (
+                              <div key={carta.id} onClick={() => tengo && setAmpliada(carta)} style={{ cursor: tengo ? 'pointer' : 'default', zoom: 0.82 }}>
+                                <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} />
+                              </div>
+                            )
+                          })}
+                        </div>
+                        <button onClick={() => nextPage(rareza, cartasDeRareza.length)} disabled={idx + CARDS_PER_PAGE >= cartasDeRareza.length} style={{ width: 40, height: 40, borderRadius: '50%', border: `1px solid ${r.color}40`, background: `${r.color}15`, color: '#fff', fontSize: '1.4rem', cursor: idx + CARDS_PER_PAGE >= cartasDeRareza.length ? 'not-allowed' : 'pointer', opacity: idx + CARDS_PER_PAGE >= cartasDeRareza.length ? 0.3 : 1, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
                       </div>
-                    )
-                  })}
-                </div>
-                </div>
+                      <p style={{ textAlign: 'center', fontSize: '0.65rem', color: r.color, opacity: 0.5, marginTop: 6 }}>
+                        {idx + 1}–{Math.min(idx + CARDS_PER_PAGE, cartasDeRareza.length)} de {cartasDeRareza.length}
+                      </p>
+                    </div>
+                  )
+                })() : (
+                  <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.85rem' }}>
+                    {cartasDeRareza.map(carta => {
+                      const tengo = coleccion.includes(carta.id)
+                      const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
+                      return (
+                        <div key={carta.id} title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`} onClick={() => tengo && setAmpliada(carta)} style={{ cursor: tengo ? 'pointer' : 'default' }}>
+                          <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} />
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             )
           })}

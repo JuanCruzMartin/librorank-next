@@ -1886,22 +1886,6 @@ textarea.form-control {
   /* Ocultar el contador X/Y en los chips del sidebar mobile */
   .coleccion-sidebar > button > span:last-child { display: none; }
 
-  /* Sección: sin overflow que bloquee al scroll wrapper hijo */
-  .coleccion-seccion { overflow: visible !important; }
-  .coleccion-seccion-inner { overflow: visible !important; }
-
-  /* Cartas: fila horizontal que desborda el wrapper (el wrapper hace el scroll) */
-  .cartas-grid {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    width: max-content !important;
-    min-width: 100% !important;
-    gap: 0.5rem !important;
-  }
-
-  /* Cada carta no se encoge */
-  .cartas-grid > div {
-    flex-shrink: 0 !important;
-    zoom: 0.88 !important;
-  }
+  /* Sección de colección mobile */
+  .coleccion-seccion { overflow: hidden; }
 }
