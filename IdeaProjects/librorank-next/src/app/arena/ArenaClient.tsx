@@ -425,8 +425,19 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
               {sala.map(d => {
                 const carta = cartasMap[d.carta_retador]
                 const color = carta ? RAREZA_COLOR[carta.rareza] : '#9e9e9e'
+                const rarezaLabel = carta?.rareza?.toUpperCase() ?? '?'
                 return (
-                  <div key={d.id} className="card p-3" style={{ border: `1px solid ${color}30` }}>
+                  <div key={d.id} className="card p-3" style={{ border: `1px solid ${color}40`, position: 'relative' }}>
+                    {/* Badge de rareza */}
+                    <div style={{
+                      position: 'absolute', top: 10, right: 10,
+                      background: `${color}22`, border: `1px solid ${color}60`,
+                      borderRadius: 20, padding: '2px 10px',
+                      fontSize: '0.62rem', fontWeight: 800, color, letterSpacing: '0.5px',
+                    }}>
+                      {rarezaLabel}
+                    </div>
+
                     <div className="d-flex align-items-center gap-3">
                       {/* Avatar retador */}
                       <div style={{ flexShrink: 0 }}>
@@ -442,12 +453,15 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
                       {/* Info */}
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.9rem' }}>{d.retador_nombre}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>@{d.retador_username} · desafía con:</div>
+                        <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>@{d.retador_username} · apuesta:</div>
                         {carta && (
                           <div style={{ fontSize: '0.75rem', color, fontWeight: 700, marginTop: 2 }}>
-                            {carta.simbolo} {carta.nombre} <span style={{ fontSize: '0.65rem', opacity: 0.7, textTransform: 'uppercase' }}>({carta.rareza})</span>
+                            {carta.simbolo} {carta.nombre}
                           </div>
                         )}
+                        <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                          Necesitás una carta <span style={{ color, fontWeight: 700 }}>{carta?.rareza}</span>
+                        </div>
                       </div>
 
                       {/* Carta preview */}
@@ -531,49 +545,73 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
             <h5 className="font-title mb-1" style={{ color: '#d4af37' }}>
               {modal === 'crear' ? '⚔️ Elegí tu carta de apuesta' : `⚔️ Aceptar duelo de ${dueloParaUnirse?.retador_nombre}`}
             </h5>
-            {modal === 'unirse' && dueloParaUnirse && (
-              <div className="d-flex align-items-center gap-2 mb-3">
-                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>Ellos apuestan:</span>
-                <MiniCarta cartaId={dueloParaUnirse.carta_retador} size="sm" />
-                <span style={{ fontSize: '0.75rem', color: '#fff', fontWeight: 700 }}>{cartasMap[dueloParaUnirse.carta_retador]?.nombre}</span>
-              </div>
-            )}
+            {modal === 'unirse' && dueloParaUnirse && (() => {
+              const cartaRival = cartasMap[dueloParaUnirse.carta_retador]
+              const colorRiv = cartaRival ? RAREZA_COLOR[cartaRival.rareza] : '#9e9e9e'
+              return (
+                <div style={{ background: `${colorRiv}12`, border: `1px solid ${colorRiv}35`, borderRadius: 10, padding: '0.6rem 0.85rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <MiniCarta cartaId={dueloParaUnirse.carta_retador} size="sm" />
+                  <div>
+                    <div style={{ fontSize: '0.72rem', color: colorRiv, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Duelo {cartaRival?.rareza}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#fff', fontWeight: 700 }}>{cartaRival?.nombre}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)' }}>
+                      Solo podés apostar una carta <span style={{ color: colorRiv, fontWeight: 700 }}>{cartaRival?.rareza}</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
             <p className="text-muted small mb-3">Si perdés, tu rival se lleva esta carta. Elegí con cuidado.</p>
 
-            {misCartas.length === 0 ? (
-              <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '2rem 0' }}>
-                No tenés cartas en tu colección todavía.
-              </p>
-            ) : (
-              <div style={{ overflowY: 'auto', flex: 1 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '0.75rem', padding: '0.25rem' }}>
-                  {misCartas.map(c => {
-                    const color = RAREZA_COLOR[c.rareza]
-                    const sel = cartaSeleccionada === c.id
-                    return (
-                      <button
-                        key={c.id}
-                        onClick={() => setCartaSeleccionada(c.id)}
-                        style={{
-                          border: sel ? `2px solid ${color}` : '2px solid rgba(255,255,255,0.08)',
-                          borderRadius: 10, padding: 4, background: sel ? `${color}18` : 'transparent',
-                          cursor: 'pointer', transform: sel ? 'scale(1.05)' : 'none',
-                          transition: 'all 0.15s', boxShadow: sel ? `0 0 12px ${color}50` : 'none',
-                        }}
-                      >
-                        <div style={{ width: '100%', aspectRatio: '2/3', borderRadius: 7, overflow: 'hidden', position: 'relative', background: '#111' }}>
-                          <img src={c.imagen} alt={c.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${c.posicionX}% ${c.posicionY}%` }} />
-                        </div>
-                        <div style={{ fontSize: '0.58rem', color: sel ? '#fff' : 'rgba(255,255,255,0.5)', marginTop: 3, fontWeight: sel ? 700 : 400, lineHeight: 1.2 }}>
-                          {c.nombre}
-                        </div>
-                        <div style={{ fontSize: '0.52rem', color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.rareza}</div>
-                      </button>
-                    )
-                  })}
+            {(() => {
+              const rarezaRequerida = modal === 'unirse' && dueloParaUnirse
+                ? cartasMap[dueloParaUnirse.carta_retador]?.rareza
+                : null
+              const cartasFiltradas = rarezaRequerida
+                ? misCartas.filter(c => c.rareza === rarezaRequerida)
+                : misCartas
+
+              if (cartasFiltradas.length === 0) return (
+                <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '2rem 0' }}>
+                  {rarezaRequerida
+                    ? `No tenés cartas ${rarezaRequerida}s en tu colección para apostar.`
+                    : 'No tenés cartas en tu colección todavía.'}
+                </p>
+              )
+
+              return (
+                <div style={{ overflowY: 'auto', flex: 1 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '0.75rem', padding: '0.25rem' }}>
+                    {cartasFiltradas.map(c => {
+                      const color = RAREZA_COLOR[c.rareza]
+                      const sel = cartaSeleccionada === c.id
+                      return (
+                        <button
+                          key={c.id}
+                          onClick={() => setCartaSeleccionada(c.id)}
+                          style={{
+                            border: sel ? `2px solid ${color}` : '2px solid rgba(255,255,255,0.08)',
+                            borderRadius: 10, padding: 4, background: sel ? `${color}18` : 'transparent',
+                            cursor: 'pointer', transform: sel ? 'scale(1.05)' : 'none',
+                            transition: 'all 0.15s', boxShadow: sel ? `0 0 12px ${color}50` : 'none',
+                          }}
+                        >
+                          <div style={{ width: '100%', aspectRatio: '2/3', borderRadius: 7, overflow: 'hidden', position: 'relative', background: '#111' }}>
+                            <img src={c.imagen} alt={c.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${c.posicionX}% ${c.posicionY}%` }} />
+                          </div>
+                          <div style={{ fontSize: '0.58rem', color: sel ? '#fff' : 'rgba(255,255,255,0.5)', marginTop: 3, fontWeight: sel ? 700 : 400, lineHeight: 1.2 }}>
+                            {c.nombre}
+                          </div>
+                          <div style={{ fontSize: '0.52rem', color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.rareza}</div>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              )
+            })()}
 
             <div className="d-flex gap-2 mt-3">
               <button onClick={() => { setModal(null); setCartaSeleccionada(null) }} style={{ flex: 1, padding: '0.6rem', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>

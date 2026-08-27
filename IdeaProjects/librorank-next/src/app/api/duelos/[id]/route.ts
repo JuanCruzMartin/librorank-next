@@ -58,6 +58,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'No tenés esa carta' }, { status: 400 })
     }
 
+    // Verificar rareza igual a la carta del retador
+    const { CARTAS } = await import('@/lib/cartas')
+    const duelo = await obtenerDueloPorId(dueloId)
+    if (!duelo) return NextResponse.json({ error: 'Duelo no encontrado' }, { status: 404 })
+    const cartaRetador = CARTAS.find(c => c.id === duelo.carta_retador)
+    const cartaRival = CARTAS.find(c => c.id === cartaId)
+    if (cartaRetador && cartaRival && cartaRetador.rareza !== cartaRival.rareza) {
+      return NextResponse.json({ error: `Solo podés apostar una carta ${cartaRetador.rareza}` }, { status: 400 })
+    }
+
     // Elegir pregunta aleatoria
     const preguntaIdx = Math.floor(Math.random() * PREGUNTAS.length)
 
