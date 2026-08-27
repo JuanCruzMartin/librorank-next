@@ -9,6 +9,17 @@ const RAREZA_COLOR: Record<string, string> = {
   legendario: '#d4af37', mitico: '#e74c3c',
 }
 
+function seededShuffle<T>(arr: T[], seed: number): T[] {
+  const result = [...arr]
+  let s = seed
+  for (let i = result.length - 1; i > 0; i--) {
+    s = (s * 1664525 + 1013904223) & 0x7fffffff
+    const j = s % (i + 1)
+    ;[result[i], result[j]] = [result[j], result[i]]
+  }
+  return result
+}
+
 interface Props {
   usuarioId: number
   salaInicial: Duelo[]
@@ -36,7 +47,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
   const [modal, setModal] = useState<'crear' | 'unirse' | null>(null)
   const [dueloParaUnirse, setDueloParaUnirse] = useState<Duelo | null>(null)
   const [cargando, setCargando] = useState(false)
-  const [timer, setTimer] = useState<number>(60)
+  const [timer, setTimer] = useState<number>(25)
   const [respondioEarly, setRespondioEarly] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -85,7 +96,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
   function clearTimer() { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null } }
 
   function iniciarTimer() {
-    setTimer(60)
+    setTimer(25)
     timerRef.current = setInterval(() => {
       setTimer(prev => {
         if (prev <= 1) { clearTimer(); return 0 }
@@ -317,38 +328,53 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
         </div>
 
         {/* Pregunta */}
-        <div className="card p-4 mb-3">
+        <div
+          className="card p-4 mb-3"
+          onCopy={e => e.preventDefault()}
+          onContextMenu={e => e.preventDefault()}
+          style={{ userSelect: 'none' } as React.CSSProperties}
+        >
           <div style={{ fontSize: '0.65rem', color: '#d4af37', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
             ⚔️ Pregunta literaria
           </div>
-          <p style={{ fontSize: '1rem', color: '#fff', fontWeight: 600, lineHeight: 1.5, marginBottom: '1.25rem' }}>
+          <p style={{ fontSize: '1rem', color: '#fff', fontWeight: 600, lineHeight: 1.5, marginBottom: '1.25rem', pointerEvents: 'none' }}>
             {pregunta.texto}
           </p>
 
-          <div className="d-flex flex-column gap-2">
-            {pregunta.opciones.map((op, i) => (
-              <button
-                key={i}
-                onClick={() => enviarRespuesta(i)}
-                disabled={respuestaSeleccionada !== null || timer === 0}
-                style={{
-                  padding: '0.7rem 1rem', borderRadius: 10, border: borderOpcion(i),
-                  background: colorOpcion(i), color: '#fff', textAlign: 'left',
-                  fontSize: '0.88rem', cursor: respuestaSeleccionada !== null ? 'default' : 'pointer',
-                  transition: 'all 0.15s', fontWeight: respuestaSeleccionada === i ? 700 : 400,
-                  display: 'flex', alignItems: 'center', gap: '0.5rem',
-                }}
-              >
-                <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'rgba(255,255,255,0.4)', minWidth: 18 }}>
-                  {String.fromCharCode(65 + i)}
-                </span>
-                {op}
-                {respuestaSeleccionada !== null && pregunta.respuesta !== undefined && i === pregunta.respuesta && (
-                  <span style={{ marginLeft: 'auto', color: '#27ae60' }}>✓</span>
-                )}
-              </button>
-            ))}
-          </div>
+          {(() => {
+            const shuffledIdx = seededShuffle([0, 1, 2, 3], dueloActivo!.id)
+            const opcionesOrdenadas = shuffledIdx.map(i => pregunta.opciones[i])
+            return (
+              <div className="d-flex flex-column gap-2">
+                {opcionesOrdenadas.map((op, si) => {
+                  const originalIdx = shuffledIdx[si]
+                  return (
+                    <button
+                      key={si}
+                      onClick={() => enviarRespuesta(originalIdx)}
+                      disabled={respuestaSeleccionada !== null || timer === 0}
+                      style={{
+                        padding: '0.7rem 1rem', borderRadius: 10, border: borderOpcion(originalIdx),
+                        background: colorOpcion(originalIdx), color: '#fff', textAlign: 'left',
+                        fontSize: '0.88rem', cursor: respuestaSeleccionada !== null ? 'default' : 'pointer',
+                        transition: 'all 0.15s', fontWeight: respuestaSeleccionada === originalIdx ? 700 : 400,
+                        display: 'flex', alignItems: 'center', gap: '0.5rem',
+                        userSelect: 'none',
+                      }}
+                    >
+                      <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'rgba(255,255,255,0.4)', minWidth: 18 }}>
+                        {String.fromCharCode(65 + si)}
+                      </span>
+                      {op}
+                      {respuestaSeleccionada !== null && pregunta.respuesta !== undefined && originalIdx === pregunta.respuesta && (
+                        <span style={{ marginLeft: 'auto', color: '#27ae60' }}>✓</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            )
+          })()}
 
           {respondioEarly && respuestaSeleccionada !== null && resultado === null && (
             <div style={{ marginTop: '1rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>
