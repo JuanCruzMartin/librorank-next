@@ -49,6 +49,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
   const [cargando, setCargando] = useState(false)
   const [timer, setTimer] = useState<number>(25)
   const [respondioEarly, setRespondioEarly] = useState(false)
+  const [cuentaRegresiva, setCuentaRegresiva] = useState<number | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -69,7 +70,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
 
     if (d.estado === 'en_curso' && data.pregunta && !pregunta) {
       setPregunta(data.pregunta)
-      iniciarTimer()
+      setCuentaRegresiva(3)
     }
 
     if (d.estado === 'terminado') {
@@ -112,12 +113,19 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
       // Cargar pregunta si ya está en curso
       if (dueloActivo.estado === 'en_curso') {
         fetch(`/api/duelos/${dueloActivo.id}`).then(r => r.json()).then(data => {
-          if (data.pregunta) { setPregunta(data.pregunta); iniciarTimer() }
+          if (data.pregunta) { setPregunta(data.pregunta); setCuentaRegresiva(3) }
         })
       }
     }
     return () => { clearPolling(); clearTimer() }
   }, [dueloActivo?.id])
+
+  useEffect(() => {
+    if (cuentaRegresiva === null) return
+    if (cuentaRegresiva === 0) { setCuentaRegresiva(null); iniciarTimer(); return }
+    const id = setTimeout(() => setCuentaRegresiva(c => (c ?? 1) - 1), 1000)
+    return () => clearTimeout(id)
+  }, [cuentaRegresiva])
 
   async function refrescarSala() {
     const res = await fetch('/api/duelos')
@@ -162,7 +170,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
       const res2 = await fetch(`/api/duelos/${dueloParaUnirse.id}`)
       const d2 = await res2.json()
       setDueloActivo(d2.duelo)
-      if (d2.pregunta) { setPregunta(d2.pregunta); iniciarTimer() }
+      if (d2.pregunta) { setPregunta(d2.pregunta); setCuentaRegresiva(3) }
     }
     setCargando(false)
   }
@@ -214,7 +222,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
     setRespuestaSeleccionada(null)
     setEsperandoRival(false)
     setRespondioEarly(false)
-    setTimer(60)
+    setTimer(25)
     refrescarSala()
   }
 
@@ -288,6 +296,37 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
         <button onClick={reiniciar} className="btn--brand" style={{ marginTop: '0.5rem' }}>
           Volver a la Arena
         </button>
+      </div>
+    )
+  }
+
+  // ── CUENTA REGRESIVA ──
+  if (dueloActivo?.estado === 'en_curso' && pregunta && cuentaRegresiva !== null && cuentaRegresiva > 0) {
+    const colores: Record<number, string> = { 3: '#27ae60', 2: '#e67e22', 1: '#e74c3c' }
+    const color = colores[cuentaRegresiva] ?? '#d4af37'
+    return (
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        minHeight: '60vh', gap: '1rem',
+      }}>
+        <div style={{
+          fontSize: '8rem', fontWeight: 900, color,
+          textShadow: `0 0 60px ${color}80`,
+          animation: 'cuentaAnim 0.9s ease-in-out',
+          lineHeight: 1,
+        }}>
+          {cuentaRegresiva}
+        </div>
+        <div style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', textTransform: 'uppercase' }}>
+          ¡Prepárate!
+        </div>
+        <style>{`
+          @keyframes cuentaAnim {
+            0% { transform: scale(1.8); opacity: 0 }
+            40% { transform: scale(1); opacity: 1 }
+            100% { transform: scale(0.85); opacity: 0.6 }
+          }
+        `}</style>
       </div>
     )
   }
