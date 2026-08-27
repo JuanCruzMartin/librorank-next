@@ -1886,23 +1886,18 @@ textarea.form-control {
   /* Ocultar el contador X/Y en los chips del sidebar mobile */
   .coleccion-sidebar > button > span:last-child { display: none; }
 
-  /* Sección y contenedor interno: sin overflow que bloquee el scroll hijo */
+  /* Sección: sin overflow que bloquee al scroll wrapper hijo */
   .coleccion-seccion { overflow: visible !important; }
   .coleccion-seccion-inner { overflow: visible !important; }
 
-  /* Cartas: scroll horizontal directo, igual que inventory-tabs */
+  /* Cartas: fila horizontal que desborda el wrapper (el wrapper hace el scroll) */
   .cartas-grid {
     display: flex !important;
     flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    width: 100% !important;
+    width: max-content !important;
+    min-width: 100% !important;
     gap: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
   }
-  .cartas-grid::-webkit-scrollbar { display: none !important; }
 
   /* Cada carta no se encoge */
   .cartas-grid > div {

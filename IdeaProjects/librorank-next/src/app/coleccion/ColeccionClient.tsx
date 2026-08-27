@@ -483,6 +483,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                 </div>
 
                 <div className="coleccion-seccion-inner" style={{ padding: '1rem 0' }}>
+                  <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%', paddingBottom: 4 } as React.CSSProperties}>
                   <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: faltantes.length > 0 ? '1rem' : 0, padding: '0 1.25rem' }}>
                     {cartasCol.map(carta => {
                       const tengo = coleccion.includes(carta.id)
@@ -499,9 +500,10 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                       )
                     })}
                   </div>
+                  </div>
 
                   {faltantes.length > 0 && (
-                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.75rem' }}>
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.75rem', padding: '0.75rem 1.25rem 0' }}>
                       <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)', fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
                         Te faltan {faltantes.length}
                       </p>
@@ -563,7 +565,8 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                   )}
                 </div>
 
-                <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.85rem', padding: '0 0.25rem' }}>
+                <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%', paddingBottom: 4 } as React.CSSProperties}>
+                <div className="cartas-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.85rem' }}>
                   {cartasDeRareza.map(carta => {
                     const tengo = coleccion.includes(carta.id)
                     const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
@@ -578,6 +581,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                       </div>
                     )
                   })}
+                </div>
                 </div>
               </div>
             )
