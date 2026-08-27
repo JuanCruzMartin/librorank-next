@@ -1886,33 +1886,36 @@ textarea.form-control {
   /* Ocultar el contador X/Y en los chips del sidebar mobile */
   .coleccion-sidebar > button > span:last-child { display: none; }
 
-  /* Sección de colección: overflow normal */
-  .coleccion-seccion { overflow: hidden !important; }
-  .coleccion-seccion-inner { padding: 0.75rem !important; }
+  /* Sección: sin overflow hidden para que el scroll funcione en touch */
+  .coleccion-seccion { overflow: visible !important; }
+  .coleccion-seccion-inner { overflow: visible !important; padding: 0 0 0.75rem 0 !important; }
 
-  /* Wrapper: sin scroll horizontal */
-  .cartas-grid-wrapper { width: 100%; }
-
-  /* Cards: grilla de 3 por fila con zoom para escalar */
-  .cartas-grid {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    flex-wrap: unset !important;
-    gap: 0.4rem !important;
+  /* Wrapper: contenedor del scroll tipo stories */
+  .cartas-grid-wrapper {
+    overflow-x: scroll !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-x !important;
+    padding: 0.5rem 0.75rem 0.75rem !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
     width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .cartas-grid-wrapper::-webkit-scrollbar { display: none !important; }
+
+  /* Cards: fila horizontal tipo stories, sin wrap */
+  .cartas-grid {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    width: max-content !important;
+    gap: 0.5rem !important;
     overflow: visible !important;
   }
+  /* Cada carta no se encoge y se escala un poco para ver 2+ a la vez */
   .cartas-grid > div {
-    flex-shrink: unset !important;
-    overflow: hidden !important;
-    display: flex !important;
-    align-items: flex-start !important;
-    justify-content: center !important;
-  }
-  /* Escalar la carta al ancho de la celda del grid */
-  .cartas-grid > div > div {
-    zoom: 0.59 !important;
     flex-shrink: 0 !important;
+    zoom: 0.88 !important;
   }
   .cartas-grid::-webkit-scrollbar { height: 3px; }
   .cartas-grid::-webkit-scrollbar-track { background: transparent; }

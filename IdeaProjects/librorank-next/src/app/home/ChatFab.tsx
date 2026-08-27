@@ -59,45 +59,43 @@ export default function ChatFab() {
         }
       `}</style>
 
-      <Link
-        href="/chat"
-        className="chat-fab-btn"
-        onClick={() => setNoLeidos(0)}
-        style={{
-          position: 'fixed',
-          bottom: 90,
-          right: 24,
-          zIndex: 9998,
-          background: 'linear-gradient(135deg, #1a5276, #2980b9)',
-          border: 'none',
-          borderRadius: 50,
-          padding: '0.7rem 1.2rem',
-          color: '#fff',
-          fontWeight: 800,
-          fontSize: '0.85rem',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          textDecoration: 'none',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
-          transition: 'transform 0.2s',
-          width: 'fit-content',
-        }}
-      >
-        <ChatCircleDots size={22} weight="duotone" />
-        {noLeidos > 0 ? (
-          <span style={{
-            background: '#e74c3c', color: '#fff', borderRadius: '50%',
-            width: 20, height: 20, fontSize: '0.65rem', fontWeight: 800,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            {noLeidos > 9 ? '9+' : noLeidos}
-          </span>
-        ) : (
-          <span className="chat-fab-label">Mensajes</span>
-        )}
-      </Link>
+      <div style={{ position: 'fixed', bottom: 70, right: 24, zIndex: 9998, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+        <Link
+          href="/chat"
+          className="chat-fab-btn"
+          onClick={() => setNoLeidos(0)}
+          style={{
+            background: 'linear-gradient(135deg, #1a5276, #2980b9)',
+            border: 'none',
+            borderRadius: 50,
+            padding: '0.7rem 1.2rem',
+            color: '#fff',
+            fontWeight: 800,
+            fontSize: '0.85rem',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            textDecoration: 'none',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+            transition: 'transform 0.2s',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <ChatCircleDots size={22} weight="duotone" />
+          {noLeidos > 0 ? (
+            <span style={{
+              background: '#e74c3c', color: '#fff', borderRadius: '50%',
+              width: 20, height: 20, fontSize: '0.65rem', fontWeight: 800,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {noLeidos > 9 ? '9+' : noLeidos}
+            </span>
+          ) : (
+            <span className="chat-fab-label">Mensajes</span>
+          )}
+        </Link>
+      </div>
     </>
   )
 }

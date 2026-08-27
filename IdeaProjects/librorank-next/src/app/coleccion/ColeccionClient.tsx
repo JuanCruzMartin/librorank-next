@@ -453,7 +453,6 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                 background: 'var(--bg-card)',
                 border: `1px solid ${col.color}30`,
                 borderRadius: 16,
-                overflow: 'hidden',
                 scrollMarginTop: '1rem',
               }}>
                 <div style={{
