@@ -59,7 +59,7 @@ export default function ChatFab() {
         }
       `}</style>
 
-      <div style={{ position: 'fixed', bottom: 70, right: 24, zIndex: 9998, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+      <div style={{ position: 'fixed', bottom: 92, right: 24, zIndex: 9998, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
         <Link
           href="/chat"
           className="chat-fab-btn"
