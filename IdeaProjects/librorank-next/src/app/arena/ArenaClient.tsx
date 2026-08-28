@@ -52,6 +52,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
   const [cuentaRegresiva, setCuentaRegresiva] = useState<number | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const preguntaRef = useRef<PreguntaData | null>(null)
 
   const esRetador = dueloActivo?.retador_id === usuarioId
   const yaRespondio = dueloActivo
@@ -68,7 +69,8 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
 
     setDueloActivo(d)
 
-    if (d.estado === 'en_curso' && data.pregunta && !pregunta) {
+    if (d.estado === 'en_curso' && data.pregunta && !preguntaRef.current) {
+      preguntaRef.current = data.pregunta
       setPregunta(data.pregunta)
       setCuentaRegresiva(3)
     }
@@ -91,7 +93,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
       setDueloActivo(null)
       refrescarSala()
     }
-  }, [dueloActivo, pregunta, usuarioId, esRetador])
+  }, [dueloActivo, usuarioId, esRetador])
 
   function clearPolling() { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null } }
   function clearTimer() { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null } }
@@ -113,7 +115,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
       // Cargar pregunta si ya está en curso
       if (dueloActivo.estado === 'en_curso') {
         fetch(`/api/duelos/${dueloActivo.id}`).then(r => r.json()).then(data => {
-          if (data.pregunta) { setPregunta(data.pregunta); setCuentaRegresiva(3) }
+          if (data.pregunta) { preguntaRef.current = data.pregunta; setPregunta(data.pregunta); setCuentaRegresiva(3) }
         })
       }
     }
@@ -170,7 +172,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
       const res2 = await fetch(`/api/duelos/${dueloParaUnirse.id}`)
       const d2 = await res2.json()
       setDueloActivo(d2.duelo)
-      if (d2.pregunta) { setPregunta(d2.pregunta); setCuentaRegresiva(3) }
+      if (d2.pregunta) { preguntaRef.current = d2.pregunta; setPregunta(d2.pregunta); setCuentaRegresiva(3) }
     }
     setCargando(false)
   }
@@ -219,6 +221,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
     setDueloActivo(null)
     setResultado(null)
     setPregunta(null)
+    preguntaRef.current = null
     setRespuestaSeleccionada(null)
     setEsperandoRival(false)
     setRespondioEarly(false)
