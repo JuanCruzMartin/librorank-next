@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import type { Duelo } from '@/lib/dao/dueloDAO'
+import type { Duelo, StatsGlobales, StatsRival } from '@/lib/dao/dueloDAO'
 import type { Carta } from '@/lib/cartas'
 
 const RAREZA_COLOR: Record<string, string> = {
@@ -27,6 +27,8 @@ interface Props {
   historialInicial: Duelo[]
   misCartas: Carta[]
   cartasMap: Record<string, Carta>
+  statsIniciales: StatsGlobales
+  statsPorRivalIniciales: StatsRival[]
 }
 
 interface PreguntaData {
@@ -35,7 +37,7 @@ interface PreguntaData {
   respuesta?: number
 }
 
-export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial, historialInicial, misCartas, cartasMap }: Props) {
+export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial, historialInicial, misCartas, cartasMap, statsIniciales, statsPorRivalIniciales }: Props) {
   const [sala, setSala] = useState<Duelo[]>(salaInicial)
   const [dueloActivo, setDueloActivo] = useState<Duelo | null>(dueloActivoInicial)
   const [historial, setHistorial] = useState<Duelo[]>(historialInicial)
@@ -47,6 +49,8 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
   const [modal, setModal] = useState<'crear' | 'unirse' | null>(null)
   const [dueloParaUnirse, setDueloParaUnirse] = useState<Duelo | null>(null)
   const [cargando, setCargando] = useState(false)
+  const [stats, setStats] = useState<StatsGlobales>(statsIniciales)
+  const [statsPorRival, setStatsPorRival] = useState<StatsRival[]>(statsPorRivalIniciales)
   const [timer, setTimer] = useState<number>(25)
   const [respondioEarly, setRespondioEarly] = useState(false)
   const [cuentaRegresiva, setCuentaRegresiva] = useState<number | null>(null)
@@ -134,6 +138,8 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
     if (!res.ok) return
     const data = await res.json()
     setSala(data.sala)
+    if (data.stats) setStats(data.stats)
+    if (data.statsPorRival) setStatsPorRival(data.statsPorRival)
   }
 
   async function crearDesafio() {
@@ -568,6 +574,25 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
             ⚔️ Crear desafío
           </button>
 
+          {/* Stats globales */}
+          {(stats.victorias > 0 || stats.derrotas > 0 || stats.empates > 0) && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: '1.25rem' }}>
+              {[
+                { label: 'V', valor: stats.victorias, color: '#27ae60', bg: 'rgba(39,174,96,0.1)' },
+                { label: 'D', valor: stats.derrotas, color: '#e74c3c', bg: 'rgba(231,76,60,0.1)' },
+                { label: 'E', valor: stats.empates, color: '#d4af37', bg: 'rgba(212,175,55,0.1)' },
+              ].map(s => (
+                <div key={s.label} style={{
+                  flex: 1, textAlign: 'center', padding: '0.5rem 0.25rem',
+                  borderRadius: 10, background: s.bg, border: `1px solid ${s.color}30`,
+                }}>
+                  <div style={{ fontSize: '1.3rem', fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.valor}</div>
+                  <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', marginTop: 2, letterSpacing: '0.5px' }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Historial */}
           {historial.length > 0 && (
             <div>
@@ -579,18 +604,26 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
                   const gane = d.ganador_id === usuarioId
                   const empate = d.ganador_id === null
                   const esRet = d.retador_id === usuarioId
+                  const rivalId = esRet ? d.rival_id : d.retador_id
                   const rivalNombre = esRet ? d.rival_nombre : d.retador_nombre
+                  const h2h = statsPorRival.find(s => s.rival_id === rivalId)
                   return (
                     <div key={d.id} style={{
                       padding: '0.6rem 0.85rem', borderRadius: 10, fontSize: '0.78rem',
                       background: empate ? 'rgba(212,175,55,0.06)' : gane ? 'rgba(39,174,96,0.06)' : 'rgba(231,76,60,0.06)',
                       border: `1px solid ${empate ? 'rgba(212,175,55,0.2)' : gane ? 'rgba(39,174,96,0.2)' : 'rgba(231,76,60,0.2)'}`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     }}>
-                      <span style={{ color: 'rgba(255,255,255,0.6)' }}>vs {rivalNombre ?? '?'}</span>
-                      <span style={{ fontWeight: 700, color: empate ? '#d4af37' : gane ? '#27ae60' : '#e74c3c' }}>
-                        {empate ? '🤝 Empate' : gane ? '🏆 Ganaste' : '💀 Perdiste'}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'rgba(255,255,255,0.6)' }}>vs {rivalNombre ?? '?'}</span>
+                        <span style={{ fontWeight: 700, color: empate ? '#d4af37' : gane ? '#27ae60' : '#e74c3c' }}>
+                          {empate ? '🤝 Empate' : gane ? '🏆 Ganaste' : '💀 Perdiste'}
+                        </span>
+                      </div>
+                      {h2h && (
+                        <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', marginTop: 3 }}>
+                          H2H: <span style={{ color: '#27ae60' }}>{h2h.victorias}V</span> · <span style={{ color: '#e74c3c' }}>{h2h.derrotas}D</span> · <span style={{ color: '#d4af37' }}>{h2h.empates}E</span>
+                        </div>
+                      )}
                     </div>
                   )
                 })}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUserFromRequest } from '@/lib/auth'
-import { crearTabla, crearDesafio, obtenerSala, obtenerDueloActivo, cancelarDesafio, obtenerHistorial, expirarDuelos } from '@/lib/dao/dueloDAO'
+import { crearTabla, crearDesafio, obtenerSala, obtenerDueloActivo, cancelarDesafio, obtenerHistorial, expirarDuelos, obtenerStatsGlobales, obtenerStatsPorRival } from '@/lib/dao/dueloDAO'
 import { obtenerColeccion } from '@/lib/dao/cartaDAO'
 import { CARTAS } from '@/lib/cartas'
 
@@ -14,11 +14,13 @@ export async function GET(req: NextRequest) {
   await init()
   await expirarDuelos()
 
-  const [sala, activo, historial, coleccion] = await Promise.all([
+  const [sala, activo, historial, coleccion, stats, statsPorRival] = await Promise.all([
     obtenerSala(),
     obtenerDueloActivo(user.id),
     obtenerHistorial(user.id, 5),
     obtenerColeccion(user.id),
+    obtenerStatsGlobales(user.id),
+    obtenerStatsPorRival(user.id),
   ])
 
   // Filtrar sala: no mostrar el propio desafío del usuario
@@ -27,7 +29,7 @@ export async function GET(req: NextRequest) {
   // Enriquecer cartas con metadata
   const cartasMap = Object.fromEntries(CARTAS.map(c => [c.id, c]))
 
-  return NextResponse.json({ sala: salaFiltrada, activo, historial, coleccion, cartasMap })
+  return NextResponse.json({ sala: salaFiltrada, activo, historial, coleccion, cartasMap, stats, statsPorRival })
 }
 
 // POST /api/duelos  { accion: 'crear', cartaId } | { accion: 'cancelar', dueloId }

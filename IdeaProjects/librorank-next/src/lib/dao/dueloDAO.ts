@@ -225,6 +225,51 @@ export async function obtenerHistorial(usuarioId: number, limite = 10): Promise<
   `, [usuarioId, usuarioId, limite])
 }
 
+export interface StatsGlobales {
+  victorias: number
+  derrotas: number
+  empates: number
+}
+
+export interface StatsRival {
+  rival_id: number
+  rival_nombre: string
+  rival_username: string
+  victorias: number
+  derrotas: number
+  empates: number
+}
+
+export async function obtenerStatsGlobales(usuarioId: number): Promise<StatsGlobales> {
+  const row = await queryOne<{ victorias: number; derrotas: number; empates: number }>(`
+    SELECT
+      SUM(ganador_id = ?) AS victorias,
+      SUM(ganador_id IS NULL) AS empates,
+      SUM(ganador_id IS NOT NULL AND ganador_id != ?) AS derrotas
+    FROM duelos
+    WHERE (retador_id = ? OR rival_id = ?) AND estado = 'terminado'
+  `, [usuarioId, usuarioId, usuarioId, usuarioId])
+  return { victorias: row?.victorias ?? 0, derrotas: row?.derrotas ?? 0, empates: row?.empates ?? 0 }
+}
+
+export async function obtenerStatsPorRival(usuarioId: number): Promise<StatsRival[]> {
+  return query<StatsRival>(`
+    SELECT
+      IF(retador_id = ?, rival_id, retador_id) AS rival_id,
+      IF(retador_id = ?, rival_nombre, retador_nombre) AS rival_nombre,
+      IF(retador_id = ?, rival_username, retador_username) AS rival_username,
+      SUM(ganador_id = ?) AS victorias,
+      SUM(ganador_id IS NULL) AS empates,
+      SUM(ganador_id IS NOT NULL AND ganador_id != ?) AS derrotas
+    FROM duelos
+    JOIN usuarios ur ON ur.id = retador_id
+    LEFT JOIN usuarios uv ON uv.id = rival_id
+    WHERE (retador_id = ? OR rival_id = ?) AND estado = 'terminado'
+    GROUP BY rival_id
+    ORDER BY (SUM(ganador_id = ?) + SUM(ganador_id IS NULL) + SUM(ganador_id IS NOT NULL AND ganador_id != ?)) DESC
+  `, [usuarioId, usuarioId, usuarioId, usuarioId, usuarioId, usuarioId, usuarioId, usuarioId, usuarioId])
+}
+
 export async function expirarDuelos(): Promise<void> {
   await execute(
     `UPDATE duelos SET estado='expirado' WHERE estado IN ('esperando','en_curso') AND expires_at < NOW()`,
