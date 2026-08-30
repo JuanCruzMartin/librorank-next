@@ -255,17 +255,26 @@ export async function obtenerStatsGlobales(usuarioId: number): Promise<StatsGlob
 export async function obtenerStatsPorRival(usuarioId: number): Promise<StatsRival[]> {
   return query<StatsRival>(`
     SELECT
-      IF(d.retador_id = ?, d.rival_id, d.retador_id) AS rival_id,
-      IF(d.retador_id = ?, uv.nombre, ur.nombre) AS rival_nombre,
-      IF(d.retador_id = ?, uv.username, ur.username) AS rival_username,
-      SUM(d.ganador_id = ?) AS victorias,
-      SUM(d.ganador_id IS NULL) AS empates,
-      SUM(d.ganador_id IS NOT NULL AND d.ganador_id != ?) AS derrotas
-    FROM duelos d
-    JOIN usuarios ur ON ur.id = d.retador_id
-    LEFT JOIN usuarios uv ON uv.id = d.rival_id
-    WHERE (d.retador_id = ? OR d.rival_id = ?) AND d.estado = 'terminado'
-    GROUP BY rival_id, rival_nombre, rival_username
+      oponente_id AS rival_id,
+      oponente_nombre AS rival_nombre,
+      oponente_username AS rival_username,
+      SUM(es_victoria) AS victorias,
+      SUM(es_empate) AS empates,
+      SUM(es_derrota) AS derrotas
+    FROM (
+      SELECT
+        IF(d.retador_id = ?, d.rival_id, d.retador_id) AS oponente_id,
+        IF(d.retador_id = ?, uv.nombre, ur.nombre) AS oponente_nombre,
+        IF(d.retador_id = ?, uv.username, ur.username) AS oponente_username,
+        (d.ganador_id = ?) AS es_victoria,
+        (d.ganador_id IS NULL) AS es_empate,
+        (d.ganador_id IS NOT NULL AND d.ganador_id != ?) AS es_derrota
+      FROM duelos d
+      JOIN usuarios ur ON ur.id = d.retador_id
+      LEFT JOIN usuarios uv ON uv.id = d.rival_id
+      WHERE (d.retador_id = ? OR d.rival_id = ?) AND d.estado = 'terminado'
+    ) t
+    GROUP BY oponente_id, oponente_nombre, oponente_username
     ORDER BY COUNT(*) DESC
   `, [usuarioId, usuarioId, usuarioId, usuarioId, usuarioId, usuarioId, usuarioId])
 }
