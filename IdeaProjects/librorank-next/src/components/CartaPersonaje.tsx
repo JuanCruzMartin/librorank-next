@@ -47,14 +47,50 @@ function Esquina({ pos, color, size }: { pos: typeof ESQUINAS[number]; color: st
       borderBottom: v === 'bottom' ? `2px solid ${color}` : undefined,
       borderLeft: h === 'left' ? `2px solid ${color}` : undefined,
       borderRight: h === 'right' ? `2px solid ${color}` : undefined,
-      opacity: 0.75,
+      opacity: 0.8,
+      pointerEvents: 'none',
     }} />
   )
 }
 
+function getSagaColor(autor: string): string {
+  if (autor === 'J.R.R. Tolkien') return '#2e7d32'
+  if (autor === 'George R.R. Martin') return '#b71c1c'
+  if (autor === 'Antoine de Saint-Exupéry') return '#e65100'
+  if (autor === 'J.K. Rowling') return '#7b1fa2'
+  return '#b8860b'
+}
+
+const ANIMATIONS = `
+  @keyframes shimmer-carta {
+    0%   { background-position: 200% center; }
+    100% { background-position: -200% center; }
+  }
+  @keyframes holoRotate {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes shimmerEpico {
+    0%, 100% { background-position: 200% center; }
+    50%       { background-position: -200% center; }
+  }
+  @keyframes sparkleAnim {
+    0%, 100% { opacity: 0.15; transform: scale(0.6); }
+    50%       { opacity: 1;    transform: scale(1.5); }
+  }
+`
+
+const SPARKLE_POS = [
+  { x: '14%', y: '12%' },
+  { x: '79%', y: '15%' },
+  { x: '20%', y: '85%' },
+  { x: '82%', y: '80%' },
+]
+
 export default function CartaPersonaje({ carta, obtenida = true, size = 'md', numero, total }: Props) {
   const rareza = RAREZAS[rarezaVisual(carta.rareza)]
   const esEspecial = rarezaVisual(carta.rareza) === 'legendario'
+  const esEpico = carta.rareza === 'epico'
+  const sagaColor = esEpico ? getSagaColor(carta.autor) : rareza.color
   const dims = size === 'sm' ? { w: 168, h: 268 } : size === 'lg' ? { w: 300, h: 480 } : { w: 220, h: 352 }
   const [imgError, setImgError] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
@@ -71,16 +107,18 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
 
     card.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.035,1.035,1.035)`
 
-    // Sombra que se proyecta hacia el lado opuesto de la inclinación
     const shadowX = (x - 0.5) * -22
     const shadowY = (y - 0.5) * -22
-    card.style.filter = `drop-shadow(${shadowX}px ${shadowY}px 14px rgba(0,0,0,0.35))`
+    if (esEpico) {
+      card.style.filter = `drop-shadow(${shadowX}px ${shadowY}px 14px rgba(0,0,0,0.5)) drop-shadow(0 0 18px ${sagaColor}70)`
+    } else {
+      card.style.filter = `drop-shadow(${shadowX}px ${shadowY}px 14px rgba(0,0,0,0.35))`
+    }
 
     if (glowRef.current) {
-      if (rareza.glow) {
-        // Holo arcoíris que se mueve con el cursor
+      if (rareza.glow || esEpico) {
         const angle = 115 + (x - 0.5) * 50
-        glowRef.current.style.background = `linear-gradient(${angle}deg, transparent 15%, rgba(255,70,150,0.32) 32%, rgba(70,180,255,0.32) 48%, rgba(255,225,60,0.32) 64%, transparent 85%)`
+        glowRef.current.style.background = `linear-gradient(${angle}deg, transparent 15%, rgba(255,70,150,0.28) 32%, rgba(70,180,255,0.28) 48%, rgba(255,225,60,0.28) 64%, transparent 85%)`
         glowRef.current.style.backgroundSize = '250% 250%'
         glowRef.current.style.backgroundPosition = `${x * 100}% ${y * 100}%`
       } else {
@@ -94,7 +132,9 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
     const card = cardRef.current
     if (!card) return
     card.style.transform = 'perspective(900px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)'
-    card.style.filter = 'drop-shadow(0px 4px 8px rgba(0,0,0,0.25))'
+    card.style.filter = esEpico
+      ? `drop-shadow(0px 8px 20px ${sagaColor}80)`
+      : obtenida ? 'drop-shadow(0px 4px 8px rgba(0,0,0,0.25))' : 'grayscale(1) brightness(0.45)'
     if (glowRef.current) glowRef.current.style.opacity = '0'
   }
 
@@ -117,6 +157,214 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
     cursor: obtenida ? undefined : 'default',
   }
 
+  // ── ÉPICO (Holographic) ──────────────────────────────────────────────────
+  if (esEpico) {
+    return (
+      <div
+        ref={cardRef}
+        className="carta-personaje"
+        onMouseMove={obtenida ? handleMouseMove : undefined}
+        onMouseLeave={obtenida ? handleMouseLeave : undefined}
+        style={{
+          width: dims.w,
+          height: dims.h,
+          borderRadius: 10,
+          position: 'relative',
+          overflow: 'visible',
+          flexShrink: 0,
+          transformStyle: 'preserve-3d',
+          transition: 'transform 0.15s ease-out, filter 0.15s ease-out',
+          willChange: 'transform',
+          filter: obtenida
+            ? `drop-shadow(0px 8px 20px ${sagaColor}80)`
+            : 'grayscale(1) brightness(0.45)',
+          opacity: obtenida ? 1 : 0.7,
+          cursor: obtenida ? undefined : 'default',
+        }}
+      >
+        {/* ── Cuerpo holográfico (clipeado al borde redondeado) ── */}
+        <div style={{
+          position: 'absolute', inset: 0, borderRadius: 10, overflow: 'hidden',
+          background: `linear-gradient(145deg, #0d0820 0%, #150d28 40%, #0d1228 100%)`,
+          boxShadow: `0 0 0 2px ${sagaColor}cc, 0 0 22px ${sagaColor}60, 0 0 44px ${sagaColor}20`,
+          zIndex: 0,
+        }}>
+          {/* Conic gradient rotando — efecto arcoíris */}
+          <div style={{
+            position: 'absolute',
+            top: '-75%', left: '-75%',
+            width: '250%', height: '250%',
+            background: `conic-gradient(from 0deg at 50% 50%,
+              transparent 0deg,
+              ${sagaColor}35 80deg,
+              rgba(255,61,232,0.18) 160deg,
+              rgba(0,212,255,0.18) 240deg,
+              rgba(255,229,96,0.18) 300deg,
+              transparent 360deg)`,
+            animation: 'holoRotate 8s linear infinite',
+            mixBlendMode: 'screen',
+          }} />
+          {/* Grilla de diamantes */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='10,1 19,10 10,19 1,10' fill='none' stroke='rgba(255,255,255,0.06)' stroke-width='0.5'/%3E%3C/svg%3E")`,
+            backgroundSize: '20px 20px',
+          }} />
+          {/* Shimmer diagonal */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.07) 50%, transparent 70%)',
+            backgroundSize: '250% 100%',
+            animation: 'shimmerEpico 4s ease-in-out infinite',
+          }} />
+        </div>
+
+        {/* ── Imagen desbordando hacia arriba ── */}
+        {!imgError ? (
+          <div style={{
+            position: 'absolute',
+            top: '-30%',
+            left: 0, right: 0,
+            height: '78%',
+            zIndex: 10,
+            maskImage: 'linear-gradient(to bottom, black 48%, transparent 86%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 48%, transparent 86%)',
+            pointerEvents: 'none',
+          }}>
+            <Image
+              src={carta.imagen}
+              alt={carta.nombre}
+              fill
+              style={{
+                objectFit: 'cover',
+                objectPosition: `${carta.posicionX}% ${carta.posicionY}%`,
+                filter: `drop-shadow(0 14px 28px ${sagaColor}90) drop-shadow(0 4px 10px rgba(0,0,0,0.95))`,
+              }}
+              unoptimized
+              onError={() => setImgError(true)}
+            />
+          </div>
+        ) : (
+          <div style={{
+            position: 'absolute', top: '8%', left: 0, right: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '3rem', opacity: 0.3, zIndex: 10,
+          }}>📜</div>
+        )}
+
+        {/* ── Panel de texto en la parte inferior ── */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0, left: 0, right: 0,
+          height: '49%',
+          borderRadius: '0 0 10px 10px',
+          background: `linear-gradient(to bottom, transparent 0%, rgba(13,8,32,0.90) 20%, rgba(13,8,32,0.97) 100%)`,
+          padding: size === 'sm' ? '0.5rem 0.55rem 0.35rem' : '0.65rem 0.7rem 0.45rem',
+          display: 'flex', flexDirection: 'column', gap: size === 'sm' ? 2 : 3,
+          zIndex: 5,
+        }}>
+          {/* Nombre con texto metálico */}
+          <div style={{
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontWeight: 800,
+            fontSize: size === 'sm' ? '0.78rem' : '0.92rem',
+            background: `linear-gradient(135deg, #ffffff 20%, ${sagaColor} 55%, #ffe566 90%)`,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            lineHeight: 1.1,
+            paddingRight: 28,
+            filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.95))',
+          }}>
+            {carta.nombre}
+          </div>
+          {/* Epíteto */}
+          <div style={{
+            fontFamily: 'Georgia, serif', fontStyle: 'italic',
+            fontSize: size === 'sm' ? '0.52rem' : '0.6rem',
+            color: 'rgba(255,255,255,0.5)',
+            lineHeight: 1.2,
+          }}>
+            {carta.epiteto}
+          </div>
+          {/* Separador con color de saga */}
+          <div style={{
+            height: 1,
+            background: `linear-gradient(90deg, transparent, ${sagaColor}90, transparent)`,
+          }} />
+          {/* Info rows */}
+          <FilaInfoDark label="OBRA" valor={carta.obra} />
+          <FilaInfoDark label="AUTOR" valor={carta.autor} />
+          {size !== 'sm' && <FilaInfoDark label="AÑO" valor={String(carta.anio)} />}
+          {/* Label rareza */}
+          <div style={{
+            marginTop: 'auto',
+            fontSize: size === 'sm' ? '0.5rem' : '0.56rem',
+            fontWeight: 800,
+            color: sagaColor,
+            textTransform: 'uppercase',
+            letterSpacing: 1.5,
+            textShadow: `0 0 12px ${sagaColor}cc`,
+          }}>
+            ✦ Épico ✦
+          </div>
+        </div>
+
+        {/* ── Badge rareza ── */}
+        <div style={{
+          position: 'absolute', top: size === 'sm' ? 6 : 8, right: size === 'sm' ? 6 : 8, zIndex: 15,
+          width: size === 'sm' ? 18 : 22, height: size === 'sm' ? 18 : 22, borderRadius: '50%',
+          background: sagaColor,
+          border: '2px solid rgba(255,255,255,0.55)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: size === 'sm' ? '0.6rem' : '0.7rem', fontWeight: 800, color: '#fff',
+          fontFamily: 'Georgia, serif',
+          boxShadow: `0 0 12px ${sagaColor}cc`,
+        }}>
+          É
+        </div>
+
+        {/* Numeración */}
+        {numero !== undefined && total !== undefined && (
+          <div style={{
+            position: 'absolute', bottom: size === 'sm' ? 6 : 8, right: size === 'sm' ? 6 : 8, zIndex: 15,
+            fontSize: size === 'sm' ? '0.44rem' : '0.5rem',
+            color: 'rgba(255,255,255,0.4)', fontWeight: 700,
+          }}>
+            №{String(numero).padStart(2, '0')}/{total}
+          </div>
+        )}
+
+        {/* Esquinas ornamentadas */}
+        {ESQUINAS.map(pos => (
+          <Esquina key={pos} pos={pos} color={sagaColor} size={size === 'sm' ? 12 : 18} />
+        ))}
+
+        {/* Partículas sparkle */}
+        {SPARKLE_POS.map(({ x, y }, i) => (
+          <div key={i} style={{
+            position: 'absolute', left: x, top: y, zIndex: 11,
+            width: size === 'sm' ? 4 : 5, height: size === 'sm' ? 4 : 5,
+            background: sagaColor, borderRadius: '50%',
+            boxShadow: `0 0 6px ${sagaColor}, 0 0 14px ${sagaColor}80`,
+            animation: `sparkleAnim ${1.2 + i * 0.45}s ease-in-out infinite`,
+            animationDelay: `${i * 0.3}s`,
+            pointerEvents: 'none',
+          }} />
+        ))}
+
+        {/* Glow cursor */}
+        <div ref={glowRef} style={{
+          position: 'absolute', inset: 0, borderRadius: 10,
+          pointerEvents: 'none', zIndex: 12,
+          opacity: 0, transition: 'opacity 0.3s ease', mixBlendMode: 'screen',
+        }} />
+
+        <style>{ANIMATIONS}</style>
+      </div>
+    )
+  }
+
   // ── FULL ART (Legendario / Mítico con imagen de carta completa) ──────────
   if (carta.fullArt) {
     return (
@@ -125,7 +373,6 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
         onMouseLeave={obtenida ? handleMouseLeave : undefined}
         style={{ ...wrapperStyle, background: '#0a0806' }}
       >
-        {/* Imagen de fondo cubriendo toda la carta */}
         {!imgError ? (
           <Image
             src={carta.imagen} alt={carta.nombre} fill
@@ -136,15 +383,12 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', opacity: 0.3 }}>📜</div>
         )}
 
-        {/* Glow cursor */}
         <div ref={glowRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 4, opacity: 0, transition: 'opacity 0.3s ease', mixBlendMode: 'overlay' }} />
 
-        {/* Esquinas ornamentadas */}
         {esEspecial && ESQUINAS.map(pos => (
           <Esquina key={pos} pos={pos} color={rareza.color} size={size === 'sm' ? 12 : 18} />
         ))}
 
-        {/* Badge rareza */}
         <div style={{
           position: 'absolute', top: size === 'sm' ? 6 : 8, right: size === 'sm' ? 6 : 8, zIndex: 2,
           width: size === 'sm' ? 18 : 22, height: size === 'sm' ? 18 : 22, borderRadius: '50%',
@@ -161,14 +405,13 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
           </div>
         )}
 
-        {/* Shimmer */}
         {rareza.glow && (
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 3,
             background: `linear-gradient(105deg, transparent 40%, ${rareza.color}1a 50%, transparent 60%)`,
             backgroundSize: '200% 100%', animation: 'shimmer-carta 3.5s infinite',
           }} />
         )}
-        <style>{`@keyframes shimmer-carta { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }`}</style>
+        <style>{ANIMATIONS}</style>
       </div>
     )
   }
@@ -187,7 +430,6 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
         flexDirection: 'column',
       }}
     >
-      {/* Glow que sigue al cursor */}
       <div
         ref={glowRef}
         style={{
@@ -196,11 +438,10 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
         }}
       />
 
-      {/* Esquinas ornamentadas — solo Legendario y Mítico */}
       {esEspecial && ESQUINAS.map(pos => (
         <Esquina key={pos} pos={pos} color={rareza.color} size={size === 'sm' ? 12 : 18} />
       ))}
-      {/* Nombre + epíteto */}
+
       <div style={{ padding: size === 'sm' ? '0.4rem 0.55rem 0.25rem' : '0.55rem 0.7rem 0.3rem', position: 'relative' }}>
         <div style={{
           fontFamily: 'Georgia, "Times New Roman", serif',
@@ -220,7 +461,6 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
         }}>
           {carta.epiteto}
         </div>
-        {/* Badge rareza */}
         <div style={{
           position: 'absolute', top: size === 'sm' ? 6 : 8, right: size === 'sm' ? 6 : 8,
           width: size === 'sm' ? 18 : 22, height: size === 'sm' ? 18 : 22, borderRadius: '50%',
@@ -232,7 +472,6 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
         }}>
           {rareza.letra}
         </div>
-        {/* Numeración de carta */}
         {numero !== undefined && total !== undefined && (
           <div style={{
             position: 'absolute', bottom: -2, right: size === 'sm' ? 6 : 8,
@@ -244,7 +483,6 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
         )}
       </div>
 
-      {/* Imagen */}
       <div style={{
         position: 'relative', width: '100%', height: size === 'sm' ? '38%' : '42%',
         margin: '0 auto', overflow: 'hidden',
@@ -267,7 +505,6 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
         )}
       </div>
 
-      {/* Concepto */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 5,
         padding: size === 'sm' ? '0.3rem 0.55rem' : '0.4rem 0.7rem',
@@ -281,7 +518,6 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
         </span>
       </div>
 
-      {/* Info */}
       <div style={{
         flex: 1, display: 'flex', flexDirection: 'column', gap: size === 'sm' ? 2 : 3,
         padding: size === 'sm' ? '0 0.55rem' : '0 0.7rem',
@@ -293,7 +529,6 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
         {size !== 'sm' && <FilaInfo label="SÍMBOLO" valor={carta.simbolo} />}
       </div>
 
-      {/* Footer: rareza + cita */}
       <div style={{
         borderTop: '1px solid rgba(138,118,84,0.35)',
         padding: size === 'sm' ? '0.3rem 0.55rem' : '0.4rem 0.7rem',
@@ -315,7 +550,6 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
         )}
       </div>
 
-      {/* Shimmer para épico+ */}
       {rareza.glow && (
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
@@ -325,12 +559,7 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
         }} />
       )}
 
-      <style>{`
-        @keyframes shimmer-carta {
-          0%   { background-position: 200% center; }
-          100% { background-position: -200% center; }
-        }
-      `}</style>
+      <style>{ANIMATIONS}</style>
     </div>
   )
 }
