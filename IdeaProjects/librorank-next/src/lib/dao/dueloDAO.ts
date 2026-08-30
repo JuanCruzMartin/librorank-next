@@ -255,19 +255,19 @@ export async function obtenerStatsGlobales(usuarioId: number): Promise<StatsGlob
 export async function obtenerStatsPorRival(usuarioId: number): Promise<StatsRival[]> {
   return query<StatsRival>(`
     SELECT
-      IF(retador_id = ?, rival_id, retador_id) AS rival_id,
-      IF(retador_id = ?, rival_nombre, retador_nombre) AS rival_nombre,
-      IF(retador_id = ?, rival_username, retador_username) AS rival_username,
-      SUM(ganador_id = ?) AS victorias,
-      SUM(ganador_id IS NULL) AS empates,
-      SUM(ganador_id IS NOT NULL AND ganador_id != ?) AS derrotas
-    FROM duelos
-    JOIN usuarios ur ON ur.id = retador_id
-    LEFT JOIN usuarios uv ON uv.id = rival_id
-    WHERE (retador_id = ? OR rival_id = ?) AND estado = 'terminado'
-    GROUP BY rival_id
-    ORDER BY (SUM(ganador_id = ?) + SUM(ganador_id IS NULL) + SUM(ganador_id IS NOT NULL AND ganador_id != ?)) DESC
-  `, [usuarioId, usuarioId, usuarioId, usuarioId, usuarioId, usuarioId, usuarioId, usuarioId, usuarioId])
+      IF(d.retador_id = ?, d.rival_id, d.retador_id) AS rival_id,
+      IF(d.retador_id = ?, uv.nombre, ur.nombre) AS rival_nombre,
+      IF(d.retador_id = ?, uv.username, ur.username) AS rival_username,
+      SUM(d.ganador_id = ?) AS victorias,
+      SUM(d.ganador_id IS NULL) AS empates,
+      SUM(d.ganador_id IS NOT NULL AND d.ganador_id != ?) AS derrotas
+    FROM duelos d
+    JOIN usuarios ur ON ur.id = d.retador_id
+    LEFT JOIN usuarios uv ON uv.id = d.rival_id
+    WHERE (d.retador_id = ? OR d.rival_id = ?) AND d.estado = 'terminado'
+    GROUP BY rival_id, rival_nombre, rival_username
+    ORDER BY COUNT(*) DESC
+  `, [usuarioId, usuarioId, usuarioId, usuarioId, usuarioId, usuarioId, usuarioId])
 }
 
 export async function expirarDuelos(): Promise<void> {
