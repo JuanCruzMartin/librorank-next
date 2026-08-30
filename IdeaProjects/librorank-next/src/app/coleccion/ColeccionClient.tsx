@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CARTAS, RAREZAS, type Carta, type Rareza } from '@/lib/cartas'
+import { CARTAS, RAREZAS, rarezaVisual, type Carta, type Rareza } from '@/lib/cartas'
 import CartaPersonaje from '@/components/CartaPersonaje'
 import CartaDorso from '@/components/CartaDorso'
 import type { TipoCofre, Cofre } from '@/lib/dao/cofreDAO'
@@ -11,10 +11,10 @@ interface Props {
   tiradas: number
 }
 
-const ORDEN_RAREZA: Rareza[] = ['comun', 'raro', 'epico', 'legendario', 'mitico']
+const ORDEN_RAREZA = ['comun', 'epico', 'legendario'] as const
 
-const EMOJI_RAREZA: Record<Rareza, string> = {
-  comun: '🥉', raro: '🔵', epico: '💜', legendario: '⭐', mitico: '👑',
+const EMOJI_RAREZA: Record<string, string> = {
+  comun: '🥉', epico: '💜', legendario: '⭐',
 }
 
 type Vista = 'rareza' | 'coleccion'
@@ -116,7 +116,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
 
   useEffect(() => {
     if (!reveal) return
-    const esAlta = reveal.carta.rareza === 'epico' || reveal.carta.rareza === 'legendario' || reveal.carta.rareza === 'mitico'
+    const esAlta = rarezaVisual(reveal.carta.rareza) === 'epico' || rarezaVisual(reveal.carta.rareza) === 'legendario'
     if (reveal.carta.fondo) {
       setFase('fondo')
       const t = setTimeout(() => {
@@ -136,7 +136,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
   }, [fase, cuenta])
 
   useEffect(() => {
-    if (fase === 'carta' && reveal && !reveal.revelada && (reveal.carta.rareza === 'comun' || reveal.carta.rareza === 'raro')) {
+    if (fase === 'carta' && reveal && !reveal.revelada && rarezaVisual(reveal.carta.rareza) === 'comun') {
       const t = setTimeout(() => setReveal(r => (r ? { ...r, revelada: true } : r)), 550)
       return () => clearTimeout(t)
     }
@@ -551,11 +551,11 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                             fontSize: '0.68rem',
                             padding: '3px 10px',
                             borderRadius: 20,
-                            background: `${RAREZAS[c.rareza].color}15`,
-                            border: `1px solid ${RAREZAS[c.rareza].color}30`,
-                            color: RAREZAS[c.rareza].color,
+                            background: `${RAREZAS[rarezaVisual(c.rareza)].color}15`,
+                            border: `1px solid ${RAREZAS[rarezaVisual(c.rareza)].color}30`,
+                            color: RAREZAS[rarezaVisual(c.rareza)].color,
                           }}>
-                            {EMOJI_RAREZA[c.rareza]} {c.nombre}
+                            {EMOJI_RAREZA[rarezaVisual(c.rareza)]} {c.nombre}
                           </span>
                         ))}
                       </div>
@@ -568,7 +568,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
 
           {/* Vista: Por rareza */}
           {vista === 'rareza' && ORDEN_RAREZA.map(rareza => {
-            const cartasDeRareza = CARTAS.filter(c => c.rareza === rareza)
+            const cartasDeRareza = CARTAS.filter(c => rarezaVisual(c.rareza) === rareza)
             const obtenidas = cartasDeRareza.filter(c => coleccion.includes(c.id)).length
             const r = RAREZAS[rareza]
 
