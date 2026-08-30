@@ -840,15 +840,15 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
         <div
           style={{
             position: 'fixed', inset: 0,
-            background: ampliada.fondo ? undefined : 'rgba(10,8,5,0.82)',
-            backdropFilter: ampliada.fondo ? undefined : 'blur(3px)',
+            background: (ampliada.fondo && ampliada.rareza !== 'epico') ? undefined : 'rgba(10,8,5,0.88)',
+            backdropFilter: (ampliada.fondo && ampliada.rareza !== 'epico') ? undefined : 'blur(4px)',
             zIndex: 9998, display: 'flex', alignItems: 'center', justifyContent: 'center',
             animation: 'fade-in-bg 0.2s ease',
             overflow: 'hidden',
           }}
           onClick={() => setAmpliada(null)}
         >
-          {ampliada.fondo && (
+          {ampliada.fondo && ampliada.rareza !== 'epico' && (
             <>
               <div style={{
                 position: 'absolute', inset: 0, zIndex: 0,
