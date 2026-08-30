@@ -59,13 +59,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     // Verificar rareza igual a la carta del retador
-    const { CARTAS } = await import('@/lib/cartas')
+    const { CARTAS, rarezaVisual } = await import('@/lib/cartas')
     const duelo = await obtenerDueloPorId(dueloId)
     if (!duelo) return NextResponse.json({ error: 'Duelo no encontrado' }, { status: 404 })
     const cartaRetador = CARTAS.find(c => c.id === duelo.carta_retador)
     const cartaRival = CARTAS.find(c => c.id === cartaId)
-    if (cartaRetador && cartaRival && cartaRetador.rareza !== cartaRival.rareza) {
-      return NextResponse.json({ error: `Solo podés apostar una carta ${cartaRetador.rareza}` }, { status: 400 })
+    if (cartaRetador && cartaRival && rarezaVisual(cartaRetador.rareza) !== rarezaVisual(cartaRival.rareza)) {
+      return NextResponse.json({ error: `Solo podés apostar una carta ${rarezaVisual(cartaRetador.rareza)}` }, { status: 400 })
     }
 
     // Elegir pregunta aleatoria

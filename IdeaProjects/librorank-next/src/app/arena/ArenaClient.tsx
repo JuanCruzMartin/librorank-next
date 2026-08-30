@@ -3,11 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Duelo, StatsGlobales, StatsRival } from '@/lib/dao/dueloDAO'
 import type { Carta } from '@/lib/cartas'
+import { rarezaVisual, RAREZA_VISUAL_COLOR } from '@/lib/cartas'
 
-const RAREZA_COLOR: Record<string, string> = {
-  comun: '#9e9e9e', raro: '#3498db', epico: '#9b59b6',
-  legendario: '#d4af37', mitico: '#e74c3c',
-}
+const RAREZA_COLOR = RAREZA_VISUAL_COLOR
 
 function seededShuffle<T>(arr: T[], seed: number): T[] {
   const result = [...arr]
@@ -257,7 +255,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
   function MiniCarta({ cartaId, size = 'sm' }: { cartaId: string; size?: 'sm' | 'md' }) {
     const c = cartasMap[cartaId]
     if (!c) return <div style={{ width: size === 'md' ? 80 : 52, height: size === 'md' ? 110 : 72, background: 'rgba(255,255,255,0.05)', borderRadius: 8 }} />
-    const color = RAREZA_COLOR[c.rareza]
+    const color = RAREZA_COLOR[rarezaVisual(c.rareza)]
     const w = size === 'md' ? 80 : 52
     const h = size === 'md' ? 110 : 72
     return (
@@ -498,8 +496,8 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
             <div className="d-flex flex-column gap-3">
               {sala.map(d => {
                 const carta = cartasMap[d.carta_retador]
-                const color = carta ? RAREZA_COLOR[carta.rareza] : '#9e9e9e'
-                const rarezaLabel = carta?.rareza?.toUpperCase() ?? '?'
+                const color = carta ? RAREZA_COLOR[rarezaVisual(carta.rareza)] : '#9e9e9e'
+                const rarezaLabel = carta ? rarezaVisual(carta.rareza).toUpperCase() : '?'
                 return (
                   <div key={d.id} className="card p-3" style={{ border: `1px solid ${color}40`, position: 'relative' }}>
                     {/* Badge de rareza */}
@@ -534,7 +532,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
                           </div>
                         )}
                         <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
-                          Necesitás una carta <span style={{ color, fontWeight: 700 }}>{carta?.rareza}</span>
+                          Necesitás una carta <span style={{ color, fontWeight: 700 }}>{carta ? rarezaVisual(carta.rareza) : ''}</span>
                         </div>
                       </div>
 
@@ -654,11 +652,11 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
                   <MiniCarta cartaId={dueloParaUnirse.carta_retador} size="sm" />
                   <div>
                     <div style={{ fontSize: '0.72rem', color: colorRiv, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      Duelo {cartaRival?.rareza}
+                      Duelo {cartaRival ? rarezaVisual(cartaRival.rareza) : ''}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#fff', fontWeight: 700 }}>{cartaRival?.nombre}</div>
                     <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)' }}>
-                      Solo podés apostar una carta <span style={{ color: colorRiv, fontWeight: 700 }}>{cartaRival?.rareza}</span>
+                      Solo podés apostar una carta <span style={{ color: colorRiv, fontWeight: 700 }}>{cartaRival ? rarezaVisual(cartaRival.rareza) : ''}</span>
                     </div>
                   </div>
                 </div>
@@ -686,7 +684,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
                 <div style={{ overflowY: 'auto', flex: 1 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: '0.75rem', padding: '0.25rem' }}>
                     {cartasFiltradas.map(c => {
-                      const color = RAREZA_COLOR[c.rareza]
+                      const color = RAREZA_COLOR[rarezaVisual(c.rareza)]
                       const sel = cartaSeleccionada === c.id
                       return (
                         <button

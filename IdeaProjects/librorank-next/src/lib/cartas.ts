@@ -38,6 +38,19 @@ export const RAREZAS: Record<Rareza, { label: string; letra: string; color: stri
   mitico:     { label: 'Mítico',     letra: 'M', color: '#b0481f', peso: 5,   glow: true  },
 }
 
+// Mapeo visual: raro → común, mítico → legendario (internamente siguen distintos para tiradas)
+export function rarezaVisual(r: Rareza): Rareza {
+  if (r === 'raro') return 'comun'
+  if (r === 'mitico') return 'legendario'
+  return r
+}
+
+export const RAREZA_VISUAL_COLOR: Record<string, string> = {
+  comun:      RAREZAS.comun.color,
+  epico:      RAREZAS.epico.color,
+  legendario: RAREZAS.legendario.color,
+}
+
 // Special:FilePath redirige al archivo real en Wikimedia Commons
 const fp = (filename: string) =>
   `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(filename)}`

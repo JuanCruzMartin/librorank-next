@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { useRef, useState } from 'react'
 import type { Carta } from '@/lib/cartas'
-import { RAREZAS } from '@/lib/cartas'
+import { RAREZAS, rarezaVisual } from '@/lib/cartas'
 
 interface Props {
   carta: Carta
@@ -53,8 +53,8 @@ function Esquina({ pos, color, size }: { pos: typeof ESQUINAS[number]; color: st
 }
 
 export default function CartaPersonaje({ carta, obtenida = true, size = 'md', numero, total }: Props) {
-  const rareza = RAREZAS[carta.rareza]
-  const esEspecial = carta.rareza === 'legendario' || carta.rareza === 'mitico'
+  const rareza = RAREZAS[rarezaVisual(carta.rareza)]
+  const esEspecial = rarezaVisual(carta.rareza) === 'legendario'
   const dims = size === 'sm' ? { w: 168, h: 268 } : size === 'lg' ? { w: 300, h: 480 } : { w: 220, h: 352 }
   const [imgError, setImgError] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)

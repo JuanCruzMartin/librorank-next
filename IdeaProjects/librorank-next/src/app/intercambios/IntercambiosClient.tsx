@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { CARTAS, RAREZAS, type Carta, type Rareza } from '@/lib/cartas'
+import { CARTAS, RAREZAS, rarezaVisual, RAREZA_VISUAL_COLOR, type Carta, type Rareza } from '@/lib/cartas'
 import type { Intercambio } from '@/lib/dao/intercambioDAO'
 
 interface Amigo { id: number; nombre: string; avatar: string | null }
@@ -14,18 +14,16 @@ interface Props {
 
 type Tab = 'mercado' | 'mis-ofertas' | 'recibidas' | 'historial'
 
-const RAREZA_LABEL: Record<Rareza, string> = {
-  comun: 'Común', raro: 'Rara', epico: 'Épica', legendario: 'Legendaria', mitico: 'Mítica',
+const RAREZA_LABEL: Record<string, string> = {
+  comun: 'Común', epico: 'Épica', legendario: 'Legendaria',
 }
 
-const RAREZA_COLOR: Record<Rareza, string> = {
-  comun: '#a0a0a0', raro: '#4a9eff', epico: '#b44fff', legendario: '#f5c842', mitico: '#ff6b35',
-}
+const RAREZA_COLOR = RAREZA_VISUAL_COLOR
 
 function CartaChip({ cartaId, size = 'md' }: { cartaId: string; size?: 'sm' | 'md' }) {
   const carta = CARTAS.find(c => c.id === cartaId)
   if (!carta) return <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem' }}>???</span>
-  const color = RAREZA_COLOR[carta.rareza]
+  const color = RAREZA_COLOR[rarezaVisual(carta.rareza)]
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: size === 'sm' ? 6 : 8,
@@ -44,7 +42,7 @@ function CartaChip({ cartaId, size = 'md' }: { cartaId: string; size?: 'sm' | 'm
         <p style={{ fontSize: size === 'sm' ? '0.72rem' : '0.8rem', fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>
           {carta.nombre}
         </p>
-        <p style={{ fontSize: '0.62rem', color, fontWeight: 600 }}>{RAREZA_LABEL[carta.rareza]}</p>
+        <p style={{ fontSize: '0.62rem', color, fontWeight: 600 }}>{RAREZA_LABEL[rarezaVisual(carta.rareza)]}</p>
       </div>
     </div>
   )
@@ -116,17 +114,18 @@ export default function IntercambiosClient({ usuarioId, miColeccion, amigos }: P
   useEffect(() => { setCartaPedida('') }, [cartaOfrecida])
 
   const rarezaOfrecida = cartaOfrecida ? CARTAS.find(c => c.id === cartaOfrecida)?.rareza : null
+  const tierOfrecido = rarezaOfrecida ? rarezaVisual(rarezaOfrecida) : null
 
   // Cartas disponibles para ofrecer (las mías)
   const cartasParaOfrecer = CARTAS.filter(c =>
     miColeccion.includes(c.id) &&
-    (!filtroRareza || c.rareza === filtroRareza)
+    (!filtroRareza || rarezaVisual(c.rareza) === rarezaVisual(filtroRareza as Rareza))
   )
 
-  // Cartas que puedo pedir (misma rareza, que no tengo yo, y si es directo: que el amigo tenga)
-  const cartasParaPedir = rarezaOfrecida
+  // Cartas que puedo pedir (mismo tier visual, que no tengo yo, y si es directo: que el amigo tenga)
+  const cartasParaPedir = tierOfrecido
     ? CARTAS.filter(c => {
-        if (c.rareza !== rarezaOfrecida) return false
+        if (rarezaVisual(c.rareza) !== tierOfrecido) return false
         if (c.id === cartaOfrecida) return false
         if (tipoOferta === 'directo' && amigoSeleccionado) {
           return coleccionAmigo.includes(c.id)
@@ -558,17 +557,17 @@ export default function IntercambiosClient({ usuarioId, miColeccion, amigos }: P
                       style={{
                         display: 'flex', alignItems: 'center', gap: 8,
                         padding: '6px 8px', borderRadius: 8, textAlign: 'left',
-                        border: `1px solid ${cartaOfrecida === c.id ? `${RAREZA_COLOR[c.rareza]}70` : 'rgba(255,255,255,0.06)'}`,
-                        background: cartaOfrecida === c.id ? `${RAREZA_COLOR[c.rareza]}18` : 'transparent',
+                        border: `1px solid ${cartaOfrecida === c.id ? `${RAREZA_COLOR[rarezaVisual(c.rareza)]}70` : 'rgba(255,255,255,0.06)'}`,
+                        background: cartaOfrecida === c.id ? `${RAREZA_COLOR[rarezaVisual(c.rareza)]}18` : 'transparent',
                         cursor: 'pointer', outline: 'none', width: '100%',
                       }}
                     >
                       <img src={c.imagen} alt="" style={{ width: 22, height: 32, objectFit: 'cover', borderRadius: 3, flexShrink: 0 }} onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
                       <div>
-                        <p style={{ fontSize: '0.72rem', fontWeight: 600, color: cartaOfrecida === c.id ? RAREZA_COLOR[c.rareza] : 'rgba(255,255,255,0.7)', lineHeight: 1.2 }}>{c.nombre}</p>
-                        <p style={{ fontSize: '0.6rem', color: RAREZA_COLOR[c.rareza], opacity: 0.8 }}>{RAREZA_LABEL[c.rareza]}</p>
+                        <p style={{ fontSize: '0.72rem', fontWeight: 600, color: cartaOfrecida === c.id ? RAREZA_COLOR[rarezaVisual(c.rareza)] : 'rgba(255,255,255,0.7)', lineHeight: 1.2 }}>{c.nombre}</p>
+                        <p style={{ fontSize: '0.6rem', color: RAREZA_COLOR[rarezaVisual(c.rareza)], opacity: 0.8 }}>{RAREZA_LABEL[rarezaVisual(c.rareza)]}</p>
                       </div>
-                      {cartaOfrecida === c.id && <span style={{ marginLeft: 'auto', color: RAREZA_COLOR[c.rareza], fontSize: '0.8rem' }}>✓</span>}
+                      {cartaOfrecida === c.id && <span style={{ marginLeft: 'auto', color: RAREZA_COLOR[rarezaVisual(c.rareza)], fontSize: '0.8rem' }}>✓</span>}
                     </button>
                   ))}
                 </div>
@@ -582,7 +581,7 @@ export default function IntercambiosClient({ usuarioId, miColeccion, amigos }: P
               }}>
                 <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
                   ¿Qué pedís?
-                  {rarezaOfrecida && <span style={{ color: RAREZA_COLOR[rarezaOfrecida], fontWeight: 700, marginLeft: 6 }}>({RAREZA_LABEL[rarezaOfrecida]})</span>}
+                  {rarezaOfrecida && <span style={{ color: RAREZA_COLOR[rarezaVisual(rarezaOfrecida)], fontWeight: 700, marginLeft: 6 }}>({RAREZA_LABEL[rarezaVisual(rarezaOfrecida)]})</span>}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5, maxHeight: 260, overflowY: 'auto' }}>
                   {!cartaOfrecida ? (
@@ -602,17 +601,17 @@ export default function IntercambiosClient({ usuarioId, miColeccion, amigos }: P
                       style={{
                         display: 'flex', alignItems: 'center', gap: 8,
                         padding: '6px 8px', borderRadius: 8, textAlign: 'left',
-                        border: `1px solid ${cartaPedida === c.id ? `${RAREZA_COLOR[c.rareza]}70` : 'rgba(255,255,255,0.06)'}`,
-                        background: cartaPedida === c.id ? `${RAREZA_COLOR[c.rareza]}18` : 'transparent',
+                        border: `1px solid ${cartaPedida === c.id ? `${RAREZA_COLOR[rarezaVisual(c.rareza)]}70` : 'rgba(255,255,255,0.06)'}`,
+                        background: cartaPedida === c.id ? `${RAREZA_COLOR[rarezaVisual(c.rareza)]}18` : 'transparent',
                         cursor: 'pointer', outline: 'none', width: '100%',
                       }}
                     >
                       <img src={c.imagen} alt="" style={{ width: 22, height: 32, objectFit: 'cover', borderRadius: 3, flexShrink: 0 }} onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
                       <div>
-                        <p style={{ fontSize: '0.72rem', fontWeight: 600, color: cartaPedida === c.id ? RAREZA_COLOR[c.rareza] : 'rgba(255,255,255,0.7)', lineHeight: 1.2 }}>{c.nombre}</p>
-                        <p style={{ fontSize: '0.6rem', color: RAREZA_COLOR[c.rareza], opacity: 0.8 }}>{RAREZA_LABEL[c.rareza]}</p>
+                        <p style={{ fontSize: '0.72rem', fontWeight: 600, color: cartaPedida === c.id ? RAREZA_COLOR[rarezaVisual(c.rareza)] : 'rgba(255,255,255,0.7)', lineHeight: 1.2 }}>{c.nombre}</p>
+                        <p style={{ fontSize: '0.6rem', color: RAREZA_COLOR[rarezaVisual(c.rareza)], opacity: 0.8 }}>{RAREZA_LABEL[rarezaVisual(c.rareza)]}</p>
                       </div>
-                      {cartaPedida === c.id && <span style={{ marginLeft: 'auto', color: RAREZA_COLOR[c.rareza], fontSize: '0.8rem' }}>✓</span>}
+                      {cartaPedida === c.id && <span style={{ marginLeft: 'auto', color: RAREZA_COLOR[rarezaVisual(c.rareza)], fontSize: '0.8rem' }}>✓</span>}
                     </button>
                   ))}
                 </div>

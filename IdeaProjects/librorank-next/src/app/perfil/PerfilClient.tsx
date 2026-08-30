@@ -10,7 +10,7 @@ import type { Logro } from '@/lib/dao/logroDAO'
 import type { Personaje } from '@/lib/personaje'
 import PersonajeCard from '@/components/PersonajeCard'
 import CartaPersonaje from '@/components/CartaPersonaje'
-import { CARTAS, RAREZAS } from '@/lib/cartas'
+import { CARTAS, RAREZAS, rarezaVisual } from '@/lib/cartas'
 
 interface WrappedData {
   anio: number
@@ -1073,7 +1073,7 @@ export default function PerfilClient({
             const total = CARTAS.length
             const obtenidas = colSet.size
             const pct = (obtenidas / total) * 100
-            const ORDEN_RAREZA = ['comun', 'raro', 'epico', 'legendario', 'mitico'] as const
+            const ORDEN_RAREZA = ['comun', 'epico', 'legendario'] as const
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {/* Header progreso */}
@@ -1096,9 +1096,9 @@ export default function PerfilClient({
                   </span>
                 </div>
 
-                {/* Cards por rareza */}
+                {/* Cards por tier visual */}
                 {ORDEN_RAREZA.map(rareza => {
-                  const cartasRareza = CARTAS.filter(c => c.rareza === rareza)
+                  const cartasRareza = CARTAS.filter(c => rarezaVisual(c.rareza) === rareza)
                   const obtenidasRareza = cartasRareza.filter(c => colSet.has(c.id)).length
                   const r = RAREZAS[rareza]
                   return (
