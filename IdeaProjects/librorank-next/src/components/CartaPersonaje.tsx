@@ -170,7 +170,7 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
           height: dims.h,
           borderRadius: 10,
           position: 'relative',
-          overflow: 'visible',
+          overflow: 'hidden',
           flexShrink: 0,
           transformStyle: 'preserve-3d',
           transition: 'transform 0.15s ease-out, filter 0.15s ease-out',
@@ -180,13 +180,13 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
             : 'grayscale(1) brightness(0.45)',
           opacity: obtenida ? 1 : 0.7,
           cursor: obtenida ? undefined : 'default',
+          boxShadow: `0 0 0 2px ${sagaColor}cc, 0 0 22px ${sagaColor}50`,
         }}
       >
-        {/* ── Cuerpo holográfico (clipeado al borde redondeado) ── */}
+        {/* ── Fondo holográfico ── */}
         <div style={{
-          position: 'absolute', inset: 0, borderRadius: 10, overflow: 'hidden',
+          position: 'absolute', inset: 0,
           background: `linear-gradient(145deg, #0d0820 0%, #150d28 40%, #0d1228 100%)`,
-          boxShadow: `0 0 0 2px ${sagaColor}cc, 0 0 22px ${sagaColor}60, 0 0 44px ${sagaColor}20`,
           zIndex: 0,
         }}>
           {/* Conic gradient rotando — efecto arcoíris */}
@@ -219,16 +219,15 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
           }} />
         </div>
 
-        {/* ── Imagen desbordando hacia arriba ── */}
+        {/* ── Imagen (contenida, fade en la parte baja) ── */}
         {!imgError ? (
           <div style={{
             position: 'absolute',
-            top: '-30%',
-            left: 0, right: 0,
-            height: '78%',
-            zIndex: 10,
-            maskImage: 'linear-gradient(to bottom, black 48%, transparent 86%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 48%, transparent 86%)',
+            top: 0, left: 0, right: 0,
+            height: '60%',
+            zIndex: 2,
+            maskImage: 'linear-gradient(to bottom, black 55%, transparent 95%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 95%)',
             pointerEvents: 'none',
           }}>
             <Image
@@ -238,7 +237,6 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
               style={{
                 objectFit: 'cover',
                 objectPosition: `${carta.posicionX}% ${carta.posicionY}%`,
-                filter: `drop-shadow(0 14px 28px ${sagaColor}90) drop-shadow(0 4px 10px rgba(0,0,0,0.95))`,
               }}
               unoptimized
               onError={() => setImgError(true)}
@@ -248,7 +246,7 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
           <div style={{
             position: 'absolute', top: '8%', left: 0, right: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '3rem', opacity: 0.3, zIndex: 10,
+            fontSize: '3rem', opacity: 0.3, zIndex: 2,
           }}>📜</div>
         )}
 
@@ -257,8 +255,7 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
           position: 'absolute',
           bottom: 0, left: 0, right: 0,
           height: '49%',
-          borderRadius: '0 0 10px 10px',
-          background: `linear-gradient(to bottom, transparent 0%, rgba(13,8,32,0.90) 20%, rgba(13,8,32,0.97) 100%)`,
+          background: `linear-gradient(to bottom, transparent 0%, rgba(13,8,32,0.92) 18%, rgba(13,8,32,0.98) 100%)`,
           padding: size === 'sm' ? '0.5rem 0.55rem 0.35rem' : '0.65rem 0.7rem 0.45rem',
           display: 'flex', flexDirection: 'column', gap: size === 'sm' ? 2 : 3,
           zIndex: 5,
