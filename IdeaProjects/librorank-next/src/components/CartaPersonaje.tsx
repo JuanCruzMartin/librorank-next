@@ -219,15 +219,15 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
           }} />
         </div>
 
-        {/* ── Imagen (contenida, fade en la parte baja) ── */}
+        {/* ── Imagen (ocupa parte superior, fade largo hacia el panel) ── */}
         {!imgError ? (
           <div style={{
             position: 'absolute',
             top: 0, left: 0, right: 0,
-            height: '60%',
+            height: '72%',
             zIndex: 2,
-            maskImage: 'linear-gradient(to bottom, black 55%, transparent 95%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 55%, transparent 95%)',
+            maskImage: 'linear-gradient(to bottom, black 40%, transparent 92%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 92%)',
             pointerEvents: 'none',
           }}>
             <Image
@@ -250,12 +250,12 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
           }}>📜</div>
         )}
 
-        {/* ── Panel de texto en la parte inferior ── */}
+        {/* ── Panel de texto — gradiente suave, sin borde duro ── */}
         <div style={{
           position: 'absolute',
           bottom: 0, left: 0, right: 0,
-          height: '49%',
-          background: `linear-gradient(to bottom, transparent 0%, rgba(13,8,32,0.92) 18%, rgba(13,8,32,0.98) 100%)`,
+          height: '52%',
+          background: `linear-gradient(to bottom, transparent 0%, rgba(13,8,32,0.78) 28%, rgba(13,8,32,0.95) 55%, rgba(13,8,32,0.98) 100%)`,
           padding: size === 'sm' ? '0.5rem 0.55rem 0.35rem' : '0.65rem 0.7rem 0.45rem',
           display: 'flex', flexDirection: 'column', gap: size === 'sm' ? 2 : 3,
           zIndex: 5,
