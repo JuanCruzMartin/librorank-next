@@ -79,11 +79,12 @@ const ANIMATIONS = `
   }
 `
 
+// Solo en la zona de imagen (top 28%), no en el panel de texto
 const SPARKLE_POS = [
-  { x: '14%', y: '12%' },
-  { x: '79%', y: '15%' },
-  { x: '20%', y: '85%' },
-  { x: '82%', y: '80%' },
+  { x: '12%', y: '9%' },
+  { x: '76%', y: '7%' },
+  { x: '20%', y: '24%' },
+  { x: '70%', y: '21%' },
 ]
 
 export default function CartaPersonaje({ carta, obtenida = true, size = 'md', numero, total }: Props) {
@@ -250,17 +251,19 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
           }}>📜</div>
         )}
 
-        {/* ── Panel de texto — gradiente suave, sin borde duro ── */}
+        {/* ── Panel de texto ── */}
         <div style={{
           position: 'absolute',
           bottom: 0, left: 0, right: 0,
-          height: '52%',
-          background: `linear-gradient(to bottom, transparent 0%, rgba(13,8,32,0.78) 28%, rgba(13,8,32,0.95) 55%, rgba(13,8,32,0.98) 100%)`,
-          padding: size === 'sm' ? '0.5rem 0.55rem 0.35rem' : '0.65rem 0.7rem 0.45rem',
+          height: '58%',
+          background: `linear-gradient(to bottom, transparent 0%, rgba(13,8,32,0.82) 16%, rgba(13,8,32,0.97) 38%, rgba(13,8,32,0.99) 100%)`,
+          padding: size === 'sm'
+            ? '0.8rem 0.55rem 0.35rem'
+            : '1.1rem 0.7rem 0.45rem',
           display: 'flex', flexDirection: 'column', gap: size === 'sm' ? 2 : 3,
           zIndex: 5,
         }}>
-          {/* Nombre con texto metálico */}
+          {/* Nombre metálico */}
           <div style={{
             fontFamily: 'Georgia, "Times New Roman", serif',
             fontWeight: 800,
@@ -270,29 +273,51 @@ export default function CartaPersonaje({ carta, obtenida = true, size = 'md', nu
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
             lineHeight: 1.1,
-            paddingRight: 28,
+            paddingRight: 26,
             filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.95))',
           }}>
             {carta.nombre}
           </div>
-          {/* Epíteto */}
+
+          {/* Concepto — alma del personaje */}
           <div style={{
-            fontFamily: 'Georgia, serif', fontStyle: 'italic',
-            fontSize: size === 'sm' ? '0.52rem' : '0.6rem',
-            color: 'rgba(255,255,255,0.5)',
-            lineHeight: 1.2,
+            fontSize: size === 'sm' ? '0.52rem' : '0.62rem',
+            fontWeight: 700,
+            color: sagaColor,
+            textTransform: 'uppercase',
+            letterSpacing: 1.2,
+            textShadow: `0 0 8px ${sagaColor}60`,
           }}>
-            {carta.epiteto}
+            {carta.concepto}
           </div>
-          {/* Separador con color de saga */}
-          <div style={{
-            height: 1,
-            background: `linear-gradient(90deg, transparent, ${sagaColor}90, transparent)`,
-          }} />
-          {/* Info rows */}
+
+          {/* Separador saga */}
+          <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${sagaColor}80, transparent)` }} />
+
+          {/* Info compacta */}
           <FilaInfoDark label="OBRA" valor={carta.obra} />
-          <FilaInfoDark label="AUTOR" valor={carta.autor} />
-          {size !== 'sm' && <FilaInfoDark label="AÑO" valor={String(carta.anio)} />}
+          {size !== 'sm' && <FilaInfoDark label="AUTOR" valor={carta.autor} />}
+
+          {/* Cita — solo md y lg */}
+          {size !== 'sm' && (
+            <>
+              <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.09), transparent)' }} />
+              <div style={{
+                fontFamily: 'Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: size === 'lg' ? '0.6rem' : '0.54rem',
+                color: 'rgba(255,255,255,0.38)',
+                lineHeight: 1.4,
+                overflow: 'hidden',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical' as const,
+              }}>
+                {carta.cita}
+              </div>
+            </>
+          )}
+
           {/* Label rareza */}
           <div style={{
             marginTop: 'auto',
