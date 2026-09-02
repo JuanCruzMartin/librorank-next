@@ -48,6 +48,17 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
   const [tirando, setTirando] = useState(false)
   const [reveal, setReveal] = useState<{ carta: Carta; esNueva: boolean; revelada: boolean } | null>(null)
   const [ampliada, setAmpliada] = useState<Carta | null>(null)
+  const [tilt, setTilt] = useState({ rx: 0, ry: 0, mx: 50, my: 50, active: false })
+
+  const handleCardMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const mx = (x / rect.width) * 100
+    const my = (y / rect.height) * 100
+    setTilt({ rx: (50 - my) * 0.25, ry: (mx - 50) * 0.25, mx, my, active: true })
+  }
+  const handleCardLeave = () => setTilt({ rx: 0, ry: 0, mx: 50, my: 50, active: false })
   const [fase, setFase] = useState<'fondo' | 'cuenta' | 'carta'>('carta')
   const [cuenta, setCuenta] = useState<number | null>(null)
   const [vista, setVista] = useState<Vista>('rareza')
@@ -865,9 +876,44 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
           )}
           <div
             onClick={e => e.stopPropagation()}
-            style={{ animation: 'zoom-in-carta 0.3s cubic-bezier(0.22,1,0.36,1)', position: 'relative', zIndex: 1 }}
+            onMouseMove={handleCardMove}
+            onMouseLeave={handleCardLeave}
+            style={{
+              animation: 'zoom-in-carta 0.3s cubic-bezier(0.22,1,0.36,1)',
+              position: 'relative', zIndex: 1,
+              transformStyle: 'preserve-3d',
+              transform: `perspective(900px) rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
+              transition: tilt.active ? 'transform 0.08s ease-out' : 'transform 0.4s ease-out',
+            }}
           >
             <CartaPersonaje carta={ampliada} obtenida size="lg" numero={CARTAS.findIndex(c => c.id === ampliada.id) + 1} total={CARTAS.length} />
+            {/* Reverse holo foil — comun/raro */}
+            {(ampliada.rareza === 'comun' || ampliada.rareza === 'raro') && (
+              <div style={{
+                position: 'absolute', inset: 0, borderRadius: 10, pointerEvents: 'none', zIndex: 9,
+                background: `linear-gradient(
+                  ${tilt.mx * 1.8}deg,
+                  hsla(${tilt.mx * 3.6 + tilt.my * 1.8},     100%, 65%, 0.45) 0%,
+                  hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 60}, 100%, 65%, 0.45) 16%,
+                  hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 120},100%, 65%, 0.45) 33%,
+                  hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 180},100%, 65%, 0.45) 50%,
+                  hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 240},100%, 65%, 0.45) 66%,
+                  hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 300},100%, 65%, 0.45) 83%,
+                  hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 360},100%, 65%, 0.45) 100%
+                )`,
+                mixBlendMode: 'color-dodge',
+                opacity: tilt.active ? 0.55 : 0,
+                transition: 'opacity 0.4s',
+              }} />
+            )}
+            {/* Glare overlay */}
+            <div style={{
+              position: 'absolute', inset: 0, borderRadius: 10, pointerEvents: 'none', zIndex: 10,
+              background: `radial-gradient(circle at ${tilt.mx}% ${tilt.my}%, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.05) 40%, transparent 65%)`,
+              opacity: tilt.active ? 1 : 0,
+              transition: 'opacity 0.3s',
+              mixBlendMode: 'overlay',
+            }} />
             <button
               onClick={() => setAmpliada(null)}
               style={{

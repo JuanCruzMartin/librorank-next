@@ -28,6 +28,7 @@ interface CartaOverride {
   posicionX?: number
   posicionY?: number
   fondo?: string
+  fullArt?: boolean
 }
 
 export const RAREZAS: Record<Rareza, { label: string; letra: string; color: string; peso: number; glow: boolean }> = {
@@ -907,7 +908,7 @@ export const CARTAS: Carta[] = CARTAS_BASE.map(c => {
     posicionX: o?.posicionX ?? 50,
     posicionY: o?.posicionY ?? 20,
     fondo: o?.fondo,
-    fullArt: c.fullArt,
+    fullArt: o?.fullArt ?? c.fullArt,
   }
 })
 
