@@ -6,6 +6,7 @@ import { crearTabla, obtenerConversaciones } from '@/lib/dao/mensajeDAO'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ChatClient from './ChatClient'
+import BannerSugerencias from './BannerSugerencias'
 
 export default async function ChatPage({ searchParams }: { searchParams: Promise<{ con?: string }> }) {
   const authUser = await getAuthUser()
@@ -28,6 +29,7 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
     <>
       <Header user={usuario} />
       <main style={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
+        <BannerSugerencias />
         <ChatClient
           usuarioId={authUser.id}
           amigos={amigos.map(a => ({ id: a.id, nombre: a.nombre, username: a.username, avatar_url: a.avatar_url ?? null }))}

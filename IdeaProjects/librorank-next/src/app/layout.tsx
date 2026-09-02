@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import PreguntaDiariaWidget from './home/PreguntaDiariaWidget'
 import ChatFab from './home/ChatFab'
+import BannerSugerenciasFlotante from '@/components/BannerSugerenciasFlotante'
 
 const BASE_URL = 'https://librorank-next.vercel.app'
 
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <PreguntaDiariaWidget />
         <ChatFab />
+        <BannerSugerenciasFlotante />
         <script
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
           async
