@@ -48,6 +48,8 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
   const [tirando, setTirando] = useState(false)
   const [reveal, setReveal] = useState<{ carta: Carta; esNueva: boolean; revelada: boolean } | null>(null)
   const [ampliada, setAmpliada] = useState<Carta | null>(null)
+  const [cardOrigin, setCardOrigin] = useState<DOMRect | null>(null)
+  const [animState, setAnimState] = useState<'flying-in' | 'arrived' | 'flying-out' | null>(null)
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, mx: 50, my: 50, active: false })
 
   const handleCardMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -59,6 +61,29 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
     setTilt({ rx: (50 - my) * 0.25, ry: (mx - 50) * 0.25, mx, my, active: true })
   }
   const handleCardLeave = () => setTilt({ rx: 0, ry: 0, mx: 50, my: 50, active: false })
+
+  const openCarta = (e: React.MouseEvent, carta: Carta) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    setCardOrigin(rect)
+    setTilt({ rx: 0, ry: 0, mx: 50, my: 50, active: false })
+    setAmpliada(carta)
+    setAnimState('flying-in')
+  }
+
+  const closeCarta = () => {
+    setTilt({ rx: 0, ry: 0, mx: 50, my: 50, active: false })
+    setAnimState('flying-out')
+  }
+
+  const handleAnimEnd = () => {
+    if (animState === 'flying-in') {
+      setAnimState('arrived')
+    } else if (animState === 'flying-out') {
+      setAmpliada(null)
+      setCardOrigin(null)
+      setAnimState(null)
+    }
+  }
   const [fase, setFase] = useState<'fondo' | 'cuenta' | 'carta'>('carta')
   const [cuenta, setCuenta] = useState<number | null>(null)
   const [vista, setVista] = useState<Vista>('rareza')
@@ -524,7 +549,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                               const tengo = coleccion.includes(carta.id)
                               const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
                               return (
-                                <div key={carta.id} onClick={() => tengo && setAmpliada(carta)} style={{ cursor: tengo ? 'pointer' : 'default', zoom: 0.82 }}>
+                                <div key={carta.id} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default', zoom: 0.82 }}>
                                   <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} />
                                 </div>
                               )
@@ -543,7 +568,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                         const tengo = coleccion.includes(carta.id)
                         const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
                         return (
-                          <div key={carta.id} title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`} onClick={() => tengo && setAmpliada(carta)} style={{ cursor: tengo ? 'pointer' : 'default' }}>
+                          <div key={carta.id} title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default' }}>
                             <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} />
                           </div>
                         )
@@ -626,7 +651,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                             const tengo = coleccion.includes(carta.id)
                             const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
                             return (
-                              <div key={carta.id} onClick={() => tengo && setAmpliada(carta)} style={{ cursor: tengo ? 'pointer' : 'default', zoom: 0.82 }}>
+                              <div key={carta.id} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default', zoom: 0.82 }}>
                                 <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} />
                               </div>
                             )
@@ -645,7 +670,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                       const tengo = coleccion.includes(carta.id)
                       const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
                       return (
-                        <div key={carta.id} title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`} onClick={() => tengo && setAmpliada(carta)} style={{ cursor: tengo ? 'pointer' : 'default' }}>
+                        <div key={carta.id} title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default' }}>
                           <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} />
                         </div>
                       )
@@ -846,91 +871,153 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
         </div>
       )}
 
-      {/* Modal ampliar carta */}
-      {ampliada && (
-        <div
-          style={{
-            position: 'fixed', inset: 0,
-            background: (ampliada.fondo && ampliada.rareza !== 'epico') ? undefined : 'rgba(10,8,5,0.88)',
-            backdropFilter: (ampliada.fondo && ampliada.rareza !== 'epico') ? undefined : 'blur(4px)',
-            zIndex: 9998, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            animation: 'fade-in-bg 0.2s ease',
-            overflow: 'hidden',
-          }}
-          onClick={() => setAmpliada(null)}
-        >
-          {ampliada.fondo && ampliada.rareza !== 'epico' && (
-            <>
-              <div style={{
-                position: 'absolute', inset: 0, zIndex: 0,
-                backgroundImage: `url(${ampliada.fondo})`,
-                backgroundSize: 'cover', backgroundPosition: 'center',
-                filter: 'blur(2px) brightness(0.4) saturate(1.2)',
-                transform: 'scale(1.08)',
-              }} />
-              <div style={{
-                position: 'absolute', inset: 0, zIndex: 0,
-                background: `radial-gradient(circle at 50% 45%, ${ampliada.color}15 0%, transparent 55%, rgba(0,0,0,0.55) 100%)`,
-              }} />
-            </>
-          )}
-          <div
-            onClick={e => e.stopPropagation()}
-            onMouseMove={handleCardMove}
-            onMouseLeave={handleCardLeave}
-            style={{
-              animation: 'zoom-in-carta 0.3s cubic-bezier(0.22,1,0.36,1)',
-              position: 'relative', zIndex: 1,
-              transformStyle: 'preserve-3d',
-              transform: `perspective(900px) rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
-              transition: tilt.active ? 'transform 0.08s ease-out' : 'transform 0.4s ease-out',
-            }}
-          >
-            <CartaPersonaje carta={ampliada} obtenida size="lg" numero={CARTAS.findIndex(c => c.id === ampliada.id) + 1} total={CARTAS.length} />
-            {/* Reverse holo foil — comun/raro */}
-            {(ampliada.rareza === 'comun' || ampliada.rareza === 'raro') && (
-              <div style={{
-                position: 'absolute', inset: 0, borderRadius: 10, pointerEvents: 'none', zIndex: 9,
-                background: `linear-gradient(
-                  ${tilt.mx * 1.8}deg,
-                  hsla(${tilt.mx * 3.6 + tilt.my * 1.8},     100%, 65%, 0.45) 0%,
-                  hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 60}, 100%, 65%, 0.45) 16%,
-                  hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 120},100%, 65%, 0.45) 33%,
-                  hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 180},100%, 65%, 0.45) 50%,
-                  hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 240},100%, 65%, 0.45) 66%,
-                  hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 300},100%, 65%, 0.45) 83%,
-                  hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 360},100%, 65%, 0.45) 100%
-                )`,
-                mixBlendMode: 'color-dodge',
-                opacity: tilt.active ? 0.55 : 0,
-                transition: 'opacity 0.4s',
-              }} />
-            )}
-            {/* Glare overlay */}
-            <div style={{
-              position: 'absolute', inset: 0, borderRadius: 10, pointerEvents: 'none', zIndex: 10,
-              background: `radial-gradient(circle at ${tilt.mx}% ${tilt.my}%, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.05) 40%, transparent 65%)`,
-              opacity: tilt.active ? 1 : 0,
-              transition: 'opacity 0.3s',
-              mixBlendMode: 'overlay',
-            }} />
-            <button
-              onClick={() => setAmpliada(null)}
+      {/* Flying card modal — spin effect */}
+      {ampliada && cardOrigin && animState && (() => {
+        const LG_W = 300
+
+        // Dorso específico según la serie de la carta
+        const dorsoImagen = (() => {
+          const f = ampliada.fondo ?? ''
+          if (f.includes('got'))         return '/dorso-got.png'
+          if (f.includes('sda'))         return '/dorso-sda.png'
+          if (f.includes('hp') || f.includes('harry-potter') || f.includes('albus') || f.includes('lord-voldemort') || f.includes('reliquias')) return '/dorso-hp.png'
+          if (f.includes('principito'))  return '/dorso-principito.png'
+          return undefined
+        })()
+        const cx = cardOrigin.left + cardOrigin.width / 2
+        const cy = cardOrigin.top + cardOrigin.height / 2
+        const dx = cx - window.innerWidth / 2
+        const dy = cy - window.innerHeight / 2
+        const sc = cardOrigin.width / LG_W
+
+        const arrived = animState === 'arrived'
+        const arrivedTransform = tilt.active
+          ? `perspective(900px) translate(-50%, -50%) rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`
+          : `translate(-50%, -50%)`
+
+        return (
+          <>
+            {/* Backdrop */}
+            <div
+              onClick={closeCarta}
               style={{
-                position: 'absolute', top: -14, right: -14,
-                width: 32, height: 32, borderRadius: '50%',
-                background: '#1a1a2e', border: '2px solid rgba(255,255,255,0.2)',
-                color: '#fff', fontSize: '1rem', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                position: 'fixed', inset: 0, zIndex: 9997,
+                background: 'rgba(10,8,5,0.88)',
+                backdropFilter: 'blur(4px)',
+                opacity: arrived ? 1 : 0,
+                transition: 'opacity 0.35s ease',
+                pointerEvents: arrived ? 'auto' : 'none',
               }}
             >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
+              {ampliada.fondo && ampliada.rareza !== 'epico' && (
+                <>
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    backgroundImage: `url(${ampliada.fondo})`,
+                    backgroundSize: 'cover', backgroundPosition: 'center',
+                    filter: 'blur(2px) brightness(0.4) saturate(1.2)',
+                    transform: 'scale(1.08)',
+                  }} />
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: `radial-gradient(circle at 50% 45%, ${ampliada.color}15 0%, transparent 55%, rgba(0,0,0,0.55) 100%)`,
+                  }} />
+                </>
+              )}
+            </div>
+
+            {/* Flying + spinning card */}
+            <div
+              onAnimationEnd={handleAnimEnd}
+              onMouseMove={arrived ? handleCardMove : undefined}
+              onMouseLeave={arrived ? handleCardLeave : undefined}
+              style={{
+                position: 'fixed', top: '50%', left: '50%',
+                zIndex: 9998,
+                transformStyle: 'preserve-3d',
+                ['--dx' as string]: `${dx}px`,
+                ['--dy' as string]: `${dy}px`,
+                ['--sc' as string]: sc,
+                animation: animState === 'flying-in'
+                  ? 'carta-vuela-in 1.3s cubic-bezier(0.22,1,0.36,1) forwards'
+                  : animState === 'flying-out'
+                  ? 'carta-vuela-out 1.0s ease-in forwards'
+                  : 'none',
+                transform: arrived ? arrivedTransform : undefined,
+                transition: arrived
+                  ? (tilt.active ? 'transform 0.08s ease-out' : 'transform 0.4s ease-out')
+                  : 'none',
+              } as React.CSSProperties}
+            >
+              {/* Cara frontal */}
+              <div style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', position: 'relative' }}>
+                <CartaPersonaje carta={ampliada} obtenida size="lg" numero={CARTAS.findIndex(c => c.id === ampliada.id) + 1} total={CARTAS.length} />
+                {/* Reverse holo foil — comun/raro */}
+                {arrived && (ampliada.rareza === 'comun' || ampliada.rareza === 'raro') && (
+                  <div style={{
+                    position: 'absolute', inset: 0, borderRadius: 10, pointerEvents: 'none', zIndex: 9,
+                    background: `linear-gradient(
+                      ${tilt.mx * 1.8}deg,
+                      hsla(${tilt.mx * 3.6 + tilt.my * 1.8},     100%, 65%, 0.45) 0%,
+                      hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 60}, 100%, 65%, 0.45) 16%,
+                      hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 120},100%, 65%, 0.45) 33%,
+                      hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 180},100%, 65%, 0.45) 50%,
+                      hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 240},100%, 65%, 0.45) 66%,
+                      hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 300},100%, 65%, 0.45) 83%,
+                      hsla(${tilt.mx * 3.6 + tilt.my * 1.8 + 360},100%, 65%, 0.45) 100%
+                    )`,
+                    mixBlendMode: 'color-dodge',
+                    opacity: tilt.active ? 0.55 : 0,
+                    transition: 'opacity 0.4s',
+                  }} />
+                )}
+                {/* Glare */}
+                {arrived && (
+                  <div style={{
+                    position: 'absolute', inset: 0, borderRadius: 10, pointerEvents: 'none', zIndex: 10,
+                    background: `radial-gradient(circle at ${tilt.mx}% ${tilt.my}%, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.05) 40%, transparent 65%)`,
+                    opacity: tilt.active ? 1 : 0,
+                    transition: 'opacity 0.3s',
+                    mixBlendMode: 'overlay',
+                  }} />
+                )}
+                <button
+                  onClick={closeCarta}
+                  style={{
+                    position: 'absolute', top: -14, right: -14,
+                    width: 32, height: 32, borderRadius: '50%',
+                    background: '#1a1a2e', border: '2px solid rgba(255,255,255,0.2)',
+                    color: '#fff', fontSize: '1rem', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    opacity: arrived ? 1 : 0,
+                    transition: 'opacity 0.3s',
+                  }}
+                >✕</button>
+              </div>
+
+              {/* Cara trasera (dorso) */}
+              <div style={{
+                position: 'absolute', top: 0, left: 0,
+                transform: 'rotateY(180deg)',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+              }}>
+                <CartaDorso size="lg" imagen={dorsoImagen} />
+              </div>
+            </div>
+          </>
+        )
+      })()}
 
       <style>{`
+        @keyframes carta-vuela-in {
+          0%   { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(var(--sc)) rotateY(0deg); }
+          100% { transform: translate(-50%, -50%) scale(1) rotateY(360deg); }
+        }
+        @keyframes carta-vuela-out {
+          0%   { transform: translate(-50%, -50%) scale(1) rotateY(0deg); }
+          100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(var(--sc)) rotateY(-360deg); }
+        }
         @keyframes fade-in-bg {
           from { opacity: 0; }
           to   { opacity: 1; }
