@@ -332,7 +332,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
         </div>
       )}
 
-      <style>{`
+      <style suppressHydrationWarning>{`
         @keyframes cofre-shake {
           0%,100% { transform: scale(1.1) rotate(0deg); }
           20%      { transform: scale(1.1) rotate(-6deg); }
@@ -549,8 +549,8 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                               const tengo = coleccion.includes(carta.id)
                               const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
                               return (
-                                <div key={carta.id} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default', zoom: 0.82 }}>
-                                  <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} />
+                                <div key={carta.id} className={`cg-item${tengo ? ' obtenida' : ''}`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default', zoom: 0.82 }}>
+                                  <div className="cg-inner"><CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} /></div>
                                 </div>
                               )
                             })}
@@ -568,8 +568,8 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                         const tengo = coleccion.includes(carta.id)
                         const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
                         return (
-                          <div key={carta.id} title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default' }}>
-                            <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} />
+                          <div key={carta.id} className={`cg-item${tengo ? ' obtenida' : ''}`} title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default' }}>
+                            <div className="cg-inner"><CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} /></div>
                           </div>
                         )
                       })}
@@ -651,8 +651,8 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                             const tengo = coleccion.includes(carta.id)
                             const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
                             return (
-                              <div key={carta.id} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default', zoom: 0.82 }}>
-                                <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} />
+                              <div key={carta.id} className={`cg-item${tengo ? ' obtenida' : ''}`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default', zoom: 0.82 }}>
+                                <div className="cg-inner"><CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} /></div>
                               </div>
                             )
                           })}
@@ -670,8 +670,8 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                       const tengo = coleccion.includes(carta.id)
                       const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
                       return (
-                        <div key={carta.id} title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default' }}>
-                          <CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} />
+                        <div key={carta.id} className={`cg-item${tengo ? ' obtenida' : ''}`} title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default' }}>
+                          <div className="cg-inner"><CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} /></div>
                         </div>
                       )
                     })}
@@ -1038,7 +1038,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
         )
       })()}
 
-      <style>{`
+      <style suppressHydrationWarning>{`
         @keyframes carta-vuela-in {
           0%   { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(var(--sc)) rotateY(0deg); }
           100% { transform: translate(-50%, -50%) scale(1) rotateY(360deg); }
@@ -1086,6 +1086,25 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
           100% { opacity: 0; transform: scale(0.85); }
         }
         .modal-shake { animation: modal-shake 0.5s ease-out; }
+        .cg-item { position: relative; z-index: 1; }
+        .cg-item.obtenida:hover { z-index: 10; }
+        .cg-inner {
+          transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+          border-radius: 10px;
+          will-change: transform;
+          position: relative;
+        }
+        .cg-item.obtenida:hover .cg-inner {
+          transform: translateY(-7px) scale(1.05) rotateX(5deg);
+          filter: brightness(1.12) saturate(1.1);
+          box-shadow: 0 14px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.07);
+        }
+        .cg-item.obtenida:hover .cg-inner::after {
+          content: '';
+          position: absolute; inset: 0; border-radius: 10px;
+          background: linear-gradient(135deg, rgba(255,255,255,0.13) 0%, transparent 50%, rgba(255,255,255,0.04) 100%);
+          pointer-events: none;
+        }
         .rayos-luz { animation: girar-rayos 22s linear infinite; }
         @keyframes girar-rayos {
           from { transform: rotate(0deg); }
