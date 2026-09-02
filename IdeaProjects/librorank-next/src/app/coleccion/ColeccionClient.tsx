@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CARTAS, RAREZAS, rarezaVisual, type Carta, type Rareza } from '@/lib/cartas'
+import { CARTAS, RAREZAS, rarezaVisual, getProbabilidadCarta, type Carta, type Rareza } from '@/lib/cartas'
 import CartaPersonaje from '@/components/CartaPersonaje'
 import CartaDorso from '@/components/CartaDorso'
 import type { TipoCofre, Cofre } from '@/lib/dao/cofreDAO'
@@ -833,6 +833,31 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
 
                     {reveal.revelada && (
                       <>
+                        {/* Badge de probabilidad */}
+                        <div style={{ animation: 'fade-in-bg 0.6s ease' }}>
+                          {(() => {
+                            const prob = getProbabilidadCarta(reveal.carta)
+                            const rareza = rarezaVisual(reveal.carta.rareza)
+                            const color = rareza === 'legendario' ? '#f0c040'
+                              : rareza === 'epico' ? '#c084fc'
+                              : '#94a3b8'
+                            return (
+                              <div style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 6,
+                                padding: '4px 12px', borderRadius: 20,
+                                background: `${color}18`,
+                                border: `1px solid ${color}44`,
+                                fontSize: '0.75rem',
+                              }}>
+                                <span style={{ color: color, fontWeight: 700 }}>
+                                  {prob < 0.1 ? prob.toFixed(2) : prob < 1 ? prob.toFixed(1) : prob.toFixed(1)}%
+                                </span>
+                                <span style={{ color: 'rgba(255,255,255,0.4)' }}>de probabilidad</span>
+                              </div>
+                            )
+                          })()}
+                        </div>
+
                         <div style={{ textAlign: 'center', animation: 'fade-in-bg 0.4s ease' }}>
                           <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>
                             {reveal.carta.autor} · {reveal.carta.anio}
@@ -877,11 +902,15 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
 
         // Dorso específico según la serie de la carta
         const dorsoImagen = (() => {
-          const f = ampliada.fondo ?? ''
-          if (f.includes('got'))         return '/dorso-got.png'
-          if (f.includes('sda'))         return '/dorso-sda.png'
-          if (f.includes('hp') || f.includes('harry-potter') || f.includes('albus') || f.includes('lord-voldemort') || f.includes('reliquias')) return '/dorso-hp.png'
-          if (f.includes('principito'))  return '/dorso-principito.png'
+          const id = ampliada.id
+          const SDA = new Set(['aragorn','legolas','arwen','galadriel','eowyn','frodo-bolson','gandalf','saruman','sauron','grima','boromir','barbol','theoden','eomer','bilbo-bolson','meriadoc','samsagaz','gimli','faramir'])
+          const GOT = new Set(['arya-stark','cersei-lannister','jaime-lannister','sansa-stark','tyrion-lannister','jon-snow','daenerys-targaryen','the-night-king','bran-stark','davos-seaworth','samwell-tarly','theon-greyjoy','ygritte','brienne-de-tarth','jorah-mormont','melisandre','petyr-baelish','sandor-clegane'])
+          const HP  = new Set(['ron-weasley','ginny-weasley','neville-longbottom','cho-chang','cedric-diggory','fred-george','luna-lovegood','hermione-granger','draco-malfoy','rubeus-hagrid','sirius-black','severus-snape','bellatrix-lestrange','dobby','harry-potter','albus-dumbledore','lord-voldemort','reliquias-muerte'])
+          const PP  = new Set(['el-bebedor','el-vanidoso','el-baobab','el-rey','el-farolero','el-hombre-de-negocios','el-aviador','el-geografo','la-serpiente','el-zorro','la-rosa','el-principito'])
+          if (SDA.has(id)) return '/dorso-sda.png'
+          if (GOT.has(id)) return '/dorso-got.png'
+          if (HP.has(id))  return '/dorso-hp.png'
+          if (PP.has(id))  return '/dorso-principito.png'
           return undefined
         })()
         const cx = cardOrigin.left + cardOrigin.width / 2
