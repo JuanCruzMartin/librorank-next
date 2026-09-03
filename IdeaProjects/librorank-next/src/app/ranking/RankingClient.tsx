@@ -1,12 +1,10 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
 import { getNivelLector } from '@/lib/nivelUtils'
-import { LIGAS, getLiga } from '@/lib/ligas'
+import { getLiga } from '@/lib/ligas'
 
-// Re-export para compatibilidad con código existente
-export { LIGAS }
 export const getLigaActual = getLiga
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
@@ -34,18 +32,6 @@ interface UsuarioSemanal {
   es_amigo: boolean
 }
 
-interface UsuarioLigaSemanal {
-  id: number
-  nombre: string
-  username: string
-  avatar_url: string | null
-  puntos: number
-  libros_semana: number
-  es_yo: boolean
-  es_amigo: boolean
-  nivel: { emoji: string; titulo: string; nivel: number }
-}
-
 interface AutorRanking {
   autor: string
   lectores: number
@@ -55,10 +41,7 @@ interface AutorRanking {
 interface Props {
   ranking: UsuarioRanking[]
   rankingSemanal: UsuarioSemanal[]
-  ligaSemanal: UsuarioLigaSemanal[]
   rankingAutores: AutorRanking[]
-  ligaActualKey: string
-  ligaCompKey: string
   usuarioId: number
   puntosUsuario: number
 }
@@ -72,9 +55,6 @@ function Medal({ pos }: { pos: number }) {
   return <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>#{pos}</span>
 }
 
-// ── Componente principal ─────────────────────────────────────────────────────
-
-// Calcula horas hasta el próximo lunes (reset semanal)
 function horasParaReset(): string {
   const ahora = new Date()
   const lunes = new Date(ahora)
@@ -88,45 +68,37 @@ function horasParaReset(): string {
   return `${horas}h ${mins}m`
 }
 
-export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, rankingAutores, ligaActualKey, ligaCompKey, usuarioId, puntosUsuario }: Props) {
-  const ligaActual  = getLigaActual(puntosUsuario)
-  const ligaComp    = LIGAS.find(l => l.key === ligaCompKey) ?? LIGAS[0]
-  const ligaSiguiente = LIGAS[LIGAS.indexOf(ligaActual) + 1] ?? null
-  const ligaCompSig   = LIGAS[LIGAS.indexOf(ligaComp) + 1] ?? null
+type TabKey = 'paginas' | 'libros' | 'general' | 'semanal' | 'autores'
 
-  const [ligaTab, setLigaTab] = useState<string>('paginas')
+const TABS: { key: TabKey; label: string; emoji: string; color: string }[] = [
+  { key: 'paginas',  label: 'Páginas leídas', emoji: '📄', color: '#3498db' },
+  { key: 'libros',   label: 'Libros leídos',  emoji: '📚', color: '#4a9e7a' },
+  { key: 'general',  label: 'Puntos',          emoji: '⭐', color: '#d4af37' },
+  { key: 'semanal',  label: 'Esta semana',     emoji: '🔥', color: '#e91e8c' },
+  { key: 'autores',  label: 'Escritores',      emoji: '✍️', color: '#9b59b6' },
+]
 
-  const esGeneral      = ligaTab === 'general'
-  const esPaginas      = ligaTab === 'paginas'
-  const esLibros       = ligaTab === 'libros'
-  const esSemanal      = ligaTab === 'semanal'
-  const esLigaSemanal  = ligaTab === 'ligasemanal'
-  const esAutores      = ligaTab === 'autores'
-  const ligaSeleccionada = LIGAS.find(l => l.key === ligaTab)
+export default function RankingClient({ ranking, rankingSemanal, rankingAutores, usuarioId, puntosUsuario }: Props) {
+  const ligaActual    = getLigaActual(puntosUsuario)
+  const ligaSiguiente = null as ReturnType<typeof getLiga> | null // no needed for progress anymore
 
-  // Usuarios a mostrar según tab
-  const usuariosLiga = esGeneral
+  const [tab, setTab] = useState<TabKey>('paginas')
+
+  const esPaginas  = tab === 'paginas'
+  const esLibros   = tab === 'libros'
+  const esGeneral  = tab === 'general'
+  const esSemanal  = tab === 'semanal'
+  const esAutores  = tab === 'autores'
+
+  const usuariosOrdenados = esGeneral
     ? [...ranking].sort((a, b) => b.puntos - a.puntos)
     : esPaginas
       ? [...ranking].sort((a, b) => b.total_paginas - a.total_paginas)
       : esLibros
         ? [...ranking].sort((a, b) => b.total_leidos - a.total_leidos)
-        : esSemanal
-          ? rankingSemanal
-          : ranking
-            .filter(u => ligaSeleccionada && u.puntos >= ligaSeleccionada.min && u.puntos <= ligaSeleccionada.max)
-            .sort((a, b) => b.puntos - a.puntos)
+        : ranking
 
-  // Posición del usuario en su propia liga
-  const posEnLiga = ranking
-    .filter(u => u.puntos >= ligaActual.min && u.puntos <= ligaActual.max)
-    .sort((a, b) => b.puntos - a.puntos)
-    .findIndex(u => u.id === usuarioId) + 1
-
-  const puntasFaltanSubir = ligaSiguiente ? ligaSiguiente.min - puntosUsuario : 0
-  const progresoLiga = ligaSiguiente
-    ? Math.min(100, Math.round(((puntosUsuario - ligaActual.min) / (ligaSiguiente.min - ligaActual.min)) * 100))
-    : 100
+  const tabInfo = TABS.find(t => t.key === tab)!
 
   return (
     <div style={{ minHeight: '100vh' }}>
@@ -142,92 +114,36 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
 
             {/* Info liga del usuario */}
             <div className="col-md-6 text-center text-md-start">
-              {/* Liga permanente (por puntos) */}
               <div style={{
                 display: 'inline-flex', alignItems: 'center', gap: '0.6rem',
                 background: ligaActual.colorBg,
                 border: `1px solid ${ligaActual.border}`,
                 borderRadius: 12, padding: '0.4rem 1rem',
                 fontSize: '0.8rem', fontWeight: 700,
-                color: ligaActual.color, marginBottom: '0.5rem',
+                color: ligaActual.color, marginBottom: '1rem',
               }}>
-                {ligaActual.emoji} Liga permanente: {ligaActual.nombre}
-                {posEnLiga > 0 && <span style={{ opacity: 0.7 }}>· #{posEnLiga}</span>}
-              </div>
-
-              {/* Liga competitiva (con ascenso/descenso) */}
-              <div style={{ marginBottom: '0.75rem' }}>
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-                  background: ligaComp.colorBg,
-                  border: `1px solid ${ligaComp.border}`,
-                  borderRadius: 12, padding: '0.4rem 1rem',
-                  fontSize: '0.8rem', fontWeight: 700,
-                  color: ligaComp.color,
-                }}>
-                  ⚔️ Liga competitiva: {ligaComp.emoji} {ligaComp.nombre}
-                  {ligaCompSig && (
-                    <span style={{ opacity: 0.65, fontSize: '0.7rem' }}>
-                      · top 3 sube a {ligaCompSig.emoji} {ligaCompSig.nombre}
-                    </span>
-                  )}
-                </div>
+                {ligaActual.emoji} Tu liga: {ligaActual.nombre}
               </div>
 
               <h1 className="font-title display-5 mb-2" style={{ color: '#fff' }}>
                 🏆 Ranking Global
               </h1>
-              <p className="text-muted" style={{ fontSize: '1rem', marginBottom: '1.25rem' }}>
-                Liga permanente: acumulá puntos. Liga competitiva: top 3 de cada semana sube, los inactivos bajan.
+              <p className="text-muted" style={{ fontSize: '1rem' }}>
+                Competí con lectores de toda la comunidad. Leé más, subí de liga.
               </p>
-
-              {/* Barra de progreso hacia siguiente liga */}
-              {ligaSiguiente && (
-                <div style={{ maxWidth: 380 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: '0.72rem' }}>
-                    <span style={{ color: ligaActual.color, fontWeight: 700 }}>
-                      {ligaActual.emoji} {ligaActual.nombre}
-                    </span>
-                    <span style={{ color: 'rgba(255,255,255,0.4)' }}>
-                      Faltan <strong style={{ color: '#fff' }}>{puntasFaltanSubir} pts</strong> para {ligaSiguiente.emoji} {ligaSiguiente.nombre}
-                    </span>
-                  </div>
-                  <div style={{ height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%', width: `${progresoLiga}%`,
-                      background: `linear-gradient(90deg, ${ligaActual.color}aa, ${ligaActual.color})`,
-                      borderRadius: 99, transition: 'width 0.6s ease',
-                    }} />
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)' }}>
-                    <span>{ligaActual.min} pts</span>
-                    <span>{ligaSiguiente.min} pts</span>
-                  </div>
-                </div>
-              )}
-              {!ligaSiguiente && (
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-                  background: 'rgba(126,207,255,0.1)', border: '1px solid rgba(126,207,255,0.3)',
-                  borderRadius: 10, padding: '0.4rem 1rem',
-                  fontSize: '0.78rem', fontWeight: 700, color: '#7ecfff',
-                }}>
-                  💎 Liga máxima alcanzada
-                </div>
-              )}
             </div>
 
             {/* Tus stats rápidos */}
             <div className="col-md-6">
-              <div className="ranking-stats-grid" style={{
+              <div style={{
                 display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem',
                 maxWidth: 360, marginLeft: 'auto',
               }}>
                 {[
-                  { label: 'Tus puntos', value: `⭐ ${puntosUsuario}`, color: '#d4af37' },
-                  { label: 'Liga permanente', value: `${ligaActual.emoji} ${ligaActual.nombre}`, color: ligaActual.color },
-                  { label: 'Liga competitiva', value: `${ligaComp.emoji} ${ligaComp.nombre}`, color: ligaComp.color },
-                  { label: 'Posición global', value: `#${ranking.findIndex(u => u.id === usuarioId) + 1 || '—'}`, color: '#fff' },
+                  { label: 'Tus puntos',       value: `⭐ ${puntosUsuario}`,                  color: '#d4af37' },
+                  { label: 'Tu liga',           value: `${ligaActual.emoji} ${ligaActual.nombre}`, color: ligaActual.color },
+                  { label: 'Total lectores',    value: `👥 ${ranking.length}`,                  color: '#fff' },
+                  { label: 'Posición global',   value: `#${ranking.findIndex(u => u.id === usuarioId) + 1 || '—'}`, color: '#fff' },
                 ].map(stat => (
                   <div key={stat.label} style={{
                     background: 'rgba(255,255,255,0.04)',
@@ -248,249 +164,90 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
       {/* ── CONTENIDO ── */}
       <div className="container py-5">
 
-        {/* Tabs — scroll horizontal en móvil */}
-        <div className="ranking-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-
-          {/* Tab Páginas leídas */}
-          <button
-            onClick={() => setLigaTab('paginas')}
-            style={{
-              background: esPaginas ? 'rgba(52,152,219,0.15)' : 'rgba(255,255,255,0.04)',
-              border: esPaginas ? '2px solid rgba(52,152,219,0.5)' : '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 20, padding: '0.45rem 1.1rem',
-              fontSize: '0.82rem', fontWeight: 700,
-              color: esPaginas ? '#3498db' : 'rgba(255,255,255,0.5)',
-              cursor: 'pointer', transition: 'all 0.2s',
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-            }}
-          >
-            📄 Páginas leídas
-            <span style={{
-              background: esPaginas ? 'rgba(52,152,219,0.3)' : 'rgba(255,255,255,0.08)',
-              color: esPaginas ? '#3498db' : 'rgba(255,255,255,0.4)',
-              borderRadius: 20, padding: '1px 7px', fontSize: '0.68rem',
-            }}>
-              {ranking.length}
-            </span>
-          </button>
-
-          {/* Tab Libros leídos */}
-          <button
-            onClick={() => setLigaTab('libros')}
-            style={{
-              background: esLibros ? 'rgba(74,158,122,0.15)' : 'rgba(255,255,255,0.04)',
-              border: esLibros ? '2px solid rgba(74,158,122,0.5)' : '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 20, padding: '0.45rem 1.1rem',
-              fontSize: '0.82rem', fontWeight: 700,
-              color: esLibros ? '#4a9e7a' : 'rgba(255,255,255,0.5)',
-              cursor: 'pointer', transition: 'all 0.2s',
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-            }}
-          >
-            📚 Libros leídos
-            <span style={{
-              background: esLibros ? 'rgba(74,158,122,0.3)' : 'rgba(255,255,255,0.08)',
-              color: esLibros ? '#4a9e7a' : 'rgba(255,255,255,0.4)',
-              borderRadius: 20, padding: '1px 7px', fontSize: '0.68rem',
-            }}>
-              {ranking.length}
-            </span>
-          </button>
-
-          {/* Tab Escritores */}
-          <button
-            onClick={() => setLigaTab('autores')}
-            style={{
-              background: esAutores ? 'rgba(155,89,182,0.15)' : 'rgba(255,255,255,0.04)',
-              border: esAutores ? '2px solid rgba(155,89,182,0.5)' : '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 20, padding: '0.45rem 1.1rem',
-              fontSize: '0.82rem', fontWeight: 700,
-              color: esAutores ? '#9b59b6' : 'rgba(255,255,255,0.5)',
-              cursor: 'pointer', transition: 'all 0.2s',
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-            }}
-          >
-            ✍️ Escritores
-            <span style={{
-              background: esAutores ? 'rgba(155,89,182,0.3)' : 'rgba(255,255,255,0.08)',
-              color: esAutores ? '#9b59b6' : 'rgba(255,255,255,0.4)',
-              borderRadius: 20, padding: '1px 7px', fontSize: '0.68rem',
-            }}>
-              {rankingAutores.length}
-            </span>
-          </button>
-
-          {/* Tab Liga Competitiva ⚔️ */}
-          <button
-            onClick={() => setLigaTab('ligasemanal')}
-            style={{
-              background: esLigaSemanal ? ligaComp.colorBg : 'rgba(255,255,255,0.04)',
-              border: esLigaSemanal ? `2px solid ${ligaComp.border}` : '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 20, padding: '0.45rem 1.1rem',
-              fontSize: '0.82rem', fontWeight: 700,
-              color: esLigaSemanal ? ligaComp.color : 'rgba(255,255,255,0.5)',
-              cursor: 'pointer', transition: 'all 0.2s',
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-            }}
-          >
-            ⚔️ Liga Competitiva
-            <span style={{
-              background: esLigaSemanal ? ligaComp.colorBg : 'rgba(255,255,255,0.08)',
-              color: esLigaSemanal ? ligaComp.color : 'rgba(255,255,255,0.4)',
-              borderRadius: 20, padding: '1px 7px', fontSize: '0.65rem', fontWeight: 800,
-            }}>
-              {ligaComp.emoji}
-            </span>
-          </button>
-
-          {/* Tab General */}
-          <button
-            onClick={() => setLigaTab('general')}
-            style={{
-              background: esGeneral ? 'rgba(212,175,55,0.12)' : 'rgba(255,255,255,0.04)',
-              border: esGeneral ? '2px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 20, padding: '0.45rem 1.1rem',
-              fontSize: '0.82rem', fontWeight: 700,
-              color: esGeneral ? '#d4af37' : 'rgba(255,255,255,0.5)',
-              cursor: 'pointer', transition: 'all 0.2s',
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-            }}
-          >
-            ⭐ Puntos
-            <span style={{
-              background: esGeneral ? 'rgba(212,175,55,0.3)' : 'rgba(255,255,255,0.08)',
-              color: esGeneral ? '#d4af37' : 'rgba(255,255,255,0.4)',
-              borderRadius: 20, padding: '1px 7px', fontSize: '0.68rem',
-            }}>
-              {ranking.length}
-            </span>
-          </button>
-
-          {/* Tab Esta semana */}
-          <button
-            onClick={() => setLigaTab('semanal')}
-            style={{
-              background: esSemanal ? 'rgba(233,30,140,0.12)' : 'rgba(255,255,255,0.04)',
-              border: esSemanal ? '2px solid rgba(233,30,140,0.45)' : '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 20, padding: '0.45rem 1.1rem',
-              fontSize: '0.82rem', fontWeight: 700,
-              color: esSemanal ? '#e91e8c' : 'rgba(255,255,255,0.5)',
-              cursor: 'pointer', transition: 'all 0.2s',
-              display: 'flex', alignItems: 'center', gap: '0.4rem',
-            }}
-          >
-            🔥 Esta semana
-            <span style={{
-              background: esSemanal ? 'rgba(233,30,140,0.25)' : 'rgba(255,255,255,0.08)',
-              color: esSemanal ? '#e91e8c' : 'rgba(255,255,255,0.4)',
-              borderRadius: 20, padding: '1px 7px', fontSize: '0.68rem',
-            }}>
-              {rankingSemanal.length}
-            </span>
-          </button>
-
-          {/* Tabs de ligas */}
-          {LIGAS.map(liga => {
-            const activa = liga.key === ligaTab
-            const countLiga = ranking.filter(u => u.puntos >= liga.min && u.puntos <= liga.max).length
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+          {TABS.map(t => {
+            const activa = t.key === tab
+            const count = t.key === 'semanal' ? rankingSemanal.length : t.key === 'autores' ? rankingAutores.length : ranking.length
             return (
               <button
-                key={liga.key}
-                onClick={() => setLigaTab(liga.key)}
+                key={t.key}
+                onClick={() => setTab(t.key)}
                 style={{
-                  background: activa ? liga.colorBg : 'rgba(255,255,255,0.04)',
-                  border: activa ? `2px solid ${liga.border}` : '1px solid rgba(255,255,255,0.08)',
+                  background: activa ? `${t.color}22` : 'rgba(255,255,255,0.04)',
+                  border: activa ? `2px solid ${t.color}80` : '1px solid rgba(255,255,255,0.08)',
                   borderRadius: 20, padding: '0.45rem 1.1rem',
                   fontSize: '0.82rem', fontWeight: 700,
-                  color: activa ? liga.color : 'rgba(255,255,255,0.5)',
+                  color: activa ? t.color : 'rgba(255,255,255,0.5)',
                   cursor: 'pointer', transition: 'all 0.2s',
                   display: 'flex', alignItems: 'center', gap: '0.4rem',
                 }}
               >
-                {liga.emoji} {liga.nombre}
+                {t.emoji} {t.label}
                 <span style={{
-                  background: activa ? liga.border : 'rgba(255,255,255,0.08)',
-                  color: activa ? liga.color : 'rgba(255,255,255,0.4)',
+                  background: activa ? `${t.color}33` : 'rgba(255,255,255,0.08)',
+                  color: activa ? t.color : 'rgba(255,255,255,0.4)',
                   borderRadius: 20, padding: '1px 7px', fontSize: '0.68rem',
                 }}>
-                  {countLiga}
+                  {count}
                 </span>
               </button>
             )
           })}
         </div>
 
-        {/* Descripción del tab activo */}
-        {!esLigaSemanal && !esAutores && (
-        <div style={{
-          background: esGeneral ? 'rgba(212,175,55,0.06)' : esSemanal ? 'rgba(233,30,140,0.06)' : ligaSeleccionada?.colorBg,
-          border: `1px solid ${esGeneral ? 'rgba(212,175,55,0.2)' : esSemanal ? 'rgba(233,30,140,0.25)' : ligaSeleccionada?.border}`,
-          borderRadius: 12, padding: '0.85rem 1.25rem',
-          marginBottom: '1.5rem',
-          display: 'flex', alignItems: 'center', gap: '0.75rem',
-        }}>
-          <span style={{ fontSize: '1.8rem' }}>
-            {esPaginas ? '📄' : esGeneral ? '⭐' : esLibros ? '📚' : esSemanal ? '🔥' : ligaSeleccionada?.emoji}
-          </span>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, color: esPaginas ? '#3498db' : esGeneral ? '#d4af37' : esLibros ? '#4a9e7a' : esSemanal ? '#e91e8c' : ligaSeleccionada?.color, fontSize: '0.9rem' }}>
-              {esPaginas ? 'Ranking — Por páginas leídas' : esGeneral ? 'Ranking — Por puntos' : esLibros ? 'Ranking — Por libros leídos' : esSemanal ? 'Ranking Semanal — Últimos 7 días' : `Liga ${ligaSeleccionada?.nombre}`}
+        {/* Descripción del tab */}
+        {!esAutores && (
+          <div style={{
+            background: `${tabInfo.color}0f`,
+            border: `1px solid ${tabInfo.color}33`,
+            borderRadius: 12, padding: '0.85rem 1.25rem',
+            marginBottom: '1.5rem',
+            display: 'flex', alignItems: 'center', gap: '0.75rem',
+          }}>
+            <span style={{ fontSize: '1.8rem' }}>{tabInfo.emoji}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, color: tabInfo.color, fontSize: '0.9rem' }}>
+                {esPaginas ? 'Ranking — Por páginas leídas' : esGeneral ? 'Ranking — Por puntos' : esLibros ? 'Ranking — Por libros leídos' : 'Ranking Semanal — Últimos 7 días'}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
+                {esSemanal ? `${rankingSemanal.length} lectores activos · reinicia el lunes` : `${ranking.length} lectores en total`}
+              </div>
             </div>
-            <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
-              {esPaginas || esGeneral || esLibros
-                ? `Todos los lectores · ${ranking.length} en total`
-                : esSemanal
-                  ? `${rankingSemanal.length} lectores activos · reinicia el lunes`
-                  : ligaSeleccionada?.max === Infinity
-                    ? `${ligaSeleccionada?.min}+ puntos · ${usuariosLiga.length} lectores`
-                    : `${ligaSeleccionada?.min}–${ligaSeleccionada?.max} puntos · ${usuariosLiga.length} lectores`
-              }
-            </div>
+            {esSemanal && (
+              <div style={{
+                background: 'rgba(233,30,140,0.12)', border: '1px solid rgba(233,30,140,0.3)',
+                borderRadius: 8, padding: '0.35rem 0.75rem',
+                fontSize: '0.68rem', fontWeight: 700, color: '#e91e8c',
+                textAlign: 'center', flexShrink: 0,
+              }}>
+                ⏰ {horasParaReset()} para reset
+              </div>
+            )}
           </div>
-          {esSemanal && (
-            <div style={{
-              background: 'rgba(233,30,140,0.12)',
-              border: '1px solid rgba(233,30,140,0.3)',
-              borderRadius: 8, padding: '0.35rem 0.75rem',
-              fontSize: '0.68rem', fontWeight: 700, color: '#e91e8c',
-              textAlign: 'center', flexShrink: 0,
-            }}>
-              🏆 Top 3 gana<br />
-              <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 400 }}>100 · 50 · 25 pts</span>
-            </div>
-          )}
-        </div>
         )}
 
-        {/* ── Ranking Escritores ───────────────────────────────────────── */}
+        {/* ── Escritores ── */}
         {esAutores && (
           <div>
             <div style={{ background: 'rgba(155,89,182,0.06)', border: '1px solid rgba(155,89,182,0.2)', borderRadius: 12, padding: '0.85rem 1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <span style={{ fontSize: '1.8rem' }}>✍️</span>
               <div>
                 <div style={{ fontWeight: 700, color: '#9b59b6', fontSize: '0.9rem' }}>Escritores más leídos</div>
-                <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
-                  Los autores con más lectores únicos en la comunidad
-                </div>
+                <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>Los autores con más lectores únicos en la comunidad</div>
               </div>
             </div>
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {rankingAutores.map((a, i) => (
                 <div key={a.autor} style={{
                   background: i === 0 ? 'rgba(212,175,55,0.06)' : i === 1 ? 'rgba(192,192,192,0.05)' : i === 2 ? 'rgba(205,127,50,0.05)' : 'rgba(255,255,255,0.02)',
                   border: i === 0 ? '1px solid rgba(212,175,55,0.2)' : i === 1 ? '1px solid rgba(192,192,192,0.15)' : i === 2 ? '1px solid rgba(205,127,50,0.15)' : '1px solid rgba(255,255,255,0.05)',
-                  borderRadius: 12,
-                  padding: '0.75rem 1rem',
+                  borderRadius: 12, padding: '0.75rem 1rem',
                   display: 'flex', alignItems: 'center', gap: '0.75rem',
                 }}>
-                  <div style={{ width: 32, textAlign: 'center', flexShrink: 0 }}>
-                    <Medal pos={i + 1} />
-                  </div>
+                  <div style={{ width: 32, textAlign: 'center', flexShrink: 0 }}><Medal pos={i + 1} /></div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {a.autor}
-                    </div>
+                    <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.autor}</div>
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', flexShrink: 0, alignItems: 'center' }}>
                     <div style={{ textAlign: 'center' }}>
@@ -505,196 +262,13 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
                 </div>
               ))}
               {rankingAutores.length === 0 && (
-                <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '3rem 0' }}>
-                  Todavía no hay datos suficientes.
-                </p>
+                <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '3rem 0' }}>Todavía no hay datos suficientes.</p>
               )}
             </div>
           </div>
         )}
 
-        {/* ── Liga Competitiva Semanal ─────────────────────────────────── */}
-        {esLigaSemanal && (() => {
-          const miPosicion = ligaSemanal.findIndex(u => u.id === usuarioId) + 1
-          const totalEnLiga = ligaSemanal.length
-          const zonaAscenso = 3
-          const zonaDescenso = Math.max(totalEnLiga - 3, zonaAscenso + 1)
-          const activosEstaSemana = ligaSemanal.filter(u => u.libros_semana > 0).length
-
-          return (
-            <div>
-              {/* Banner de estado de la liga */}
-              <div style={{
-                background: `linear-gradient(135deg, ${ligaComp.colorBg}, rgba(0,0,0,0.3))`,
-                border: `1px solid ${ligaComp.border}`,
-                borderRadius: 16, padding: '1.25rem 1.5rem',
-                marginBottom: '0.75rem',
-                display: 'flex', flexWrap: 'wrap', gap: '1.25rem', alignItems: 'center',
-              }}>
-                <div style={{ fontSize: '2.5rem', lineHeight: 1 }}>{ligaComp.emoji}</div>
-                <div style={{ flex: 1, minWidth: 180 }}>
-                  <div style={{ fontWeight: 800, fontSize: '1rem', color: ligaComp.color }}>
-                    ⚔️ Liga Competitiva: {ligaComp.nombre}
-                  </div>
-                  <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>
-                    {totalEnLiga} lectores · {activosEstaSemana} activos esta semana
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: miPosicion > 0 ? ligaComp.color : 'rgba(255,255,255,0.3)' }}>
-                      {miPosicion > 0 ? `#${miPosicion}` : '—'}
-                    </div>
-                    <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 }}>tu posición</div>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#ff6b35' }}>
-                      {horasParaReset()}
-                    </div>
-                    <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 }}>para el reset</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Reglas compactas */}
-              <div style={{
-                display: 'flex', gap: '0.5rem', flexWrap: 'wrap',
-                marginBottom: '1rem', fontSize: '0.7rem',
-                color: 'rgba(255,255,255,0.4)',
-              }}>
-                <span>⚡ Reset cada lunes</span>
-                <span>·</span>
-                <span style={{ color: 'rgba(76,209,55,0.8)' }}>▲ Top 3 activos → sube de liga</span>
-                <span>·</span>
-                <span style={{ color: 'rgba(231,76,60,0.8)' }}>▼ Últimos 3 inactivos → baja de liga</span>
-              </div>
-
-              {/* Leyenda de zonas */}
-              <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.72rem' }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(76,209,55,0.5)', flexShrink: 0 }} />
-                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>Top 3 — zona de ascenso</span>
-                </div>
-                {ligaSiguiente && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.72rem' }}>
-                    <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(231,76,60,0.5)', flexShrink: 0 }} />
-                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>Últimos 3 — zona de descenso</span>
-                  </div>
-                )}
-              </div>
-
-              {ligaSemanal.length === 0 ? (
-                <div className="text-center py-5">
-                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{ligaComp.emoji}</div>
-                  <p className="text-muted">Nadie en tu liga competitiva leyó esta semana aún. ¡Sé el primero!</p>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                  {ligaSemanal.map((u, i) => {
-                    const pos = i + 1
-                    const esYo = u.id === usuarioId
-                    const enZonaAscenso = pos <= zonaAscenso && u.libros_semana > 0
-                    const enZonaDescenso = ligaSiguiente && pos > zonaDescenso && totalEnLiga > 6
-                    const borderColor = enZonaAscenso
-                      ? 'rgba(76,209,55,0.4)'
-                      : enZonaDescenso
-                        ? 'rgba(231,76,60,0.3)'
-                        : esYo
-                          ? ligaComp.border
-                          : 'rgba(255,255,255,0.05)'
-                    const bgColor = enZonaAscenso
-                      ? 'rgba(76,209,55,0.05)'
-                      : enZonaDescenso
-                        ? 'rgba(231,76,60,0.04)'
-                        : esYo
-                          ? `${ligaComp.color}10`
-                          : 'var(--bg-card)'
-
-                    return (
-                      <div key={u.id} className="ranking-row" style={{
-                        background: bgColor,
-                        border: `1px solid ${borderColor}`,
-                        borderRadius: 12, padding: '0.65rem 1rem',
-                        display: 'flex', alignItems: 'center', gap: '0.6rem',
-                        transition: 'transform 0.15s',
-                      }}
-                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateX(4px)'}
-                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'none'}
-                      >
-                        {/* Posición + indicador de zona */}
-                        <div style={{ width: 28, textAlign: 'center', flexShrink: 0, position: 'relative' }}>
-                          {enZonaAscenso && pos <= 3 ? (
-                            <Medal pos={pos} />
-                          ) : (
-                            <span style={{ fontSize: '0.75rem', color: enZonaDescenso ? '#e74c3c' : 'rgba(255,255,255,0.4)', fontWeight: 700 }}>#{pos}</span>
-                          )}
-                          {enZonaAscenso && (
-                            <div style={{ position: 'absolute', top: -2, right: -4, fontSize: '0.5rem', color: '#4cd137' }}>▲</div>
-                          )}
-                          {enZonaDescenso && (
-                            <div style={{ position: 'absolute', top: -2, right: -4, fontSize: '0.5rem', color: '#e74c3c' }}>▼</div>
-                          )}
-                        </div>
-
-                        {/* Avatar */}
-                        <img
-                          src={u.avatar_url || '/default-avatar.svg'}
-                          alt={u.username}
-                          style={{
-                            width: 34, height: 34, borderRadius: '50%',
-                            objectFit: 'cover', flexShrink: 0,
-                            border: `2px solid ${esYo ? ligaComp.color : enZonaAscenso ? 'rgba(76,209,55,0.5)' : 'rgba(255,255,255,0.1)'}`,
-                            opacity: u.libros_semana === 0 ? 0.5 : 1,
-                          }}
-                        />
-
-                        {/* Nombre */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
-                            <Link href={`/perfil/${u.username}`} className="ranking-row-username" style={{ fontWeight: 700, color: u.libros_semana === 0 ? 'rgba(255,255,255,0.4)' : '#fff', textDecoration: 'none', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
-                              @{u.username}
-                            </Link>
-                            {esYo && (
-                              <span style={{ fontSize: '0.6rem', fontWeight: 700, background: `${ligaComp.color}25`, color: ligaComp.color, borderRadius: 20, padding: '1px 6px', border: `1px solid ${ligaComp.border}`, flexShrink: 0 }}>
-                                Vos
-                              </span>
-                            )}
-                            {u.es_amigo && (
-                              <span className="ranking-amigo-badge" style={{ fontSize: '0.6rem', fontWeight: 700, background: 'rgba(39,174,96,0.15)', color: '#27ae60', borderRadius: 20, padding: '1px 6px', border: '1px solid rgba(39,174,96,0.3)', flexShrink: 0 }}>
-                                amigo
-                              </span>
-                            )}
-                          </div>
-                          <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>
-                            {u.nivel.emoji} {u.nivel.titulo}
-                          </div>
-                        </div>
-
-                        {/* Stats */}
-                        <div className="ranking-row-stats" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexShrink: 0 }}>
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontWeight: 800, fontSize: '1rem', color: u.libros_semana > 0 ? '#4cd137' : 'rgba(255,255,255,0.2)' }}>
-                              {u.libros_semana > 0 ? `📚 ${u.libros_semana}` : '—'}
-                            </div>
-                            <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)' }}>semana</div>
-                          </div>
-                          <div className="ranking-pts-col" style={{ textAlign: 'center' }}>
-                            <div style={{ fontWeight: 600, color: `${ligaComp.color}99`, fontSize: '0.8rem' }}>
-                              ⭐ {u.puntos}
-                            </div>
-                            <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.3)' }}>pts</div>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )
-        })()}
-
-        {/* ── Tabla Semanal ─────────────────────────────────────────────── */}
+        {/* ── Ranking Semanal ── */}
         {esSemanal && (
           rankingSemanal.length === 0 ? (
             <div className="text-center py-5">
@@ -708,79 +282,35 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
                 const esYo = u.id === usuarioId
                 const medalColor = pos === 1 ? '#d4af37' : pos === 2 ? '#b0b8c1' : pos === 3 ? '#cd7f32' : 'rgba(255,255,255,0.1)'
                 return (
-                  <div
-                    key={u.id}
-                    style={{
-                      background: esYo
-                        ? 'linear-gradient(135deg, rgba(233,30,140,0.1), rgba(233,30,140,0.04))'
-                        : pos <= 3 ? 'rgba(255,255,255,0.04)' : 'var(--bg-card)',
-                      border: esYo
-                        ? '1px solid rgba(233,30,140,0.35)'
-                        : pos <= 3 ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.05)',
-                      borderRadius: 12, padding: '0.65rem 1rem',
-                      display: 'flex', alignItems: 'center', gap: '0.6rem',
-                      transition: 'transform 0.15s',
-                    }}
+                  <div key={u.id} style={{
+                    background: esYo ? 'linear-gradient(135deg, rgba(233,30,140,0.1), rgba(233,30,140,0.04))' : pos <= 3 ? 'rgba(255,255,255,0.04)' : 'var(--bg-card)',
+                    border: esYo ? '1px solid rgba(233,30,140,0.35)' : pos <= 3 ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: 12, padding: '0.65rem 1rem',
+                    display: 'flex', alignItems: 'center', gap: '0.6rem',
+                    transition: 'transform 0.15s',
+                  }}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateX(4px)'}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'none'}
                   >
-                    <div style={{ width: 28, textAlign: 'center', flexShrink: 0 }}>
-                      <Medal pos={pos} />
-                    </div>
-                    <img
-                      src={u.avatar_url || '/default-avatar.svg'}
-                      alt={u.username}
-                      style={{
-                        width: 34, height: 34, borderRadius: '50%',
-                        objectFit: 'cover', flexShrink: 0,
-                        border: `2px solid ${esYo ? '#e91e8c' : medalColor}`,
-                      }}
-                    />
+                    <div style={{ width: 28, textAlign: 'center', flexShrink: 0 }}><Medal pos={pos} /></div>
+                    <img src={u.avatar_url || '/default-avatar.svg'} alt={u.username} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `2px solid ${esYo ? '#e91e8c' : medalColor}` }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
-                        <Link
-                          href={`/perfil/${u.username}`}
-                          style={{ fontWeight: 700, color: '#fff', textDecoration: 'none', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                        >
-                          @{u.username}
-                        </Link>
-                        {esYo && (
-                          <span style={{
-                            fontSize: '0.6rem', fontWeight: 700, background: 'rgba(233,30,140,0.2)',
-                            color: '#e91e8c', borderRadius: 20, padding: '1px 6px',
-                            border: '1px solid rgba(233,30,140,0.3)', flexShrink: 0,
-                          }}>
-                            Vos
-                          </span>
-                        )}
-                        {u.es_amigo && (
-                          <span className="ranking-amigo-badge" style={{
-                            fontSize: '0.6rem', fontWeight: 700, background: 'rgba(39,174,96,0.15)',
-                            color: '#27ae60', borderRadius: 20, padding: '1px 6px',
-                            border: '1px solid rgba(39,174,96,0.3)', flexShrink: 0,
-                          }}>
-                            amigo
-                          </span>
-                        )}
+                        <Link href={`/perfil/${u.username}`} style={{ fontWeight: 700, color: '#fff', textDecoration: 'none', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{u.username}</Link>
+                        {esYo && <span style={{ fontSize: '0.6rem', fontWeight: 700, background: 'rgba(233,30,140,0.2)', color: '#e91e8c', borderRadius: 20, padding: '1px 6px', border: '1px solid rgba(233,30,140,0.3)', flexShrink: 0 }}>Vos</span>}
+                        {u.es_amigo && <span className="ranking-amigo-badge" style={{ fontSize: '0.6rem', fontWeight: 700, background: 'rgba(39,174,96,0.15)', color: '#27ae60', borderRadius: 20, padding: '1px 6px', border: '1px solid rgba(39,174,96,0.3)', flexShrink: 0 }}>amigo</span>}
                       </div>
                       <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>
                         {getNivelLector(u.puntos).emoji} {getNivelLector(u.puntos).titulo}
-                        <span className="ranking-liga-badge" style={{ marginLeft: 6, color: getLigaActual(u.puntos).color, opacity: 0.8, fontWeight: 700, fontSize: '0.58rem' }}>
-                          · {getLigaActual(u.puntos).emoji} {getLigaActual(u.puntos).nombre}
-                        </span>
                       </div>
                     </div>
                     <div className="ranking-row-stats" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexShrink: 0 }}>
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 800, color: '#e91e8c', fontSize: '1rem' }}>
-                          📚 {u.libros_semana}
-                        </div>
+                        <div style={{ fontWeight: 800, color: '#e91e8c', fontSize: '1rem' }}>📚 {u.libros_semana}</div>
                         <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)' }}>semana</div>
                       </div>
                       <div className="ranking-pts-col" style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 600, color: 'rgba(212,175,55,0.55)', fontSize: '0.82rem' }}>
-                          ⭐ {u.puntos}
-                        </div>
+                        <div style={{ fontWeight: 600, color: 'rgba(212,175,55,0.55)', fontSize: '0.82rem' }}>⭐ {u.puntos}</div>
                         <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)' }}>pts</div>
                       </div>
                     </div>
@@ -791,114 +321,62 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
           )
         )}
 
-        {/* ── Tabla Normal (general / libros / ligas) ───────────────────── */}
-        {!esSemanal && (
-          usuariosLiga.length === 0 ? (
+        {/* ── Tabla General / Páginas / Libros ── */}
+        {!esSemanal && !esAutores && (
+          usuariosOrdenados.length === 0 ? (
             <div className="text-center py-5">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{ligaSeleccionada?.emoji ?? '🏆'}</div>
-              <p className="text-muted">Todavía no hay lectores en esta liga.</p>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏆</div>
+              <p className="text-muted">Todavía no hay lectores.</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {(usuariosLiga as UsuarioRanking[]).map((u, i) => {
+              {usuariosOrdenados.map((u, i) => {
                 const pos = i + 1
                 const nivelInfo = getNivelLector(u.puntos)
                 const esYo = u.id === usuarioId
                 return (
-                  <div
-                    key={u.id}
-                    style={{
-                      background: esYo
-                        ? `linear-gradient(135deg, ${(ligaSeleccionada ?? ligaActual).color}12, ${(ligaSeleccionada ?? ligaActual).color}06)`
-                        : pos <= 3 ? 'rgba(255,255,255,0.04)' : 'var(--bg-card)',
-                      border: esYo
-                        ? `1px solid ${(ligaSeleccionada ?? ligaActual).border}`
-                        : pos <= 3 ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.05)',
-                      borderRadius: 12, padding: '0.65rem 1rem',
-                      display: 'flex', alignItems: 'center', gap: '0.6rem',
-                      transition: 'transform 0.15s',
-                    }}
+                  <div key={u.id} style={{
+                    background: esYo
+                      ? `linear-gradient(135deg, ${ligaActual.color}12, ${ligaActual.color}06)`
+                      : pos <= 3 ? 'rgba(255,255,255,0.04)' : 'var(--bg-card)',
+                    border: esYo ? `1px solid ${ligaActual.border}` : pos <= 3 ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: 12, padding: '0.65rem 1rem',
+                    display: 'flex', alignItems: 'center', gap: '0.6rem',
+                    transition: 'transform 0.15s',
+                  }}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateX(4px)'}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'none'}
                   >
-                    {/* Posición */}
-                    <div style={{ width: 28, textAlign: 'center', flexShrink: 0 }}>
-                      <Medal pos={pos} />
-                    </div>
-
-                    {/* Avatar */}
-                    <img
-                      src={u.avatar_url || '/default-avatar.svg'}
-                      alt={u.username}
-                      style={{
-                        width: 34, height: 34, borderRadius: '50%',
-                        objectFit: 'cover', flexShrink: 0,
-                        border: esYo ? `2px solid ${(ligaSeleccionada ?? ligaActual).color}` : '1px solid rgba(255,255,255,0.1)',
-                      }}
-                    />
-
-                    {/* Nombre */}
+                    <div style={{ width: 28, textAlign: 'center', flexShrink: 0 }}><Medal pos={pos} /></div>
+                    <img src={u.avatar_url || '/default-avatar.svg'} alt={u.username} style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: esYo ? `2px solid ${ligaActual.color}` : '1px solid rgba(255,255,255,0.1)' }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
-                        <Link
-                          href={`/perfil/${u.username}`}
-                          style={{ fontWeight: 700, color: '#fff', textDecoration: 'none', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                        >
-                          @{u.username}
-                        </Link>
-                        {esYo && (
-                          <span style={{
-                            fontSize: '0.6rem', fontWeight: 700, background: 'rgba(212,175,55,0.2)',
-                            color: '#d4af37', borderRadius: 20, padding: '1px 6px',
-                            border: '1px solid rgba(212,175,55,0.3)', flexShrink: 0,
-                          }}>
-                            Vos
-                          </span>
-                        )}
-                        {u.es_amigo && (
-                          <span className="ranking-amigo-badge" style={{
-                            fontSize: '0.6rem', fontWeight: 700, background: 'rgba(39,174,96,0.15)',
-                            color: '#27ae60', borderRadius: 20, padding: '1px 6px',
-                            border: '1px solid rgba(39,174,96,0.3)', flexShrink: 0,
-                          }}>
-                            amigo
-                          </span>
-                        )}
+                        <Link href={`/perfil/${u.username}`} style={{ fontWeight: 700, color: '#fff', textDecoration: 'none', fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{u.username}</Link>
+                        {esYo && <span style={{ fontSize: '0.6rem', fontWeight: 700, background: 'rgba(212,175,55,0.2)', color: '#d4af37', borderRadius: 20, padding: '1px 6px', border: '1px solid rgba(212,175,55,0.3)', flexShrink: 0 }}>Vos</span>}
+                        {u.es_amigo && <span className="ranking-amigo-badge" style={{ fontSize: '0.6rem', fontWeight: 700, background: 'rgba(39,174,96,0.15)', color: '#27ae60', borderRadius: 20, padding: '1px 6px', border: '1px solid rgba(39,174,96,0.3)', flexShrink: 0 }}>amigo</span>}
                       </div>
                       <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)', marginTop: 1, display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
                         <span>{nivelInfo.emoji} {nivelInfo.titulo}</span>
                         {esGeneral && (
-                          <span className="ranking-liga-badge" style={{
-                            fontSize: '0.58rem', fontWeight: 700,
-                            color: getLigaActual(u.puntos).color,
-                            opacity: 0.8,
-                          }}>
+                          <span className="ranking-liga-badge" style={{ fontSize: '0.58rem', fontWeight: 700, color: getLigaActual(u.puntos).color, opacity: 0.8 }}>
                             · {getLigaActual(u.puntos).emoji} {getLigaActual(u.puntos).nombre}
                           </span>
                         )}
                       </div>
                     </div>
-
-                    {/* Stats — orden cambia según tab */}
                     <div className="ranking-row-stats" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexShrink: 0 }}>
                       {esPaginas && (
                         <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontWeight: 800, color: '#3498db', fontSize: '0.9rem' }}>
-                            📄 {(u as UsuarioRanking).total_paginas?.toLocaleString('es-AR') ?? 0}
-                          </div>
+                          <div style={{ fontWeight: 800, color: '#3498db', fontSize: '0.9rem' }}>📄 {u.total_paginas?.toLocaleString('es-AR') ?? 0}</div>
                           <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)' }}>páginas</div>
                         </div>
                       )}
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 800, color: esLibros ? '#4a9e7a' : esPaginas ? 'rgba(255,255,255,0.4)' : '#fff', fontSize: esPaginas ? '0.78rem' : '0.9rem' }}>
-                          📚 {u.total_leidos}
-                        </div>
+                        <div style={{ fontWeight: 800, color: esLibros ? '#4a9e7a' : esPaginas ? 'rgba(255,255,255,0.4)' : '#fff', fontSize: esPaginas ? '0.78rem' : '0.9rem' }}>📚 {u.total_leidos}</div>
                         <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)' }}>leídos</div>
                       </div>
                       <div className="ranking-pts-col" style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: esLibros || esPaginas ? 600 : 800, color: esLibros || esPaginas ? 'rgba(212,175,55,0.6)' : '#d4af37', fontSize: '0.85rem' }}>
-                          ⭐ {u.puntos}
-                        </div>
+                        <div style={{ fontWeight: esLibros || esPaginas ? 600 : 800, color: esLibros || esPaginas ? 'rgba(212,175,55,0.6)' : '#d4af37', fontSize: '0.85rem' }}>⭐ {u.puntos}</div>
                         <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)' }}>pts</div>
                       </div>
                     </div>
@@ -912,4 +390,3 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
     </div>
   )
 }
-

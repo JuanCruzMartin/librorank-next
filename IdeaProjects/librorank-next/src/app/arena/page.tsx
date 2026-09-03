@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/lib/auth'
 import { buscarPorId } from '@/lib/dao/usuarioDAO'
 import { crearTabla, obtenerSala, obtenerDueloActivo, obtenerHistorial, expirarDuelos, obtenerStatsGlobales, obtenerStatsPorRival } from '@/lib/dao/dueloDAO'
+import { migrarLigasArena, obtenerEstadoLiga, obtenerRankingTodasLigas } from '@/lib/dao/ligaArenaDAO'
+import { LIGAS_ARENA } from '@/lib/ligasArena'
 import { obtenerColeccion } from '@/lib/dao/cartaDAO'
 import { obtenerMisionesConProgreso } from '@/lib/dao/misionDAO'
 import { obtenerRetosActivos } from '@/lib/dao/retoDAO'
@@ -26,8 +28,9 @@ export default async function ArenaPage({ searchParams }: { searchParams: Promis
 
   await crearTabla()
   await expirarDuelos()
+  await migrarLigasArena()
 
-  const [usuario, sala, activo, historial, coleccion, stats, statsPorRival, misiones, retos, bingo, misLibros] = await Promise.all([
+  const [usuario, sala, activo, historial, coleccion, stats, statsPorRival, misiones, retos, bingo, misLibros, estadoLiga] = await Promise.all([
     buscarPorId(authUser.id),
     obtenerSala(),
     obtenerDueloActivo(authUser.id),
@@ -39,7 +42,10 @@ export default async function ArenaPage({ searchParams }: { searchParams: Promis
     obtenerRetosActivos(authUser.id),
     obtenerBingo(authUser.id),
     buscarPorUsuario(authUser.id),
+    obtenerEstadoLiga(authUser.id),
   ])
+
+  const rankingLiga = await obtenerRankingTodasLigas(10)
 
   if (!usuario) redirect('/login')
 
@@ -66,6 +72,9 @@ export default async function ArenaPage({ searchParams }: { searchParams: Promis
           retos={retos}
           bingo={bingo}
           misLibros={misLibros}
+          estadoLiga={estadoLiga}
+          rankingLiga={rankingLiga}
+          todasLasLigas={LIGAS_ARENA}
         />
       </main>
       <Footer />

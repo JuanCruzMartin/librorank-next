@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/lib/auth'
-import { buscarPorId, obtenerRankingLectores, obtenerRankingSemanal, obtenerRankingAutores, getNivelLector } from '@/lib/dao/usuarioDAO'
+import { buscarPorId, obtenerRankingLectores, obtenerRankingSemanal, obtenerRankingAutores } from '@/lib/dao/usuarioDAO'
 import { obtenerIdsAmigos } from '@/lib/dao/amigoDAO'
 import { getLiga } from '@/lib/ligas'
-import { ensureResetSemanal, getLigaCompUsuario, getRankingLigaComp } from '@/lib/dao/ligaCompDAO'
+import { ensureResetSemanal } from '@/lib/dao/ligaCompDAO'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import RankingClient from './RankingClient'
@@ -18,7 +18,6 @@ export default async function RankingPage() {
   const authUser = await getAuthUser()
   if (!authUser) redirect('/login')
 
-  // Dispara el reset semanal lazy (no-op si ya se corrió esta semana)
   await ensureResetSemanal().catch(() => {})
 
   const [usuario, rankingRaw, idsAmigos, rankingSemanalRaw, rankingAutores] = await Promise.all([
@@ -30,10 +29,6 @@ export default async function RankingPage() {
   ])
 
   if (!usuario) redirect('/login')
-
-  const ligaActual    = getLiga(usuario.puntos ?? 0)
-  const ligaCompKey   = await getLigaCompUsuario(authUser.id)
-  const ligaCompRaw   = await getRankingLigaComp(ligaCompKey)
 
   const ranking = rankingRaw.map(u => ({
     id: u.id,
@@ -58,18 +53,6 @@ export default async function RankingPage() {
     es_amigo: idsAmigos.includes(u.id),
   }))
 
-  const ligaSemanal = ligaCompRaw.map(u => ({
-    id: u.id,
-    nombre: u.nombre,
-    username: u.username,
-    avatar_url: u.avatar_url ?? null,
-    puntos: u.puntos ?? 0,
-    libros_semana: Number(u.libros_semana ?? 0),
-    es_yo: u.id === authUser.id,
-    es_amigo: idsAmigos.includes(u.id),
-    nivel: getNivelLector(u.puntos ?? 0),
-  }))
-
   return (
     <>
       <Header user={usuario} />
@@ -77,10 +60,7 @@ export default async function RankingPage() {
         <RankingClient
           ranking={ranking}
           rankingSemanal={rankingSemanal}
-          ligaSemanal={ligaSemanal}
           rankingAutores={rankingAutores}
-          ligaActualKey={ligaActual.key}
-          ligaCompKey={ligaCompKey}
           usuarioId={authUser.id}
           puntosUsuario={usuario.puntos ?? 0}
         />

@@ -276,6 +276,10 @@ async function finalizarDuelo(dueloId: number, duelo: Duelo, ptsRetador: number,
   } else if (duelo.tipo === 'estandar' && ganadorId) {
     await execute('UPDATE usuarios SET monedas = monedas + 40 WHERE id = ?', [ganadorId])
   }
+
+  // Actualizar liga de arena
+  const { procesarResultadoDuelo } = await import('@/lib/dao/ligaArenaDAO')
+  await procesarResultadoDuelo(ganadorId, perdedorId)
 }
 
 export async function cancelarDesafio(dueloId: number, usuarioId: number): Promise<boolean> {
