@@ -672,45 +672,6 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
     )
   }
 
-  // ── ESPERANDO RIVAL ──
-  if (dueloActivo?.estado === 'esperando') {
-    return (
-      <div className="text-center" style={{ maxWidth: 400, margin: '0 auto' }}>
-        <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>⚔️</div>
-        <h3 className="font-title" style={{ color: '#d4af37', marginBottom: '0.5rem' }}>Desafío publicado</h3>
-        <p className="text-muted mb-3">Esperando que alguien acepte tu duelo...</p>
-
-        {/* Tipo de duelo */}
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          background: dueloActivo.tipo === 'apuesta' ? 'rgba(212,175,55,0.1)' : 'rgba(39,174,96,0.1)',
-          border: `1px solid ${dueloActivo.tipo === 'apuesta' ? 'rgba(212,175,55,0.3)' : 'rgba(39,174,96,0.3)'}`,
-          borderRadius: 20, padding: '3px 12px', fontSize: '0.72rem', fontWeight: 700,
-          color: dueloActivo.tipo === 'apuesta' ? '#d4af37' : '#27ae60', marginBottom: '1rem',
-        }}>
-          {dueloActivo.tipo === 'apuesta' ? '🃏 Apuesta de carta' : '⚡ Duelo estándar'}
-        </div>
-
-        <div className="d-flex justify-content-center mb-3">
-          <MiniCarta cartaId={dueloActivo.carta_retador} size="md" />
-        </div>
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: '1.5rem' }}>
-          <span>{dueloActivo.tipo === 'apuesta' ? 'Carta apostada:' : 'Rareza del duelo:'}</span>
-          <span style={{ color: '#fff', fontWeight: 700 }}>{cartasMap[dueloActivo.carta_retador]?.nombre}</span>
-        </div>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0.5rem 1rem', borderRadius: 8, background: 'rgba(255,255,255,0.04)', marginBottom: '1.5rem' }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#27ae60', animation: 'pulse-dot 1.5s ease-in-out infinite' }} />
-          <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>En vivo en la Arena</span>
-        </div>
-        <br />
-        <button onClick={cancelarDesafio} style={{ background: 'none', border: '1px solid rgba(231,76,60,0.4)', borderRadius: 8, color: '#e74c3c', padding: '0.4rem 1rem', fontSize: '0.8rem', cursor: 'pointer' }}>
-          Cancelar desafío
-        </button>
-        <style>{`@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
-      </div>
-    )
-  }
-
   // ── SALA PRINCIPAL ──
   return (
     <div>
@@ -722,6 +683,64 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
       <div className="row g-4">
         {/* Columna izquierda: sala */}
         <div className="col-lg-8">
+
+          {/* Tu desafío pendiente (visible en la sala mientras esperás) */}
+          {dueloActivo?.estado === 'esperando' && (() => {
+            const carta = cartasMap[dueloActivo.carta_retador]
+            const color = carta ? RAREZA_COLOR[rarezaVisual(carta.rareza)] : '#9b59b6'
+            const esApuesta = dueloActivo.tipo === 'apuesta'
+            return (
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(74,20,140,0.1) 100%)',
+                border: '2px solid rgba(124,58,237,0.5)',
+                borderRadius: 14, padding: '1rem 1.25rem',
+                marginBottom: '1.25rem',
+                boxShadow: '0 0 24px rgba(124,58,237,0.15)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#7c3aed', animation: 'pulse-dot 1.5s ease-in-out infinite', flexShrink: 0 }} />
+                    <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#a78bfa' }}>Tu desafío · Esperando rival...</span>
+                  </div>
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    background: esApuesta ? 'rgba(212,175,55,0.12)' : 'rgba(39,174,96,0.12)',
+                    border: `1px solid ${esApuesta ? 'rgba(212,175,55,0.35)' : 'rgba(39,174,96,0.35)'}`,
+                    borderRadius: 20, padding: '2px 10px',
+                    fontSize: '0.68rem', fontWeight: 700,
+                    color: esApuesta ? '#d4af37' : '#27ae60',
+                  }}>
+                    {esApuesta ? '🃏 Apuesta' : '⚡ Estándar'}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <MiniCarta cartaId={dueloActivo.carta_retador} size="md" />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.78rem', color: color, fontWeight: 700, marginBottom: 4 }}>
+                      {carta?.nombre ?? dueloActivo.carta_retador}
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.4)', marginBottom: '0.6rem' }}>
+                      {esApuesta ? 'Cualquier rival puede aceptar esta apuesta' : 'Cualquier rival puede aceptar este duelo estándar'}
+                    </div>
+                    <button
+                      onClick={cancelarDesafio}
+                      style={{
+                        background: 'rgba(231,76,60,0.08)',
+                        border: '1px solid rgba(231,76,60,0.35)',
+                        borderRadius: 8, color: '#e74c3c',
+                        padding: '0.3rem 0.85rem',
+                        fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600,
+                      }}
+                    >
+                      Cancelar desafío
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
           <div className="d-flex align-items-center justify-content-between mb-3">
             <h5 className="font-title mb-0" style={{ color: '#fff' }}>Desafíos disponibles</h5>
             <button onClick={refrescarSala} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.8rem' }}>
@@ -732,7 +751,11 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
           {sala.length === 0 ? (
             <div className="card p-5 text-center">
               <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🏟️</div>
-              <p className="text-muted">La arena está vacía. ¡Sé el primero en desafiar!</p>
+              <p className="text-muted">
+                {dueloActivo?.estado === 'esperando'
+                  ? 'Tu desafío ya está en la arena. Esperando rival...'
+                  : 'La arena está vacía. ¡Sé el primero en desafiar!'}
+              </p>
             </div>
           ) : (
             <div className="d-flex flex-column gap-3">
@@ -811,16 +834,25 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
         {/* Columna derecha: acciones + historial */}
         <div className="col-lg-4">
           <button
-            onClick={() => setModal('crear')}
+            onClick={() => !dueloActivo && setModal('crear')}
+            disabled={!!dueloActivo}
+            title={dueloActivo ? 'Ya tenés un desafío activo' : undefined}
             style={{
               width: '100%', padding: '1rem', borderRadius: 12,
-              background: 'linear-gradient(135deg, #7d3c98, #9b59b6)',
-              border: 'none', color: '#fff', fontWeight: 800,
-              fontSize: '1rem', cursor: 'pointer', marginBottom: '1.5rem',
-              boxShadow: '0 4px 20px rgba(155,89,182,0.35)',
+              background: dueloActivo
+                ? 'rgba(124,58,237,0.15)'
+                : 'linear-gradient(135deg, #7d3c98, #9b59b6)',
+              border: dueloActivo ? '1px solid rgba(124,58,237,0.3)' : 'none',
+              color: dueloActivo ? 'rgba(167,139,250,0.5)' : '#fff',
+              fontWeight: 800,
+              fontSize: '1rem',
+              cursor: dueloActivo ? 'not-allowed' : 'pointer',
+              marginBottom: '1.5rem',
+              boxShadow: dueloActivo ? 'none' : '0 4px 20px rgba(155,89,182,0.35)',
+              transition: 'all 0.2s',
             }}
           >
-            ⚔️ Crear desafío
+            {dueloActivo?.estado === 'esperando' ? '⏳ Esperando rival...' : '⚔️ Crear desafío'}
           </button>
 
           {/* Stats globales */}
@@ -1029,6 +1061,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
           </div>
         </div>
       )}
+      <style>{`@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
     </div>
   )
 }
