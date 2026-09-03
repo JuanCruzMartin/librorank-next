@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 
 const LS_KEY = 'lr_sugerencia_enviada'
+const SS_KEY = 'lr_sugerencia_sesion'
 
 export default function BannerSugerenciasFlotante() {
   const [visible, setVisible] = useState(false)
@@ -15,7 +16,7 @@ export default function BannerSugerenciasFlotante() {
   const bannerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (localStorage.getItem(LS_KEY)) return
+    if (sessionStorage.getItem(SS_KEY)) return
     const t = setTimeout(() => setVisible(true), 4000)
     return () => clearTimeout(t)
   }, [])
@@ -46,9 +47,9 @@ export default function BannerSugerenciasFlotante() {
     }
   }, [dragging])
 
-  const cerrar = (permanente = false) => {
+  const cerrar = () => {
     setVisible(false)
-    if (permanente) localStorage.setItem(LS_KEY, '1')
+    sessionStorage.setItem(SS_KEY, '1')
   }
 
   const enviar = async () => {
@@ -61,8 +62,8 @@ export default function BannerSugerenciasFlotante() {
         body: JSON.stringify({ sugerencia: texto }),
       })
       setEnviado(true)
-      localStorage.setItem(LS_KEY, '1')
-      setTimeout(() => cerrar(false), 2500)
+      sessionStorage.setItem(SS_KEY, '1')
+      setTimeout(() => cerrar(), 2500)
     } finally {
       setEnviando(false)
     }
@@ -112,7 +113,7 @@ export default function BannerSugerenciasFlotante() {
             </p>
           </div>
         </div>
-        <button onClick={() => cerrar(true)} style={{
+        <button onClick={() => cerrar()} style={{
           background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)',
           cursor: 'pointer', fontSize: '1rem', lineHeight: 1, flexShrink: 0, marginLeft: 6,
         }}>✕</button>
