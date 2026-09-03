@@ -8,6 +8,7 @@ import type { TipoCofre, Cofre } from '@/lib/dao/cofreDAO'
 
 interface Props {
   coleccion: string[]
+  cantidades: Record<string, number>
   tiradas: number
 }
 
@@ -42,8 +43,9 @@ const COFRE_CONFIG: Record<TipoCofre, { emoji: string; label: string; desc: stri
   epico: { emoji: '✨', label: 'Cofre Épico',  desc: 'Épico o superior garantizado', color: '#6b3d8e', glow: 'rgba(107,61,142,0.6)' },
 }
 
-export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: tiradasIniciales }: Props) {
+export default function ColeccionClient({ coleccion: coleccionInicial, cantidades: cantidadesIniciales, tiradas: tiradasIniciales }: Props) {
   const [coleccion, setColeccion] = useState<string[]>(coleccionInicial)
+  const [cantidades, setCantidades] = useState<Record<string, number>>(cantidadesIniciales)
   const [tiradas, setTiradas] = useState(tiradasIniciales)
   const [tirando, setTirando] = useState(false)
   const [reveal, setReveal] = useState<{ carta: Carta; esNueva: boolean; revelada: boolean } | null>(null)
@@ -186,7 +188,10 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
       if (!res.ok) return
       const data = await res.json()
       setTiradas(t => t - 1)
-      if (data.esNueva) setColeccion(c => [...c, data.carta.id])
+      if (data.esNueva) {
+        setColeccion(c => c.includes(data.carta.id) ? c : [...c, data.carta.id])
+        setCantidades(prev => ({ ...prev, [data.carta.id]: Math.min((prev[data.carta.id] ?? 0) + 1, 2) }))
+      }
       setReveal({ carta: data.carta, esNueva: data.esNueva, revelada: false })
     } finally {
       setTirando(false)
@@ -210,7 +215,10 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
       setCofreAbierto(true)
       await new Promise(r => setTimeout(r, 400))
       setCofres(cs => cs.filter(c => c.id !== cofre.id))
-      if (data.esNueva) setColeccion(c => [...c, data.carta.id])
+      if (data.esNueva) {
+        setColeccion(c => c.includes(data.carta.id) ? c : [...c, data.carta.id])
+        setCantidades(prev => ({ ...prev, [data.carta.id]: Math.min((prev[data.carta.id] ?? 0) + 1, 2) }))
+      }
       setReveal({ carta: data.carta, esNueva: data.esNueva, revelada: false })
     } finally {
       setAbriendoCofre(null)
@@ -548,9 +556,11 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                             {pagina.map(carta => {
                               const tengo = coleccion.includes(carta.id)
                               const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
+                              const copias = cantidades[carta.id] ?? 0
                               return (
-                                <div key={carta.id} className={`cg-item${tengo ? ' obtenida' : ''}`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default', zoom: 0.82 }}>
+                                <div key={carta.id} className={`cg-item${tengo ? ' obtenida' : ''}`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default', zoom: 0.82, position: 'relative' }}>
                                   <div className="cg-inner"><CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} /></div>
+                                  {copias >= 2 && <span style={{ position: 'absolute', top: 4, right: 4, background: '#7c3aed', color: '#fff', fontSize: '0.6rem', fontWeight: 800, borderRadius: 20, padding: '2px 6px', zIndex: 5, lineHeight: 1 }}>×2</span>}
                                 </div>
                               )
                             })}
@@ -567,9 +577,11 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                       {cartasCol.map(carta => {
                         const tengo = coleccion.includes(carta.id)
                         const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
+                        const copias = cantidades[carta.id] ?? 0
                         return (
-                          <div key={carta.id} className={`cg-item${tengo ? ' obtenida' : ''}`} title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default' }}>
+                          <div key={carta.id} className={`cg-item${tengo ? ' obtenida' : ''}`} title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default', position: 'relative' }}>
                             <div className="cg-inner"><CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} /></div>
+                            {copias >= 2 && <span style={{ position: 'absolute', top: 4, right: 4, background: '#7c3aed', color: '#fff', fontSize: '0.6rem', fontWeight: 800, borderRadius: 20, padding: '2px 6px', zIndex: 5, lineHeight: 1 }}>×2</span>}
                           </div>
                         )
                       })}
@@ -650,9 +662,11 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                           {pagina.map(carta => {
                             const tengo = coleccion.includes(carta.id)
                             const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
+                            const copias = cantidades[carta.id] ?? 0
                             return (
-                              <div key={carta.id} className={`cg-item${tengo ? ' obtenida' : ''}`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default', zoom: 0.82 }}>
+                              <div key={carta.id} className={`cg-item${tengo ? ' obtenida' : ''}`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default', zoom: 0.82, position: 'relative' }}>
                                 <div className="cg-inner"><CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} /></div>
+                                {copias >= 2 && <span style={{ position: 'absolute', top: 4, right: 4, background: '#7c3aed', color: '#fff', fontSize: '0.6rem', fontWeight: 800, borderRadius: 20, padding: '2px 6px', zIndex: 5, lineHeight: 1 }}>×2</span>}
                               </div>
                             )
                           })}
@@ -669,9 +683,11 @@ export default function ColeccionClient({ coleccion: coleccionInicial, tiradas: 
                     {cartasDeRareza.map(carta => {
                       const tengo = coleccion.includes(carta.id)
                       const indiceGlobal = CARTAS.findIndex(c => c.id === carta.id) + 1
+                      const copias = cantidades[carta.id] ?? 0
                       return (
-                        <div key={carta.id} className={`cg-item${tengo ? ' obtenida' : ''}`} title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default' }}>
+                        <div key={carta.id} className={`cg-item${tengo ? ' obtenida' : ''}`} title={tengo ? `${carta.nombre} — ${carta.obra}` : `${carta.nombre} (no obtenida)`} onClick={(e) => tengo && openCarta(e, carta)} style={{ cursor: tengo ? 'pointer' : 'default', position: 'relative' }}>
                           <div className="cg-inner"><CartaPersonaje carta={carta} obtenida={tengo} size="sm" numero={indiceGlobal} total={CARTAS.length} /></div>
+                          {copias >= 2 && <span style={{ position: 'absolute', top: 4, right: 4, background: '#7c3aed', color: '#fff', fontSize: '0.6rem', fontWeight: 800, borderRadius: 20, padding: '2px 6px', zIndex: 5, lineHeight: 1 }}>×2</span>}
                         </div>
                       )
                     })}

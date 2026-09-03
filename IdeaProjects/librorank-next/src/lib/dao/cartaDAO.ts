@@ -1,5 +1,21 @@
 import { query, queryOne, execute } from '@/lib/db'
 
+const MAX_COPIAS = 2
+
+export async function migrarCantidadCartas(): Promise<void> {
+  const rows = await query<{ COLUMN_NAME: string }>(
+    `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cartas_usuario' AND COLUMN_NAME = 'cantidad'`,
+    []
+  )
+  if (rows.length === 0) {
+    await execute(
+      `ALTER TABLE cartas_usuario ADD COLUMN cantidad INT NOT NULL DEFAULT 1`,
+      []
+    )
+  }
+}
+
 export async function obtenerColeccion(usuarioId: number): Promise<string[]> {
   const rows = await query<{ carta_id: string }>(
     'SELECT carta_id FROM cartas_usuario WHERE usuario_id = ? ORDER BY obtenida_en DESC',
@@ -8,11 +24,24 @@ export async function obtenerColeccion(usuarioId: number): Promise<string[]> {
   return rows.map(r => r.carta_id)
 }
 
+export async function obtenerCantidades(usuarioId: number): Promise<Record<string, number>> {
+  const rows = await query<{ carta_id: string; cantidad: number }>(
+    'SELECT carta_id, COALESCE(cantidad, 1) AS cantidad FROM cartas_usuario WHERE usuario_id = ?',
+    [usuarioId]
+  )
+  return Object.fromEntries(rows.map(r => [r.carta_id, r.cantidad]))
+}
+
 export async function agregarCarta(usuarioId: number, cartaId: string): Promise<boolean> {
+  // Intenta insertar; si ya existe incrementa hasta MAX_COPIAS
   const res = await execute(
-    'INSERT IGNORE INTO cartas_usuario (usuario_id, carta_id) VALUES (?, ?)',
+    `INSERT INTO cartas_usuario (usuario_id, carta_id, cantidad)
+     VALUES (?, ?, 1)
+     ON DUPLICATE KEY UPDATE
+       cantidad = IF(cantidad < ${MAX_COPIAS}, cantidad + 1, cantidad)`,
     [usuarioId, cartaId]
   )
+  // affectedRows = 1 → insert, 2 → update (incrementado), 0 → ya en máximo
   return res.affectedRows > 0
 }
 

@@ -919,17 +919,62 @@ function getPesoIndividual(carta: Carta): number {
   return RAREZAS[carta.rareza].peso / cantidadEnRareza
 }
 
-export function tirarCarta(): Carta {
-  const cartasConPeso = CARTAS.map(c => ({ carta: c, peso: getPesoIndividual(c) }))
-  const total = cartasConPeso.reduce((sum, c) => sum + c.peso, 0)
-  let rand = Math.random() * total
+export type Serie = 'got' | 'sda' | 'hp' | 'principito'
 
+const SERIES_IDS: Record<Serie, Set<string>> = {
+  got: new Set(['arya-stark','cersei-lannister','jaime-lannister','sansa-stark','tyrion-lannister','jon-snow','daenerys-targaryen','the-night-king','bran-stark','davos-seaworth','samwell-tarly','theon-greyjoy','ygritte','brienne-de-tarth','jorah-mormont','melisandre','petyr-baelish','sandor-clegane']),
+  sda: new Set(['aragorn','legolas','arwen','galadriel','eowyn','frodo-bolson','gandalf','saruman','sauron','grima','boromir','barbol','theoden','eomer','bilbo-bolson','meriadoc','samsagaz','gimli','faramir']),
+  hp:  new Set(['ron-weasley','ginny-weasley','neville-longbottom','cho-chang','cedric-diggory','fred-george','luna-lovegood','hermione-granger','draco-malfoy','rubeus-hagrid','sirius-black','severus-snape','bellatrix-lestrange','dobby','harry-potter','albus-dumbledore','lord-voldemort','reliquias-muerte']),
+  principito: new Set(['el-bebedor','el-vanidoso','el-baobab','el-rey','el-farolero','el-hombre-de-negocios','el-aviador','el-geografo','la-serpiente','el-zorro','la-rosa','el-principito']),
+}
+
+function sortearDePeso(pool: Carta[], multiplicadorRareza?: Partial<Record<Rareza, number>>): Carta {
+  const cartasConPeso = pool.map(c => {
+    const mult = multiplicadorRareza?.[c.rareza] ?? 1
+    const cantEnRareza = pool.filter(x => x.rareza === c.rareza).length
+    return { carta: c, peso: (RAREZAS[c.rareza].peso * mult) / cantEnRareza }
+  })
+  const total = cartasConPeso.reduce((s, c) => s + c.peso, 0)
+  let rand = Math.random() * total
   for (const { carta, peso } of cartasConPeso) {
     rand -= peso
     if (rand <= 0) return carta
   }
+  return pool[0]
+}
 
-  return CARTAS[0]
+export function tirarCarta(): Carta {
+  return sortearDePeso(CARTAS)
+}
+
+export function tirarCartaDeSerie(serie: Serie): Carta {
+  const pool = CARTAS.filter(c => SERIES_IDS[serie].has(c.id))
+  return sortearDePeso(pool.length ? pool : CARTAS)
+}
+
+export function tirarCartaPremium(): Carta {
+  return sortearDePeso(CARTAS, { epico: 3, legendario: 3, mitico: 3 })
+}
+
+export function tirarSobre(tipo: 'general' | Serie | 'premium', cantidad = 5): Carta[] {
+  const elegidas: Carta[] = []
+  const usadas = new Set<string>()
+  const intentosMax = cantidad * 10
+  let intentos = 0
+
+  while (elegidas.length < cantidad && intentos < intentosMax) {
+    intentos++
+    let carta: Carta
+    if (tipo === 'general') carta = tirarCarta()
+    else if (tipo === 'premium') carta = tirarCartaPremium()
+    else carta = tirarCartaDeSerie(tipo)
+
+    if (!usadas.has(carta.id)) {
+      usadas.add(carta.id)
+      elegidas.push(carta)
+    }
+  }
+  return elegidas
 }
 
 // Probabilidad individual de cada carta (para mostrar en UI)
