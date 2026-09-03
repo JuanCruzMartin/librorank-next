@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
@@ -57,11 +57,11 @@ function UserCardComp({ user, esAmigo, onAgregar, onEliminar }: {
       <div className="card p-3 h-100 d-flex flex-column">
         <div className="d-flex align-items-center gap-3 mb-2">
           <img
-            src={user.avatar_url || '/img/personajes/personaje_1.png'}
+            src={user.avatar_url || '/default-avatar.svg'}
             alt={user.username}
             className="rounded-circle flex-shrink-0"
             style={{ width: 50, height: 50, objectFit: 'cover', border: '2px solid var(--accent-gold)' }}
-            onError={e => { const img = e.target as HTMLImageElement; img.onerror = null; img.src = '/img/personajes/personaje_1.png' }}
+            onError={e => { const img = e.target as HTMLImageElement; img.onerror = null; img.src = '/default-avatar.svg' }}
           />
           <div className="min-w-0">
             <div className="fw-bold text-white text-truncate" style={{ fontSize: '0.92rem' }}>@{user.username}</div>
@@ -277,11 +277,11 @@ export default function AmigosPage() {
                     {sugerencias.slice(0, 5).map(s => (
                       <div key={s.id} className="d-flex align-items-center gap-2">
                         <img
-                          src={s.avatar_url || '/img/personajes/personaje_1.png'}
+                          src={s.avatar_url || '/default-avatar.svg'}
                           alt={s.username}
                           className="rounded-circle flex-shrink-0"
                           style={{ width: 40, height: 40, objectFit: 'cover', border: '2px solid var(--accent-gold)' }}
-                          onError={e => { const img = e.target as HTMLImageElement; img.onerror = null; img.src = '/img/personajes/personaje_1.png' }}
+                          onError={e => { const img = e.target as HTMLImageElement; img.onerror = null; img.src = '/default-avatar.svg' }}
                         />
                         <div className="flex-grow-1 min-w-0">
                           <div className="fw-bold text-white text-truncate" style={{ fontSize: '0.85rem' }}>@{s.username}</div>
@@ -389,3 +389,4 @@ export default function AmigosPage() {
     </div>
   )
 }
+

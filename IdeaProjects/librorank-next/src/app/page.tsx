@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/lib/auth'
 import { obtenerRankingLectores, getNivelLector } from '@/lib/dao/usuarioDAO'
@@ -265,7 +265,7 @@ export default async function LandingPage() {
                   }}>
                     <span style={{ fontSize: '1.8rem', width: 40, textAlign: 'center', flexShrink: 0 }}>{medallaEmoji}</span>
                     <img
-                      src={u.avatar_url || '/img/personajes/personaje_1.png'}
+                      src={u.avatar_url || '/default-avatar.svg'}
                       alt={u.username}
                       style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${medallaColor}`, flexShrink: 0 }}
                     />
@@ -314,3 +314,4 @@ export default async function LandingPage() {
     </>
   )
 }
+

@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+﻿import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getAuthUser } from '@/lib/auth'
 import { buscarPorId } from '@/lib/dao/usuarioDAO'
@@ -46,7 +46,7 @@ export default async function HomePage() {
                 <div className="user-avatar" style={{ width: 100, height: 100, margin: '0 auto' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={usuario.avatar_url || '/img/personajes/personaje_1.png'}
+                    src={usuario.avatar_url || '/default-avatar.svg'}
                     alt="Avatar"
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
@@ -143,3 +143,4 @@ export default async function HomePage() {
     </>
   )
 }
+

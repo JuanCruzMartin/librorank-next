@@ -130,9 +130,9 @@ export default function ClubClient({ club, miembrosIniciales, postsIniciales, us
               {miembrosIniciales.map(m => (
                 <div key={m.usuario_id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '0.25rem 0.75rem' }}>
                   <img
-                    src={m.avatar_url || '/img/personajes/personaje_1.png'}
+                    src={m.avatar_url || '/default-avatar.svg'}
                     alt="" style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover' }}
-                    onError={e => { (e.target as HTMLImageElement).src = '/img/personajes/personaje_1.png' }}
+                    onError={e => { (e.target as HTMLImageElement).src = '/default-avatar.svg' }}
                   />
                   <span style={{ fontSize: '0.75rem', color: '#fff', fontWeight: 600 }}>@{m.username}</span>
                   {m.rol === 'creador' && <span style={{ fontSize: '0.6rem', color: '#d4af37' }}>✦</span>}
@@ -206,9 +206,9 @@ export default function ClubClient({ club, miembrosIniciales, postsIniciales, us
                     return (
                       <div key={post.id} style={{ display: 'flex', gap: '0.75rem', flexDirection: esMio ? 'row-reverse' : 'row' }}>
                         <img
-                          src={post.avatar_url || '/img/personajes/personaje_1.png'}
+                          src={post.avatar_url || '/default-avatar.svg'}
                           alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, alignSelf: 'flex-start', marginTop: 2 }}
-                          onError={e => { (e.target as HTMLImageElement).src = '/img/personajes/personaje_1.png' }}
+                          onError={e => { (e.target as HTMLImageElement).src = '/default-avatar.svg' }}
                         />
                         <div style={{ maxWidth: '75%' }}>
                           <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginBottom: '0.25rem', textAlign: esMio ? 'right' : 'left' }}>

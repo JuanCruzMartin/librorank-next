@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import type { RetoAmigo } from '@/lib/dao/retoDAO'
@@ -200,7 +200,7 @@ export default function RetosClient({ retos: retosIni, misLibros, usuarioId }: P
               <div key={p.usuario_id} className="mb-3">
                 <div className="d-flex align-items-center gap-2 mb-1">
                   <img
-                    src={p.avatar_url || '/img/personajes/personaje_1.png'}
+                    src={p.avatar_url || '/default-avatar.svg'}
                     alt={p.username}
                     className="rounded-circle flex-shrink-0"
                     style={{ width: 26, height: 26, objectFit: 'cover', border: `1px solid ${esGanador && vencido ? '#d4af37' : 'rgba(212,175,55,0.4)'}` }}
@@ -418,3 +418,4 @@ export default function RetosClient({ retos: retosIni, misLibros, usuarioId }: P
     </div>
   )
 }
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -397,10 +397,10 @@ export default function Header({ user }: HeaderProps) {
             marginBottom: '1.5rem',
           }}>
             <img
-              src={user.avatar_url || '/img/personajes/personaje_1.png'}
+              src={user.avatar_url || '/default-avatar.svg'}
               alt={user.username}
               style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '2px solid #d4af37', flexShrink: 0 }}
-              onError={e => { const img = e.target as HTMLImageElement; img.onerror = null; img.src = '/img/personajes/personaje_1.png' }}
+              onError={e => { const img = e.target as HTMLImageElement; img.onerror = null; img.src = '/default-avatar.svg' }}
             />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.9rem' }}>@{user.username}</div>
@@ -500,3 +500,4 @@ export default function Header({ user }: HeaderProps) {
     </>
   )
 }
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -69,7 +69,7 @@ export default function FeedClient({ feedInicial, usuarioId }: Props) {
                   alt={act.username}
                   className="rounded-circle"
                   style={{ width: 45, height: 45, objectFit: 'cover' }}
-                  onError={(e) => { const img = e.target as HTMLImageElement; img.onerror = null; img.src = '/img/personajes/personaje_1.png' }}
+                  onError={(e) => { const img = e.target as HTMLImageElement; img.onerror = null; img.src = '/default-avatar.svg' }}
                 />
               </div>
               <div className="flex-grow-1">
@@ -126,3 +126,4 @@ export default function FeedClient({ feedInicial, usuarioId }: Props) {
     </div>
   )
 }
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -81,7 +81,7 @@ export default function PerfilClient({
   const [mensaje, setMensaje] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [subiendo, setSubiendo] = useState(false)
-  const [avatarActual, setAvatarActual] = useState(usuario.avatar_url || '/img/personajes/personaje_1.png')
+  const [avatarActual, setAvatarActual] = useState(usuario.avatar_url || '/default-avatar.svg')
   const [cropFile, setCropFile] = useState<File | null>(null)
   const [cropPreviewUrl, setCropPreviewUrl] = useState<string | null>(null)
   const [cropPos, setCropPos] = useState({ x: 50, y: 50 })
@@ -204,7 +204,7 @@ export default function PerfilClient({
                   src={avatarActual}
                   alt="Avatar"
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  onError={e => { (e.target as HTMLImageElement).src = '/img/personajes/personaje_1.png' }}
+                  onError={e => { (e.target as HTMLImageElement).src = '/default-avatar.svg' }}
                 />
                 {esMiPerfil && (
                   <label
@@ -1189,3 +1189,4 @@ export default function PerfilClient({
     </>
   )
 }
+

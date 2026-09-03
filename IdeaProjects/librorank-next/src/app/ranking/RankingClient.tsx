@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -638,7 +638,7 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
 
                         {/* Avatar */}
                         <img
-                          src={u.avatar_url || '/img/personajes/personaje_1.png'}
+                          src={u.avatar_url || '/default-avatar.svg'}
                           alt={u.username}
                           style={{
                             width: 34, height: 34, borderRadius: '50%',
@@ -728,7 +728,7 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
                       <Medal pos={pos} />
                     </div>
                     <img
-                      src={u.avatar_url || '/img/personajes/personaje_1.png'}
+                      src={u.avatar_url || '/default-avatar.svg'}
                       alt={u.username}
                       style={{
                         width: 34, height: 34, borderRadius: '50%',
@@ -828,7 +828,7 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
 
                     {/* Avatar */}
                     <img
-                      src={u.avatar_url || '/img/personajes/personaje_1.png'}
+                      src={u.avatar_url || '/default-avatar.svg'}
                       alt={u.username}
                       style={{
                         width: 34, height: 34, borderRadius: '50%',
@@ -912,3 +912,4 @@ export default function RankingClient({ ranking, rankingSemanal, ligaSemanal, ra
     </div>
   )
 }
+

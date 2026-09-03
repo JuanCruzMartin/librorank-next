@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { registrar, buscarPorEmailOUsername } from '@/lib/dao/usuarioDAO'
 import { setAuthCookie } from '@/lib/auth'
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     const password_hash = await bcrypt.hash(password, 12)
-    const ok = await registrar({ nombre, username, email, password_hash, avatar_url: '/img/personajes/personaje_1.png' })
+    const ok = await registrar({ nombre, username, email, password_hash, avatar_url: '/default-avatar.svg' })
 
     if (!ok) {
       return NextResponse.json({ error: 'Error al registrar usuario' }, { status: 500 })
@@ -49,3 +49,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
+
