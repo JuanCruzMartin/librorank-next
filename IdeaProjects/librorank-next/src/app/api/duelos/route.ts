@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUserFromRequest } from '@/lib/auth'
-import { crearTabla, crearDesafio, obtenerSala, obtenerDueloActivo, cancelarDesafio, obtenerHistorial, expirarDuelos, obtenerStatsGlobales, obtenerStatsPorRival } from '@/lib/dao/dueloDAO'
+import { crearTabla, crearDesafio, obtenerSala, obtenerDueloActivo, cancelarDesafio, obtenerHistorial, expirarDuelos, obtenerStatsGlobales, obtenerStatsPorRival, type TipoDuelo } from '@/lib/dao/dueloDAO'
 import { obtenerColeccion } from '@/lib/dao/cartaDAO'
 import { CARTAS } from '@/lib/cartas'
 
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
 
   if (body.accion === 'crear') {
-    const { cartaId } = body
+    const { cartaId, tipo = 'estandar' } = body
     if (!cartaId) return NextResponse.json({ error: 'Falta carta' }, { status: 400 })
 
     // Verificar que el usuario tiene la carta
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     const activo = await obtenerDueloActivo(user.id)
     if (activo) return NextResponse.json({ error: 'Ya tenés un duelo activo' }, { status: 400 })
 
-    const id = await crearDesafio(user.id, cartaId)
+    const id = await crearDesafio(user.id, cartaId, tipo as TipoDuelo)
     return NextResponse.json({ ok: true, dueloId: id })
   }
 

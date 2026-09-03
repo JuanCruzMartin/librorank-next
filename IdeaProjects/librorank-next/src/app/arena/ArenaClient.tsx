@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import type { Duelo, StatsGlobales, StatsRival } from '@/lib/dao/dueloDAO'
+import type { Duelo, StatsGlobales, StatsRival, TipoDuelo } from '@/lib/dao/dueloDAO'
 import type { Carta } from '@/lib/cartas'
 import { rarezaVisual, RAREZA_VISUAL_COLOR } from '@/lib/cartas'
 
@@ -35,6 +35,24 @@ interface PreguntaData {
   respuesta?: number
 }
 
+interface ResultadoRonda {
+  ronda: number
+  ganadorRonda: 'retador' | 'rival' | 'empate'
+  respuestaCorrecta: number
+  puntosRetador: number
+  puntosRival: number
+}
+
+interface ResultadoFinal {
+  gane: boolean
+  empate: boolean
+  tipo: TipoDuelo
+  cartaGanada?: string
+  monedasGanadas?: number
+  puntosRetador: number
+  puntosRival: number
+}
+
 export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial, historialInicial, misCartas, cartasMap, statsIniciales, statsPorRivalIniciales }: Props) {
   const [sala, setSala] = useState<Duelo[]>(salaInicial)
   const [dueloActivo, setDueloActivo] = useState<Duelo | null>(dueloActivoInicial)
@@ -42,8 +60,9 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
   const [pregunta, setPregunta] = useState<PreguntaData | null>(null)
   const [respuestaSeleccionada, setRespuestaSeleccionada] = useState<number | null>(null)
   const [esperandoRival, setEsperandoRival] = useState(false)
-  const [resultado, setResultado] = useState<{ gane: boolean; empate: boolean; cartaGanada?: string } | null>(null)
+  const [resultado, setResultado] = useState<ResultadoFinal | null>(null)
   const [cartaSeleccionada, setCartaSeleccionada] = useState<string | null>(null)
+  const [tipoSeleccionado, setTipoSeleccionado] = useState<TipoDuelo>('estandar')
   const [modal, setModal] = useState<'crear' | 'unirse' | null>(null)
   const [dueloParaUnirse, setDueloParaUnirse] = useState<Duelo | null>(null)
   const [cargando, setCargando] = useState(false)
@@ -52,55 +71,30 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
   const [timer, setTimer] = useState<number>(25)
   const [respondioEarly, setRespondioEarly] = useState(false)
   const [cuentaRegresiva, setCuentaRegresiva] = useState<number | null>(null)
+
+  // Mejor de 3
+  const [rondaActual, setRondaActual] = useState(1)
+  const [puntosRetador, setPuntosRetador] = useState(0)
+  const [puntosRival, setPuntosRival] = useState(0)
+  const [resultadoRonda, setResultadoRonda] = useState<ResultadoRonda | null>(null)
+
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const preguntaRef = useRef<PreguntaData | null>(null)
+  const lastSeenRondaRef = useRef(0)
+  const overlayActiveRef = useRef(false)
+  const mountedRef = useRef(true)
+  const dueloIdRef = useRef<number | null>(null)
+
+  useEffect(() => { return () => { mountedRef.current = false } }, [])
 
   const esRetador = dueloActivo?.retador_id === usuarioId
-  const yaRespondio = dueloActivo
-    ? (esRetador ? dueloActivo.respuesta_retador !== null : dueloActivo.respuesta_rival !== null)
-    : false
-
-  // Polling del duelo activo
-  const pollDuelo = useCallback(async () => {
-    if (!dueloActivo) return
-    const res = await fetch(`/api/duelos/${dueloActivo.id}`)
-    if (!res.ok) return
-    const data = await res.json()
-    const d: Duelo = data.duelo
-
-    setDueloActivo(d)
-
-    if (d.estado === 'en_curso' && data.pregunta && !preguntaRef.current) {
-      preguntaRef.current = data.pregunta
-      setPregunta(data.pregunta)
-      setCuentaRegresiva(3)
-    }
-
-    if (d.estado === 'terminado') {
-      clearPolling()
-      clearTimer()
-      const gane = d.ganador_id === usuarioId
-      const empate = d.ganador_id === null
-      const cartaGanada = gane
-        ? (esRetador ? d.carta_rival : d.carta_retador) ?? undefined
-        : undefined
-      setResultado({ gane, empate, cartaGanada })
-      setHistorial(prev => [d, ...prev].slice(0, 5))
-    }
-
-    if (d.estado === 'expirado') {
-      clearPolling()
-      clearTimer()
-      setDueloActivo(null)
-      refrescarSala()
-    }
-  }, [dueloActivo, usuarioId, esRetador])
 
   function clearPolling() { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null } }
   function clearTimer() { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null } }
 
   function iniciarTimer() {
+    clearTimer()
     setTimer(25)
     timerRef.current = setInterval(() => {
       setTimer(prev => {
@@ -110,14 +104,108 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
     }, 1000)
   }
 
+  async function mostrarResultadoRondaYAvanzar(resRonda: ResultadoRonda, dueloId: number) {
+    overlayActiveRef.current = true
+    clearTimer()
+    setResultadoRonda(resRonda)
+    setRondaActual(resRonda.ronda + 1)
+    setPuntosRetador(resRonda.puntosRetador)
+    setPuntosRival(resRonda.puntosRival)
+
+    await new Promise(resolve => setTimeout(resolve, 3500))
+    if (!mountedRef.current) return
+
+    setResultadoRonda(null)
+    setRespuestaSeleccionada(null)
+    setRespondioEarly(false)
+    overlayActiveRef.current = false
+
+    try {
+      const res = await fetch(`/api/duelos/${dueloId}`)
+      if (!res.ok) return
+      const data = await res.json()
+      if (!mountedRef.current) return
+      if (data.preguntaActual) {
+        preguntaRef.current = data.preguntaActual
+        setPregunta(data.preguntaActual)
+      }
+    } catch { /* continúa */ }
+
+    if (mountedRef.current) setCuentaRegresiva(3)
+  }
+
+  const pollDuelo = useCallback(async () => {
+    if (!dueloIdRef.current) return
+    const res = await fetch(`/api/duelos/${dueloIdRef.current}`)
+    if (!res.ok) return
+    const data = await res.json()
+    const d: Duelo = data.duelo
+
+    if (!mountedRef.current) return
+    setDueloActivo(d)
+
+    if (d.estado === 'en_curso') {
+      const nuevoRonda = d.ronda_actual ?? 1
+      setPuntosRetador(d.puntos_retador ?? 0)
+      setPuntosRival(d.puntos_rival ?? 0)
+      setRondaActual(nuevoRonda)
+
+      if (lastSeenRondaRef.current === 0 && data.preguntaActual && !preguntaRef.current) {
+        // Primera vez viendo el duelo en curso
+        lastSeenRondaRef.current = nuevoRonda
+        preguntaRef.current = data.preguntaActual
+        setPregunta(data.preguntaActual)
+        setCuentaRegresiva(3)
+      } else if (nuevoRonda > lastSeenRondaRef.current && lastSeenRondaRef.current > 0 && !overlayActiveRef.current) {
+        // Ronda avanzó — mostrar resultado intermedio
+        lastSeenRondaRef.current = nuevoRonda
+        if (data.resultadoRondaAnterior) {
+          mostrarResultadoRondaYAvanzar(data.resultadoRondaAnterior, d.id)
+        }
+      }
+    }
+
+    if (d.estado === 'terminado') {
+      clearPolling()
+      clearTimer()
+      const gane = d.ganador_id === usuarioId
+      const empate = d.ganador_id === null
+      const tipo: TipoDuelo = d.tipo ?? 'estandar'
+      const esRet = d.retador_id === usuarioId
+      const cartaGanada = gane && tipo === 'apuesta'
+        ? (esRet ? d.carta_rival : d.carta_retador) ?? undefined
+        : undefined
+      const monedasGanadas = gane && tipo === 'estandar' ? 40 : undefined
+      setResultado({ gane, empate, tipo, cartaGanada, monedasGanadas, puntosRetador: d.puntos_retador ?? 0, puntosRival: d.puntos_rival ?? 0 })
+      setHistorial(prev => [d, ...prev].slice(0, 5))
+    }
+
+    if (d.estado === 'expirado') {
+      clearPolling()
+      clearTimer()
+      setDueloActivo(null)
+      refrescarSala()
+    }
+  }, [usuarioId, esRetador])
+
   useEffect(() => {
     if (dueloActivo && dueloActivo.estado !== 'terminado') {
+      dueloIdRef.current = dueloActivo.id
       clearPolling()
       pollRef.current = setInterval(pollDuelo, 2000)
-      // Cargar pregunta si ya está en curso
       if (dueloActivo.estado === 'en_curso') {
         fetch(`/api/duelos/${dueloActivo.id}`).then(r => r.json()).then(data => {
-          if (data.pregunta) { preguntaRef.current = data.pregunta; setPregunta(data.pregunta); setCuentaRegresiva(3) }
+          if (!mountedRef.current) return
+          const ronda = data.duelo?.ronda_actual ?? 1
+          lastSeenRondaRef.current = ronda
+          setRondaActual(ronda)
+          setPuntosRetador(data.duelo?.puntos_retador ?? 0)
+          setPuntosRival(data.duelo?.puntos_rival ?? 0)
+          if (data.preguntaActual && !preguntaRef.current) {
+            preguntaRef.current = data.preguntaActual
+            setPregunta(data.preguntaActual)
+            setCuentaRegresiva(3)
+          }
         })
       }
     }
@@ -146,7 +234,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
     const res = await fetch('/api/duelos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accion: 'crear', cartaId: cartaSeleccionada }),
+      body: JSON.stringify({ accion: 'crear', cartaId: cartaSeleccionada, tipo: tipoSeleccionado }),
     })
     const data = await res.json()
     if (data.ok) {
@@ -176,7 +264,13 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
       const res2 = await fetch(`/api/duelos/${dueloParaUnirse.id}`)
       const d2 = await res2.json()
       setDueloActivo(d2.duelo)
-      if (d2.pregunta) { preguntaRef.current = d2.pregunta; setPregunta(d2.pregunta); setCuentaRegresiva(3) }
+      lastSeenRondaRef.current = 1
+      setRondaActual(1)
+      if (d2.preguntaActual) {
+        preguntaRef.current = d2.preguntaActual
+        setPregunta(d2.preguntaActual)
+        setCuentaRegresiva(3)
+      }
     }
     setCargando(false)
   }
@@ -200,12 +294,31 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
       setDueloActivo(d)
       const gane = d.ganador_id === usuarioId
       const empate = d.ganador_id === null
-      const cartaGanada = gane
+      const tipo: TipoDuelo = d.tipo ?? 'estandar'
+      const cartaGanada = gane && tipo === 'apuesta'
         ? (esRetador ? d.carta_rival : d.carta_retador) ?? undefined
         : undefined
-      setResultado({ gane, empate, cartaGanada })
+      const monedasGanadas = gane && tipo === 'estandar' ? 40 : undefined
+      setResultado({ gane, empate, tipo, cartaGanada, monedasGanadas, puntosRetador: data.puntosRetador ?? 0, puntosRival: data.puntosRival ?? 0 })
       setHistorial(prev => [d, ...prev].slice(0, 5))
-      if (data.pregunta) setPregunta(p => ({ ...p!, respuesta: data.respuestaCorrecta }))
+      if (data.respuestaCorrecta !== undefined) {
+        setPregunta(p => p ? { ...p, respuesta: data.respuestaCorrecta } : p)
+      }
+    } else if (data.rondaTerminada) {
+      // Esta ronda terminó, el match continúa
+      if (data.respuestaCorrecta !== undefined) {
+        setPregunta(p => p ? { ...p, respuesta: data.respuestaCorrecta } : p)
+      }
+      const nextRonda = (dueloActivo.ronda_actual ?? 1) + 1
+      lastSeenRondaRef.current = nextRonda
+      overlayActiveRef.current = true
+      mostrarResultadoRondaYAvanzar({
+        ronda: dueloActivo.ronda_actual ?? 1,
+        ganadorRonda: data.ganadorRonda,
+        respuestaCorrecta: data.respuestaCorrecta,
+        puntosRetador: data.puntosRetador ?? 0,
+        puntosRival: data.puntosRival ?? 0,
+      }, dueloActivo.id)
     }
   }
 
@@ -230,6 +343,14 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
     setEsperandoRival(false)
     setRespondioEarly(false)
     setTimer(25)
+    setRondaActual(1)
+    setPuntosRetador(0)
+    setPuntosRival(0)
+    setResultadoRonda(null)
+    lastSeenRondaRef.current = 0
+    overlayActiveRef.current = false
+    dueloIdRef.current = null
+    setTipoSeleccionado('estandar')
     refrescarSala()
   }
 
@@ -244,7 +365,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
   }
 
   function borderOpcion(idx: number) {
-    if (respuestaSeleccionada === null) return idx === respuestaSeleccionada ? '2px solid #d4af37' : '1px solid rgba(255,255,255,0.1)'
+    if (respuestaSeleccionada === null) return '1px solid rgba(255,255,255,0.1)'
     if (pregunta?.respuesta !== undefined) {
       if (idx === pregunta.respuesta) return '2px solid #27ae60'
       if (idx === respuestaSeleccionada) return '2px solid #e74c3c'
@@ -269,17 +390,46 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
     )
   }
 
-  // ── RESULTADO ──
+  function ScoreDots({ pts, max = 2, color }: { pts: number; max?: number; color: string }) {
+    return (
+      <div style={{ display: 'flex', gap: 5 }}>
+        {Array.from({ length: max }).map((_, i) => (
+          <div key={i} style={{
+            width: 11, height: 11, borderRadius: '50%',
+            background: i < pts ? color : 'rgba(255,255,255,0.12)',
+            border: `1px solid ${i < pts ? color : 'rgba(255,255,255,0.2)'}`,
+            transition: 'background 0.3s',
+          }} />
+        ))}
+      </div>
+    )
+  }
+
+  // ── RESULTADO FINAL ──
   if (resultado && dueloActivo) {
+    const misPts = esRetador ? resultado.puntosRetador : resultado.puntosRival
+    const rivalPts = esRetador ? resultado.puntosRival : resultado.puntosRetador
     return (
       <div className="text-center" style={{ maxWidth: 500, margin: '0 auto' }}>
-        <div style={{ fontSize: '4rem', marginBottom: '0.5rem' }}>
+        <div style={{ fontSize: '3.5rem', marginBottom: '0.4rem' }}>
           {resultado.empate ? '🤝' : resultado.gane ? '🏆' : '💀'}
         </div>
-        <h2 className="font-title" style={{ color: resultado.empate ? '#d4af37' : resultado.gane ? '#27ae60' : '#e74c3c', marginBottom: '0.5rem' }}>
+        <h2 className="font-title" style={{ color: resultado.empate ? '#d4af37' : resultado.gane ? '#27ae60' : '#e74c3c', marginBottom: '0.25rem' }}>
           {resultado.empate ? '¡Empate!' : resultado.gane ? '¡Ganaste!' : '¡Perdiste!'}
         </h2>
-        {resultado.empate && <p className="text-muted">Los dos fallaron — las cartas vuelven a sus dueños.</p>}
+
+        {/* Marcador final */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginBottom: '1rem' }}>
+          <ScoreDots pts={misPts} color="#27ae60" />
+          <span style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fff' }}>{misPts} — {rivalPts}</span>
+          <ScoreDots pts={rivalPts} color="#e74c3c" />
+        </div>
+
+        {resultado.empate && (
+          <p className="text-muted">
+            {resultado.tipo === 'apuesta' ? 'Las cartas vuelven a sus dueños.' : 'Nadie suma monedas.'}
+          </p>
+        )}
         {resultado.gane && resultado.cartaGanada && (
           <div>
             <p style={{ color: 'rgba(255,255,255,0.7)' }}>Te llevás la carta de tu rival:</p>
@@ -288,14 +438,20 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
             </div>
           </div>
         )}
+        {resultado.gane && resultado.monedasGanadas && (
+          <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#d4af37', marginBottom: '0.75rem' }}>
+            +{resultado.monedasGanadas} ⚡
+          </div>
+        )}
         {!resultado.gane && !resultado.empate && (
-          <p style={{ color: 'rgba(255,255,255,0.5)' }}>Tu rival se llevó tu carta.</p>
+          <p style={{ color: 'rgba(255,255,255,0.5)' }}>
+            {resultado.tipo === 'apuesta' ? 'Tu rival se llevó tu carta.' : 'Tu rival sumó las monedas.'}
+          </p>
         )}
 
-        {/* Mostrar respuesta correcta si no la vimos */}
         {pregunta && pregunta.respuesta !== undefined && (
           <div style={{ background: 'rgba(39,174,96,0.08)', border: '1px solid rgba(39,174,96,0.3)', borderRadius: 10, padding: '0.75rem 1rem', marginBottom: '1.25rem', textAlign: 'left' }}>
-            <div style={{ fontSize: '0.72rem', color: '#27ae60', fontWeight: 700, marginBottom: 4 }}>✓ Respuesta correcta</div>
+            <div style={{ fontSize: '0.72rem', color: '#27ae60', fontWeight: 700, marginBottom: 4 }}>✓ Última respuesta correcta</div>
             <div style={{ fontSize: '0.85rem', color: '#fff' }}>{pregunta.opciones[pregunta.respuesta]}</div>
           </div>
         )}
@@ -307,33 +463,60 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
     )
   }
 
+  // ── RESULTADO DE RONDA (overlay entre rondas) ──
+  if (resultadoRonda && dueloActivo) {
+    const esGanadorRonda = (resultadoRonda.ganadorRonda === 'retador') === esRetador
+    const esEmpateRonda = resultadoRonda.ganadorRonda === 'empate'
+    const misPts = esRetador ? resultadoRonda.puntosRetador : resultadoRonda.puntosRival
+    const rivalPts = esRetador ? resultadoRonda.puntosRival : resultadoRonda.puntosRetador
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' }}>
+        <div style={{ fontSize: '3rem' }}>
+          {esEmpateRonda ? '🤝' : esGanadorRonda ? '✅' : '❌'}
+        </div>
+        <h3 className="font-title" style={{ color: esEmpateRonda ? '#d4af37' : esGanadorRonda ? '#27ae60' : '#e74c3c', margin: 0 }}>
+          {esEmpateRonda ? 'Ronda empatada' : esGanadorRonda ? `¡Ganaste la ronda ${resultadoRonda.ronda}!` : `Perdiste la ronda ${resultadoRonda.ronda}`}
+        </h3>
+
+        {/* Respuesta correcta */}
+        {pregunta && resultadoRonda.respuestaCorrecta !== undefined && (
+          <div style={{ background: 'rgba(39,174,96,0.1)', border: '1px solid rgba(39,174,96,0.3)', borderRadius: 10, padding: '0.6rem 1rem', fontSize: '0.82rem', color: '#fff', maxWidth: 400, textAlign: 'center' }}>
+            <span style={{ color: '#27ae60', fontWeight: 700 }}>✓ </span>
+            {pregunta.opciones[resultadoRonda.respuestaCorrecta]}
+          </div>
+        )}
+
+        {/* Marcador */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '0.75rem 1.5rem', background: 'rgba(255,255,255,0.04)', borderRadius: 12 }}>
+          <ScoreDots pts={misPts} color="#27ae60" />
+          <span style={{ fontSize: '1.2rem', fontWeight: 900, color: '#fff', letterSpacing: 2 }}>{misPts} — {rivalPts}</span>
+          <ScoreDots pts={rivalPts} color="#e74c3c" />
+        </div>
+
+        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px' }}>
+          Ronda {resultadoRonda.ronda + 1} en unos segundos...
+        </div>
+      </div>
+    )
+  }
+
   // ── CUENTA REGRESIVA ──
   if (dueloActivo?.estado === 'en_curso' && pregunta && cuentaRegresiva !== null && cuentaRegresiva > 0) {
     const colores: Record<number, string> = { 3: '#27ae60', 2: '#e67e22', 1: '#e74c3c' }
     const color = colores[cuentaRegresiva] ?? '#d4af37'
     return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        minHeight: '60vh', gap: '1rem',
-      }}>
-        <div style={{
-          fontSize: '8rem', fontWeight: 900, color,
-          textShadow: `0 0 60px ${color}80`,
-          animation: 'cuentaAnim 0.9s ease-in-out',
-          lineHeight: 1,
-        }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' }}>
+        <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', textTransform: 'uppercase' }}>
+          Ronda {rondaActual} / 3
+        </div>
+        <div style={{ fontSize: '8rem', fontWeight: 900, color, textShadow: `0 0 60px ${color}80`, animation: 'cuentaAnim 0.9s ease-in-out', lineHeight: 1 }}>
           {cuentaRegresiva}
         </div>
-        <div style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', textTransform: 'uppercase' }}>
           ¡Prepárate!
         </div>
-        <style>{`
-          @keyframes cuentaAnim {
-            0% { transform: scale(1.8); opacity: 0 }
-            40% { transform: scale(1); opacity: 1 }
-            100% { transform: scale(0.85); opacity: 0.6 }
-          }
-        `}</style>
+        <style>{`@keyframes cuentaAnim { 0% { transform: scale(1.8); opacity: 0 } 40% { transform: scale(1); opacity: 1 } 100% { transform: scale(0.85); opacity: 0.6 } }`}</style>
       </div>
     )
   }
@@ -344,31 +527,44 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
       ? { nombre: dueloActivo.rival_nombre, avatar: dueloActivo.rival_avatar, carta: dueloActivo.carta_rival }
       : { nombre: dueloActivo.retador_nombre, avatar: dueloActivo.retador_avatar, carta: dueloActivo.carta_retador }
     const miCarta = esRetador ? dueloActivo.carta_retador : dueloActivo.carta_rival
+    const misPts = esRetador ? puntosRetador : puntosRival
+    const rivalPts = esRetador ? puntosRival : puntosRetador
 
     return (
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
-        {/* Cabecera: yo vs rival */}
-        <div className="d-flex align-items-center justify-content-between mb-4 gap-3">
+        {/* Cabecera: yo vs rival con marcador */}
+        <div className="d-flex align-items-center justify-content-between mb-3 gap-3">
           <div className="text-center" style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Tu apuesta</div>
+            <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>Tu carta</div>
             {miCarta && <MiniCarta cartaId={miCarta} size="md" />}
           </div>
+
           <div className="text-center">
-            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#d4af37' }}>⚔️</div>
-            {!yaRespondio && (
-              <div style={{
-                fontSize: '1.2rem', fontWeight: 900,
-                color: timer <= 10 ? '#e74c3c' : '#fff',
-                background: timer <= 10 ? 'rgba(231,76,60,0.15)' : 'rgba(255,255,255,0.05)',
-                borderRadius: 8, padding: '2px 12px', marginTop: 4,
-                transition: 'all 0.3s',
-              }}>
-                {timer}s
+            {/* Marcador */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+              <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                Ronda {rondaActual}/3
               </div>
-            )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <ScoreDots pts={misPts} color="#27ae60" />
+                <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#d4af37' }}>⚔️</span>
+                <ScoreDots pts={rivalPts} color="#e74c3c" />
+              </div>
+              {!respondioEarly && (
+                <div style={{
+                  fontSize: '1.1rem', fontWeight: 900,
+                  color: timer <= 10 ? '#e74c3c' : '#fff',
+                  background: timer <= 10 ? 'rgba(231,76,60,0.15)' : 'rgba(255,255,255,0.05)',
+                  borderRadius: 8, padding: '2px 10px', transition: 'all 0.3s',
+                }}>
+                  {timer}s
+                </div>
+              )}
+            </div>
           </div>
+
           <div className="text-center" style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Apuesta rival</div>
+            <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>Carta rival</div>
             {rival.carta && <MiniCarta cartaId={rival.carta} size="md" />}
           </div>
         </div>
@@ -381,14 +577,14 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
           style={{ userSelect: 'none' } as React.CSSProperties}
         >
           <div style={{ fontSize: '0.65rem', color: '#d4af37', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
-            ⚔️ Pregunta literaria
+            ⚔️ Pregunta literaria · Ronda {rondaActual}
           </div>
           <p style={{ fontSize: '1rem', color: '#fff', fontWeight: 600, lineHeight: 1.5, marginBottom: '1.25rem', pointerEvents: 'none' }}>
             {pregunta.texto}
           </p>
 
           {(() => {
-            const shuffledIdx = seededShuffle([0, 1, 2, 3], dueloActivo!.id)
+            const shuffledIdx = seededShuffle([0, 1, 2, 3], dueloActivo!.id + rondaActual * 1000)
             const opcionesOrdenadas = shuffledIdx.map(i => pregunta.opciones[i])
             return (
               <div className="d-flex flex-column gap-2">
@@ -404,8 +600,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
                         background: colorOpcion(originalIdx), color: '#fff', textAlign: 'left',
                         fontSize: '0.88rem', cursor: respuestaSeleccionada !== null ? 'default' : 'pointer',
                         transition: 'all 0.15s', fontWeight: respuestaSeleccionada === originalIdx ? 700 : 400,
-                        display: 'flex', alignItems: 'center', gap: '0.5rem',
-                        userSelect: 'none',
+                        display: 'flex', alignItems: 'center', gap: '0.5rem', userSelect: 'none',
                       }}
                     >
                       <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'rgba(255,255,255,0.4)', minWidth: 18 }}>
@@ -422,7 +617,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
             )
           })()}
 
-          {respondioEarly && respuestaSeleccionada !== null && resultado === null && (
+          {respondioEarly && respuestaSeleccionada !== null && resultado === null && !resultadoRonda && (
             <div style={{ marginTop: '1rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>
               Esperando que tu rival responda...
             </div>
@@ -449,11 +644,23 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
         <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>⚔️</div>
         <h3 className="font-title" style={{ color: '#d4af37', marginBottom: '0.5rem' }}>Desafío publicado</h3>
         <p className="text-muted mb-3">Esperando que alguien acepte tu duelo...</p>
-        <div className="d-flex justify-content-center mb-4">
+
+        {/* Tipo de duelo */}
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          background: dueloActivo.tipo === 'apuesta' ? 'rgba(212,175,55,0.1)' : 'rgba(39,174,96,0.1)',
+          border: `1px solid ${dueloActivo.tipo === 'apuesta' ? 'rgba(212,175,55,0.3)' : 'rgba(39,174,96,0.3)'}`,
+          borderRadius: 20, padding: '3px 12px', fontSize: '0.72rem', fontWeight: 700,
+          color: dueloActivo.tipo === 'apuesta' ? '#d4af37' : '#27ae60', marginBottom: '1rem',
+        }}>
+          {dueloActivo.tipo === 'apuesta' ? '🃏 Apuesta de carta' : '⚡ Duelo estándar'}
+        </div>
+
+        <div className="d-flex justify-content-center mb-3">
           <MiniCarta cartaId={dueloActivo.carta_retador} size="md" />
         </div>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'center', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: '1.5rem' }}>
-          <span>Tu carta en juego:</span>
+          <span>{dueloActivo.tipo === 'apuesta' ? 'Carta apostada:' : 'Rareza del duelo:'}</span>
           <span style={{ color: '#fff', fontWeight: 700 }}>{cartasMap[dueloActivo.carta_retador]?.nombre}</span>
         </div>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0.5rem 1rem', borderRadius: 8, background: 'rgba(255,255,255,0.04)', marginBottom: '1.5rem' }}>
@@ -474,7 +681,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
     <div>
       <div className="text-center mb-5">
         <h1 className="font-title display-5" style={{ color: '#fff' }}>⚔️ Arena de Duelos</h1>
-        <p className="text-muted">Apostá una carta de tu colección y desafiá a cualquier lector</p>
+        <p className="text-muted">Mejor de 3 rondas — ganá puntos o apostá tu carta</p>
       </div>
 
       <div className="row g-4">
@@ -498,20 +705,29 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
                 const carta = cartasMap[d.carta_retador]
                 const color = carta ? RAREZA_COLOR[rarezaVisual(carta.rareza)] : '#9e9e9e'
                 const rarezaLabel = carta ? rarezaVisual(carta.rareza).toUpperCase() : '?'
+                const esApuesta = d.tipo === 'apuesta'
                 return (
                   <div key={d.id} className="card p-3" style={{ border: `1px solid ${color}40`, position: 'relative' }}>
-                    {/* Badge de rareza */}
-                    <div style={{
-                      position: 'absolute', top: 10, right: 10,
-                      background: `${color}22`, border: `1px solid ${color}60`,
-                      borderRadius: 20, padding: '2px 10px',
-                      fontSize: '0.62rem', fontWeight: 800, color, letterSpacing: '0.5px',
-                    }}>
-                      {rarezaLabel}
+                    {/* Badges */}
+                    <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6 }}>
+                      <div style={{
+                        background: esApuesta ? 'rgba(212,175,55,0.15)' : 'rgba(39,174,96,0.15)',
+                        border: `1px solid ${esApuesta ? 'rgba(212,175,55,0.4)' : 'rgba(39,174,96,0.4)'}`,
+                        borderRadius: 20, padding: '2px 8px',
+                        fontSize: '0.6rem', fontWeight: 800, color: esApuesta ? '#d4af37' : '#27ae60',
+                      }}>
+                        {esApuesta ? '🃏 Apuesta' : '⚡ Estándar'}
+                      </div>
+                      <div style={{
+                        background: `${color}22`, border: `1px solid ${color}60`,
+                        borderRadius: 20, padding: '2px 8px',
+                        fontSize: '0.6rem', fontWeight: 800, color,
+                      }}>
+                        {rarezaLabel}
+                      </div>
                     </div>
 
                     <div className="d-flex align-items-center gap-3">
-                      {/* Avatar retador */}
                       <div style={{ flexShrink: 0 }}>
                         {d.retador_avatar ? (
                           <img src={d.retador_avatar} alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(212,175,55,0.3)' }} />
@@ -522,24 +738,24 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
                         )}
                       </div>
 
-                      {/* Info */}
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.9rem' }}>{d.retador_nombre}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>@{d.retador_username} · apuesta:</div>
+                        <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>@{d.retador_username}</div>
                         {carta && (
                           <div style={{ fontSize: '0.75rem', color, fontWeight: 700, marginTop: 2 }}>
                             {carta.simbolo} {carta.nombre}
                           </div>
                         )}
                         <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
-                          Necesitás una carta <span style={{ color, fontWeight: 700 }}>{carta ? rarezaVisual(carta.rareza) : ''}</span>
+                          {esApuesta
+                            ? <>Apostá una carta <span style={{ color, fontWeight: 700 }}>{carta ? rarezaVisual(carta.rareza) : ''}</span></>
+                            : <>Elegí una carta <span style={{ color, fontWeight: 700 }}>{carta ? rarezaVisual(carta.rareza) : ''}</span> para jugar</>
+                          }
                         </div>
                       </div>
 
-                      {/* Carta preview */}
                       <MiniCarta cartaId={d.carta_retador} size="sm" />
 
-                      {/* Botón */}
                       <button
                         onClick={() => { setDueloParaUnirse(d); setModal('unirse') }}
                         style={{
@@ -605,6 +821,8 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
                   const rivalId = esRet ? d.rival_id : d.retador_id
                   const rivalNombre = esRet ? d.rival_nombre : d.retador_nombre
                   const h2h = statsPorRival.find(s => s.rival_id === rivalId)
+                  const misPts = esRet ? d.puntos_retador : d.puntos_rival
+                  const rivalPts2 = esRet ? d.puntos_rival : d.puntos_retador
                   return (
                     <div key={d.id} style={{
                       padding: '0.6rem 0.85rem', borderRadius: 10, fontSize: '0.78rem',
@@ -613,9 +831,12 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ color: 'rgba(255,255,255,0.6)' }}>vs {rivalNombre ?? '?'}</span>
-                        <span style={{ fontWeight: 700, color: empate ? '#d4af37' : gane ? '#27ae60' : '#e74c3c' }}>
-                          {empate ? '🤝 Empate' : gane ? '🏆 Ganaste' : '💀 Perdiste'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)' }}>{misPts}–{rivalPts2}</span>
+                          <span style={{ fontWeight: 700, color: empate ? '#d4af37' : gane ? '#27ae60' : '#e74c3c' }}>
+                            {empate ? '🤝' : gane ? '🏆' : '💀'}
+                          </span>
+                        </div>
                       </div>
                       {h2h && (
                         <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', marginTop: 3 }}>
@@ -639,30 +860,71 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
         }} onClick={() => { setModal(null); setCartaSeleccionada(null) }}>
           <div
             onClick={e => e.stopPropagation()}
-            style={{ background: '#1a1a2e', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 16, padding: '1.5rem', maxWidth: 560, width: '100%', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}
+            style={{ background: '#1a1a2e', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 16, padding: '1.5rem', maxWidth: 560, width: '100%', maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}
           >
-            <h5 className="font-title mb-1" style={{ color: '#d4af37' }}>
-              {modal === 'crear' ? '⚔️ Elegí tu carta de apuesta' : `⚔️ Aceptar duelo de ${dueloParaUnirse?.retador_nombre}`}
+            <h5 className="font-title mb-3" style={{ color: '#d4af37' }}>
+              {modal === 'crear' ? '⚔️ Nuevo desafío' : `⚔️ Aceptar duelo de ${dueloParaUnirse?.retador_nombre}`}
             </h5>
+
+            {/* Selector de tipo (solo al crear) */}
+            {modal === 'crear' && (
+              <div style={{ display: 'flex', gap: 8, marginBottom: '1rem' }}>
+                {(['estandar', 'apuesta'] as TipoDuelo[]).map(t => (
+                  <button
+                    key={t}
+                    onClick={() => setTipoSeleccionado(t)}
+                    style={{
+                      flex: 1, padding: '0.75rem 0.5rem', borderRadius: 10,
+                      border: tipoSeleccionado === t
+                        ? `2px solid ${t === 'estandar' ? '#27ae60' : '#d4af37'}`
+                        : '1px solid rgba(255,255,255,0.1)',
+                      background: tipoSeleccionado === t
+                        ? `${t === 'estandar' ? '#27ae60' : '#d4af37'}15`
+                        : 'transparent',
+                      color: '#fff', cursor: 'pointer', textAlign: 'center',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <div style={{ fontSize: '1.3rem', marginBottom: 2 }}>{t === 'estandar' ? '⚡' : '🃏'}</div>
+                    <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{t === 'estandar' ? 'Estándar' : 'Apuesta'}</div>
+                    <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                      {t === 'estandar' ? 'Ganás 40 ⚡ monedas' : 'Ganás la carta rival'}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Info de duelo de apuesta al unirse */}
             {modal === 'unirse' && dueloParaUnirse && (() => {
               const cartaRival = cartasMap[dueloParaUnirse.carta_retador]
               const colorRiv = cartaRival ? RAREZA_COLOR[cartaRival.rareza] : '#9e9e9e'
+              const esApuesta = dueloParaUnirse.tipo === 'apuesta'
               return (
                 <div style={{ background: `${colorRiv}12`, border: `1px solid ${colorRiv}35`, borderRadius: 10, padding: '0.6rem 0.85rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: 10 }}>
                   <MiniCarta cartaId={dueloParaUnirse.carta_retador} size="sm" />
                   <div>
-                    <div style={{ fontSize: '0.72rem', color: colorRiv, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      Duelo {cartaRival ? rarezaVisual(cartaRival.rareza) : ''}
+                    <div style={{ fontSize: '0.7rem', color: esApuesta ? '#d4af37' : '#27ae60', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      {esApuesta ? '🃏 Duelo de apuesta' : '⚡ Duelo estándar'}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#fff', fontWeight: 700 }}>{cartaRival?.nombre}</div>
                     <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)' }}>
-                      Solo podés apostar una carta <span style={{ color: colorRiv, fontWeight: 700 }}>{cartaRival ? rarezaVisual(cartaRival.rareza) : ''}</span>
+                      {esApuesta
+                        ? <>Apostá una carta <span style={{ color: colorRiv, fontWeight: 700 }}>{cartaRival ? rarezaVisual(cartaRival.rareza) : ''}</span> — si perdés, tu rival se la lleva</>
+                        : <>Elegí una carta <span style={{ color: colorRiv, fontWeight: 700 }}>{cartaRival ? rarezaVisual(cartaRival.rareza) : ''}</span> — sin riesgo de perderla</>
+                      }
                     </div>
                   </div>
                 </div>
               )
             })()}
-            <p className="text-muted small mb-3">Si perdés, tu rival se lleva esta carta. Elegí con cuidado.</p>
+
+            <p className="text-muted small mb-3">
+              {modal === 'crear'
+                ? (tipoSeleccionado === 'apuesta' ? 'Si perdés, tu rival se lleva esta carta.' : 'Tu carta define la rareza. No la apostás.')
+                : (dueloParaUnirse?.tipo === 'apuesta' ? 'Si perdés, tu rival se lleva esta carta.' : 'Tu carta define la rareza. No la apostás.')
+              }
+            </p>
 
             {(() => {
               const rarezaRequerida = modal === 'unirse' && dueloParaUnirse
@@ -675,7 +937,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
               if (cartasFiltradas.length === 0) return (
                 <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '2rem 0' }}>
                   {rarezaRequerida
-                    ? `No tenés cartas ${rarezaRequerida}s en tu colección para apostar.`
+                    ? `No tenés cartas ${rarezaRequerida}s para este duelo.`
                     : 'No tenés cartas en tu colección todavía.'}
                 </p>
               )
