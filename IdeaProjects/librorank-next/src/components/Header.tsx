@@ -56,7 +56,6 @@ interface HeaderProps {
 
 const NAV_ITEMS: { href: string; label: string; icon: React.ReactNode }[] = [
   { href: '/biblioteca',  label: 'Biblioteca',   icon: <Books size={16} weight="duotone" /> },
-  { href: '/desafios',    label: 'Desafíos',     icon: <Sword size={16} weight="duotone" /> },
   { href: '/coleccion',   label: 'Colección',    icon: <Cards size={16} weight="duotone" /> },
   { href: '/ranking',     label: 'Ranking',      icon: <Trophy size={16} weight="duotone" /> },
   { href: '/amigos',      label: 'Comunidad',    icon: <UsersThree size={16} weight="duotone" /> },
@@ -183,7 +182,7 @@ export default function Header({ user }: HeaderProps) {
           <nav className="header-nav-desktop">
             <ul className="d-flex list-unstyled gap-3 mb-0 align-items-center">
               {NAV_ITEMS.map(item => {
-                const esDesafios = item.href === '/desafios'
+                const esDesafios = item.href === '/arena'
                 const tieneGlow = esDesafios && misionesPendientes > 0
                 return (
                   <li key={item.href} style={{ position: 'relative' }}>
@@ -412,7 +411,7 @@ export default function Header({ user }: HeaderProps) {
           <nav style={{ flex: 1 }}>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
               {NAV_ITEMS.map(item => {
-                const esDesafios = item.href === '/desafios'
+                const esDesafios = item.href === '/arena'
                 const tieneGlow = esDesafios && misionesPendientes > 0
                 const activo = pathname.startsWith(item.href)
                 return (
