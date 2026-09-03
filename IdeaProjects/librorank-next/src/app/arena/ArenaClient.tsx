@@ -39,6 +39,8 @@ interface ResultadoRonda {
   ronda: number
   ganadorRonda: 'retador' | 'rival' | 'empate'
   respuestaCorrecta: number
+  retadorAcerto?: boolean
+  rivalAcerto?: boolean
   puntosRetador: number
   puntosRival: number
 }
@@ -316,6 +318,8 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
         ronda: dueloActivo.ronda_actual ?? 1,
         ganadorRonda: data.ganadorRonda,
         respuestaCorrecta: data.respuestaCorrecta,
+        retadorAcerto: data.retadorAcerto,
+        rivalAcerto: data.rivalAcerto,
         puntosRetador: data.puntosRetador ?? 0,
         puntosRival: data.puntosRival ?? 0,
       }, dueloActivo.id)
@@ -469,6 +473,30 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
     const esEmpateRonda = resultadoRonda.ganadorRonda === 'empate'
     const misPts = esRetador ? resultadoRonda.puntosRetador : resultadoRonda.puntosRival
     const rivalPts = esRetador ? resultadoRonda.puntosRival : resultadoRonda.puntosRetador
+    const yoAcerte = esRetador ? resultadoRonda.retadorAcerto : resultadoRonda.rivalAcerto
+    const rivalAcerto = esRetador ? resultadoRonda.rivalAcerto : resultadoRonda.retadorAcerto
+
+    // Razón por la que ganaste/perdiste/empataste
+    let razonTexto = ''
+    let razonColor = 'rgba(255,255,255,0.45)'
+    if (resultadoRonda.retadorAcerto !== undefined) {
+      if (yoAcerte && !rivalAcerto) {
+        razonTexto = '¡Respondiste bien y tu rival se equivocó!'
+        razonColor = '#27ae60'
+      } else if (!yoAcerte && rivalAcerto) {
+        razonTexto = 'Tu rival respondió bien y vos te equivocaste'
+        razonColor = '#e74c3c'
+      } else if (!yoAcerte && !rivalAcerto) {
+        razonTexto = 'Ninguno de los dos acertó — ronda empatada'
+        razonColor = '#d4af37'
+      } else if (yoAcerte && rivalAcerto && esGanadorRonda) {
+        razonTexto = '¡Ambos respondieron bien, pero fuiste más rápido!'
+        razonColor = '#27ae60'
+      } else if (yoAcerte && rivalAcerto && !esGanadorRonda) {
+        razonTexto = 'Ambos respondieron bien, pero tu rival fue más rápido'
+        razonColor = '#e74c3c'
+      }
+    }
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' }}>
@@ -478,6 +506,13 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
         <h3 className="font-title" style={{ color: esEmpateRonda ? '#d4af37' : esGanadorRonda ? '#27ae60' : '#e74c3c', margin: 0 }}>
           {esEmpateRonda ? 'Ronda empatada' : esGanadorRonda ? `¡Ganaste la ronda ${resultadoRonda.ronda}!` : `Perdiste la ronda ${resultadoRonda.ronda}`}
         </h3>
+
+        {/* Razón */}
+        {razonTexto && (
+          <p style={{ fontSize: '0.85rem', color: razonColor, margin: 0, textAlign: 'center', maxWidth: 360, fontWeight: 600 }}>
+            {razonTexto}
+          </p>
+        )}
 
         {/* Respuesta correcta */}
         {pregunta && resultadoRonda.respuestaCorrecta !== undefined && (

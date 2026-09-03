@@ -60,6 +60,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         ronda: prevIdx + 1,
         ganadorRonda,
         respuestaCorrecta: correcta,
+        retadorAcerto: retadorOk,
+        rivalAcerto: rivalOk,
         puntosRetador: duelo.puntos_retador,
         puntosRival: duelo.puntos_rival,
       }
@@ -120,6 +122,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         rondaTerminada: true,
         ganadorRonda: result.ganadorRonda,
         respuestaCorrecta: result.respuestaCorrecta,
+        retadorAcerto: result.retadorAcerto,
+        rivalAcerto: result.rivalAcerto,
         puntosRetador: result.puntosRetador,
         puntosRival: result.puntosRival,
         duelo,
@@ -133,6 +137,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         rondaTerminada: true,
         ganadorRonda: result.ganadorRonda,
         respuestaCorrecta: result.respuestaCorrecta,
+        retadorAcerto: result.retadorAcerto,
+        rivalAcerto: result.rivalAcerto,
         puntosRetador: result.puntosRetador,
         puntosRival: result.puntosRival,
       })

@@ -36,6 +36,8 @@ export interface ResponderResult {
   rondaTerminada?: boolean
   ganadorRonda?: 'retador' | 'rival' | 'empate'
   respuestaCorrecta?: number
+  retadorAcerto?: boolean
+  rivalAcerto?: boolean
   puntosRetador?: number
   puntosRival?: number
 }
@@ -242,7 +244,7 @@ async function resolverRonda(dueloId: number, duelo: Duelo): Promise<ResponderRe
   if (matchOver) {
     await execute('UPDATE duelos SET puntos_retador=?, puntos_rival=? WHERE id=?', [pts_ret, pts_riv, dueloId])
     await finalizarDuelo(dueloId, duelo, pts_ret, pts_riv)
-    return { ok: true, dueloTerminado: true, rondaTerminada: true, ganadorRonda, respuestaCorrecta: correcta, puntosRetador: pts_ret, puntosRival: pts_riv }
+    return { ok: true, dueloTerminado: true, rondaTerminada: true, ganadorRonda, respuestaCorrecta: correcta, retadorAcerto: retadorOk, rivalAcerto: rivalOk, puntosRetador: pts_ret, puntosRival: pts_riv }
   }
 
   await execute(
@@ -250,7 +252,7 @@ async function resolverRonda(dueloId: number, duelo: Duelo): Promise<ResponderRe
      expires_at=DATE_ADD(NOW(), INTERVAL 5 MINUTE) WHERE id=?`,
     [pts_ret, pts_riv, duelo.ronda_actual + 1, dueloId]
   )
-  return { ok: true, dueloTerminado: false, rondaTerminada: true, ganadorRonda, respuestaCorrecta: correcta, puntosRetador: pts_ret, puntosRival: pts_riv }
+  return { ok: true, dueloTerminado: false, rondaTerminada: true, ganadorRonda, respuestaCorrecta: correcta, retadorAcerto: retadorOk, rivalAcerto: rivalOk, puntosRetador: pts_ret, puntosRival: pts_riv }
 }
 
 async function finalizarDuelo(dueloId: number, duelo: Duelo, ptsRetador: number, ptsRival: number): Promise<void> {
