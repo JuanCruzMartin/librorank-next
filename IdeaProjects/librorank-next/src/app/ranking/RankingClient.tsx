@@ -68,35 +68,30 @@ function horasParaReset(): string {
   return `${horas}h ${mins}m`
 }
 
-type TabKey = 'paginas' | 'libros' | 'general' | 'semanal' | 'autores'
+type TabKey = 'paginas' | 'libros' | 'semanal' | 'autores'
 
 const TABS: { key: TabKey; label: string; emoji: string; color: string }[] = [
   { key: 'paginas',  label: 'Páginas leídas', emoji: '📄', color: '#3498db' },
   { key: 'libros',   label: 'Libros leídos',  emoji: '📚', color: '#4a9e7a' },
-  { key: 'general',  label: 'Puntos',          emoji: '⭐', color: '#d4af37' },
   { key: 'semanal',  label: 'Esta semana',     emoji: '🔥', color: '#e91e8c' },
   { key: 'autores',  label: 'Escritores',      emoji: '✍️', color: '#9b59b6' },
 ]
 
 export default function RankingClient({ ranking, rankingSemanal, rankingAutores, usuarioId, puntosUsuario }: Props) {
-  const ligaActual    = getLigaActual(puntosUsuario)
-  const ligaSiguiente = null as ReturnType<typeof getLiga> | null // no needed for progress anymore
+  const ligaActual = getLigaActual(puntosUsuario)
 
   const [tab, setTab] = useState<TabKey>('paginas')
 
   const esPaginas  = tab === 'paginas'
   const esLibros   = tab === 'libros'
-  const esGeneral  = tab === 'general'
   const esSemanal  = tab === 'semanal'
   const esAutores  = tab === 'autores'
 
-  const usuariosOrdenados = esGeneral
-    ? [...ranking].sort((a, b) => b.puntos - a.puntos)
-    : esPaginas
-      ? [...ranking].sort((a, b) => b.total_paginas - a.total_paginas)
-      : esLibros
-        ? [...ranking].sort((a, b) => b.total_leidos - a.total_leidos)
-        : ranking
+  const usuariosOrdenados = esPaginas
+    ? [...ranking].sort((a, b) => b.total_paginas - a.total_paginas)
+    : esLibros
+      ? [...ranking].sort((a, b) => b.total_leidos - a.total_leidos)
+      : ranking
 
   const tabInfo = TABS.find(t => t.key === tab)!
 
@@ -140,10 +135,10 @@ export default function RankingClient({ ranking, rankingSemanal, rankingAutores,
                 maxWidth: 360, marginLeft: 'auto',
               }}>
                 {[
-                  { label: 'Tus puntos',       value: `⭐ ${puntosUsuario}`,                  color: '#d4af37' },
                   { label: 'Tu liga',           value: `${ligaActual.emoji} ${ligaActual.nombre}`, color: ligaActual.color },
                   { label: 'Total lectores',    value: `👥 ${ranking.length}`,                  color: '#fff' },
-                  { label: 'Posición global',   value: `#${ranking.findIndex(u => u.id === usuarioId) + 1 || '—'}`, color: '#fff' },
+                  { label: 'Páginas leídas',    value: `📄 ${(ranking.find(u => u.id === usuarioId)?.total_paginas ?? 0).toLocaleString('es-AR')}`, color: '#3498db' },
+                  { label: 'Libros leídos',     value: `📚 ${ranking.find(u => u.id === usuarioId)?.total_leidos ?? 0}`, color: '#4a9e7a' },
                 ].map(stat => (
                   <div key={stat.label} style={{
                     background: 'rgba(255,255,255,0.04)',
@@ -208,7 +203,7 @@ export default function RankingClient({ ranking, rankingSemanal, rankingAutores,
             <span style={{ fontSize: '1.8rem' }}>{tabInfo.emoji}</span>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, color: tabInfo.color, fontSize: '0.9rem' }}>
-                {esPaginas ? 'Ranking — Por páginas leídas' : esGeneral ? 'Ranking — Por puntos' : esLibros ? 'Ranking — Por libros leídos' : 'Ranking Semanal — Últimos 7 días'}
+                {esPaginas ? 'Ranking — Por páginas leídas' : esLibros ? 'Ranking — Por libros leídos' : 'Ranking Semanal — Últimos 7 días'}
               </div>
               <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
                 {esSemanal ? `${rankingSemanal.length} lectores activos · reinicia el lunes` : `${ranking.length} lectores en total`}
@@ -357,11 +352,6 @@ export default function RankingClient({ ranking, rankingSemanal, rankingAutores,
                       </div>
                       <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)', marginTop: 1, display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
                         <span>{nivelInfo.emoji} {nivelInfo.titulo}</span>
-                        {esGeneral && (
-                          <span className="ranking-liga-badge" style={{ fontSize: '0.58rem', fontWeight: 700, color: getLigaActual(u.puntos).color, opacity: 0.8 }}>
-                            · {getLigaActual(u.puntos).emoji} {getLigaActual(u.puntos).nombre}
-                          </span>
-                        )}
                       </div>
                     </div>
                     <div className="ranking-row-stats" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexShrink: 0 }}>
@@ -372,12 +362,8 @@ export default function RankingClient({ ranking, rankingSemanal, rankingAutores,
                         </div>
                       )}
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: 800, color: esLibros ? '#4a9e7a' : esPaginas ? 'rgba(255,255,255,0.4)' : '#fff', fontSize: esPaginas ? '0.78rem' : '0.9rem' }}>📚 {u.total_leidos}</div>
+                        <div style={{ fontWeight: 800, color: esLibros ? '#4a9e7a' : 'rgba(255,255,255,0.5)', fontSize: esPaginas ? '0.78rem' : '0.9rem' }}>📚 {u.total_leidos}</div>
                         <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)' }}>leídos</div>
-                      </div>
-                      <div className="ranking-pts-col" style={{ textAlign: 'center' }}>
-                        <div style={{ fontWeight: esLibros || esPaginas ? 600 : 800, color: esLibros || esPaginas ? 'rgba(212,175,55,0.6)' : '#d4af37', fontSize: '0.85rem' }}>⭐ {u.puntos}</div>
-                        <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)' }}>pts</div>
                       </div>
                     </div>
                   </div>
