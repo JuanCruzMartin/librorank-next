@@ -5,6 +5,7 @@ import * as actividadDAO from '@/lib/dao/actividadDAO'
 import * as logroDAO from '@/lib/dao/logroDAO'
 import { actualizarRacha } from '@/lib/dao/usuarioDAO'
 import { notificarLigaSemanalSuperado } from '@/lib/dao/notificacionDAO'
+import { agregarTirada } from '@/lib/dao/cartaDAO'
 
 export async function GET(req: NextRequest) {
   const user = await getAuthUserFromRequest(req)
@@ -57,6 +58,7 @@ export async function POST(req: NextRequest) {
             await libroDAO.otorgarPuntos(user.id, 30, 'Libro marcado como LEÍDO al agregar')
             puntosGanados += 30
             await actividadDAO.registrar(user.id, 'LIBRO_LEIDO', nuevoId, titulo)
+            agregarTirada(user.id).catch(() => {})
             notificarLigaSemanalSuperado(user.id).catch(() => {})
             // Actualizar racha
             const rachaResult = await actualizarRacha(user.id)
@@ -69,10 +71,10 @@ export async function POST(req: NextRequest) {
               } else if (rachaResult.escudoUsado) {
                 toastMsg = `📚 Libro leído · 🛡️ Escudo activado (racha salvada!) +${puntosGanados} pts`
               } else {
-                toastMsg = `📚 Libro agregado como leído · +${puntosGanados} puntos`
+                toastMsg = `📚 Libro agregado como leído · +${puntosGanados} pts · 🎴 +1 tirada`
               }
             } else {
-              toastMsg = `📚 Libro agregado como leído · +${puntosGanados} puntos`
+              toastMsg = `📚 Libro agregado como leído · +${puntosGanados} pts · 🎴 +1 tirada`
             }
           } else {
             await actividadDAO.registrar(user.id, 'NUEVO_LIBRO', nuevoId, titulo)
@@ -113,7 +115,8 @@ export async function POST(req: NextRequest) {
             await libroDAO.otorgarPuntos(user.id, 30, 'Libro marcado como LEÍDO')
             await actividadDAO.registrar(user.id, 'LIBRO_LEIDO', Number(id), `Ha terminado de leer "${libroAnterior?.titulo}"`)
             puntosGanados += 30
-            toastParts.push('📖 ¡Libro terminado!')
+            toastParts.push('📖 ¡Libro terminado! 🎴 +1 tirada de cartas')
+            agregarTirada(user.id).catch(() => {})
             notificarLigaSemanalSuperado(user.id).catch(() => {})
             // Actualizar racha con escudos y milestones
             const rachaResult = await actualizarRacha(user.id)

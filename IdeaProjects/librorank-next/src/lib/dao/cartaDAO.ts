@@ -24,6 +24,13 @@ export async function obtenerTiradas(usuarioId: number): Promise<number> {
   return row?.tiradas_disponibles ?? 0
 }
 
+export async function agregarTirada(usuarioId: number, cantidad = 1): Promise<void> {
+  await execute(
+    'UPDATE usuarios SET tiradas_disponibles = tiradas_disponibles + ? WHERE id = ?',
+    [cantidad, usuarioId]
+  )
+}
+
 export async function usarTirada(usuarioId: number): Promise<boolean> {
   const res = await execute(
     'UPDATE usuarios SET tiradas_disponibles = tiradas_disponibles - 1 WHERE id = ? AND tiradas_disponibles > 0',
