@@ -66,9 +66,9 @@ function SidebarLiga({ estado, ranking, todasLasLigas, usuarioId }: {
 
   return (
     <aside style={{
-      width: 280, flexShrink: 0,
-      position: 'sticky', top: 72, alignSelf: 'flex-start',
-      maxHeight: 'calc(100vh - 90px)', overflowY: 'auto',
+      width: 260, flexShrink: 0,
+      position: 'sticky', top: 60, alignSelf: 'flex-start',
+      maxHeight: 'calc(100vh - 75px)', overflowY: 'auto',
       scrollbarWidth: 'thin',
       scrollbarColor: `${liga.color}40 transparent`,
     }}>
@@ -273,8 +273,8 @@ export default function ArenaConTabs({
       {/* ── Arena: sidebar + contenido ── */}
       {tab === 'arena' && (
         <div style={{
-          display: 'flex', gap: '1.5rem', alignItems: 'flex-start',
-          maxWidth: 1200, margin: '0 auto', padding: '1.5rem 1rem',
+          display: 'flex', gap: '1.25rem', alignItems: 'flex-start',
+          maxWidth: 1200, margin: '0 auto', padding: '1rem 1rem 1.5rem',
         }}>
           {/* Sidebar liga — oculta en mobile */}
           <div className="liga-sidebar-wrapper" style={{ flexShrink: 0 }}>

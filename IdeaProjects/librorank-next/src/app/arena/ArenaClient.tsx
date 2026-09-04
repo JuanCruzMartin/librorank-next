@@ -675,11 +675,6 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
   // ── SALA PRINCIPAL ──
   return (
     <div>
-      <div className="text-center mb-5">
-        <h1 className="font-title display-5" style={{ color: '#fff' }}>⚔️ Arena de Duelos</h1>
-        <p className="text-muted">Mejor de 3 rondas — ganá puntos o apostá tu carta</p>
-      </div>
-
       <div className="row g-4">
         {/* Columna izquierda: sala */}
         <div className="col-lg-8">
@@ -749,9 +744,9 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
           </div>
 
           {sala.length === 0 ? (
-            <div className="card p-5 text-center">
-              <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🏟️</div>
-              <p className="text-muted">
+            <div className="card text-center" style={{ padding: '2rem 1.5rem' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🏟️</div>
+              <p className="text-muted mb-0" style={{ fontSize: '0.9rem' }}>
                 {dueloActivo?.estado === 'esperando'
                   ? 'Tu desafío ya está en la arena. Esperando rival...'
                   : 'La arena está vacía. ¡Sé el primero en desafiar!'}
