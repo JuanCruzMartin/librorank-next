@@ -43,6 +43,77 @@ const COFRE_CONFIG: Record<TipoCofre, { emoji: string; label: string; desc: stri
   epico: { emoji: '✨', label: 'Cofre Épico',  desc: 'Épico o superior garantizado', color: '#6b3d8e', glow: 'rgba(107,61,142,0.6)' },
 }
 
+function ComoConseguirSobres() {
+  const [abierto, setAbierto] = useState(false)
+
+  const formas = [
+    { emoji: '🎁', titulo: 'Sobre diario gratis', desc: '1 sobre gratis cada 24 horas. ¡Entrá todos los días!' },
+    { emoji: '⭐', titulo: 'Puntos de lectura', desc: 'Cada 500 puntos acumulados (libros, páginas, reseñas) te dan +1 sobre.' },
+    { emoji: '🧠', titulo: 'Pregunta del día', desc: 'Respondé bien la pregunta literaria diaria y ganás +1 sobre.' },
+    { emoji: '🛒', titulo: 'Tienda', desc: 'Canjeá tus puntos por sobres o cofrtes especiales en la Tienda.' },
+  ]
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        onClick={() => setAbierto(v => !v)}
+        title="¿Cómo conseguir sobres?"
+        style={{
+          width: 24, height: 24, borderRadius: '50%',
+          background: abierto ? 'rgba(212,175,55,0.2)' : 'rgba(255,255,255,0.07)',
+          border: `1px solid ${abierto ? 'rgba(212,175,55,0.5)' : 'rgba(255,255,255,0.15)'}`,
+          color: abierto ? '#d4af37' : 'rgba(255,255,255,0.4)',
+          fontSize: '0.72rem', fontWeight: 800, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'all 0.15s', flexShrink: 0,
+        }}
+      >
+        ?
+      </button>
+
+      {abierto && (
+        <>
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 998 }}
+            onClick={() => setAbierto(false)}
+          />
+          <div style={{
+            position: 'absolute', top: 30, right: 0, zIndex: 999,
+            width: 280,
+            background: 'linear-gradient(160deg, rgba(20,15,40,0.98), rgba(10,8,25,0.98))',
+            border: '1px solid rgba(212,175,55,0.3)',
+            borderRadius: 14,
+            boxShadow: '0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)',
+            overflow: 'hidden',
+          }}>
+            <div style={{ padding: '0.75rem 1rem 0.5rem', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ margin: 0, fontWeight: 800, fontSize: '0.8rem', color: '#d4af37' }}>
+                🎴 ¿Cómo conseguir sobres?
+              </p>
+            </div>
+            <div style={{ padding: '0.5rem 0.75rem 0.75rem', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {formas.map((f, i) => (
+                <div key={i} style={{
+                  display: 'flex', gap: 10, alignItems: 'flex-start',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: 10, padding: '0.55rem 0.65rem',
+                }}>
+                  <span style={{ fontSize: '1.1rem', lineHeight: 1, flexShrink: 0, marginTop: 1 }}>{f.emoji}</span>
+                  <div>
+                    <p style={{ margin: 0, fontWeight: 700, fontSize: '0.75rem', color: '#fff' }}>{f.titulo}</p>
+                    <p style={{ margin: 0, fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.4 }}>{f.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function ColeccionClient({ coleccion: coleccionInicial, cantidades: cantidadesIniciales, tiradas: tiradasIniciales }: Props) {
   const [coleccion, setColeccion] = useState<string[]>(coleccionInicial)
   const [cantidades, setCantidades] = useState<Record<string, number>>(cantidadesIniciales)
@@ -394,13 +465,16 @@ export default function ColeccionClient({ coleccion: coleccionInicial, cantidade
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-          <div style={{
-            fontSize: '0.78rem', color: 'var(--accent-gold)', fontWeight: 700,
-            background: 'rgba(212,175,55,0.1)',
-            border: '1px solid rgba(212,175,55,0.25)',
-            borderRadius: 10, padding: '4px 12px',
-          }}>
-            🎴 {tiradas} tirada{tiradas !== 1 ? 's' : ''}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{
+              fontSize: '0.78rem', color: 'var(--accent-gold)', fontWeight: 700,
+              background: 'rgba(212,175,55,0.1)',
+              border: '1px solid rgba(212,175,55,0.25)',
+              borderRadius: 10, padding: '4px 12px',
+            }}>
+              🎴 {tiradas} sobre{tiradas !== 1 ? 's' : ''}
+            </div>
+            <ComoConseguirSobres />
           </div>
           <button
             onClick={tirar}
@@ -408,16 +482,16 @@ export default function ColeccionClient({ coleccion: coleccionInicial, cantidade
             className="btn--brand"
             style={{ opacity: tiradas <= 0 ? 0.4 : 1, fontSize: '0.85rem' }}
           >
-            {tirando ? 'Revelando...' : tiradas > 0 ? '✨ Tirar carta' : 'Sin tiradas'}
+            {tirando ? 'Revelando...' : tiradas > 0 ? '✨ Abrir sobre' : 'Sin sobres'}
           </button>
           {tiradas <= 0 && countdown && (
             <p style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.25)', textAlign: 'right', maxWidth: 180 }}>
-              🕐 Gratis en {countdown}
+              🕐 Sobre gratis en {countdown}
             </p>
           )}
           {tiradas <= 0 && !countdown && (
             <p style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,0.25)', textAlign: 'right', maxWidth: 180 }}>
-              1 tirada cada 500 puntos acumulados
+              1 sobre cada 500 puntos acumulados
             </p>
           )}
         </div>
@@ -886,7 +960,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, cantidade
                         <div style={{ display: 'flex', gap: 10, animation: 'fade-in-bg 0.4s ease' }}>
                           {tiradas > 0 && (
                             <button className="btn--brand" onClick={() => { setReveal(null); setTimeout(tirar, 80) }}>
-                              🎴 Otra tirada ({tiradas})
+                              🎴 Otro sobre ({tiradas})
                             </button>
                           )}
                           <button
