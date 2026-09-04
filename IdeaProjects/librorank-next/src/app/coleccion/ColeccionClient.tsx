@@ -57,18 +57,24 @@ function ComoConseguirSobres() {
     <div style={{ position: 'relative' }}>
       <button
         onClick={() => setAbierto(v => !v)}
-        title="¿Cómo conseguir sobres?"
         style={{
-          width: 24, height: 24, borderRadius: '50%',
-          background: abierto ? 'rgba(212,175,55,0.2)' : 'rgba(255,255,255,0.07)',
-          border: `1px solid ${abierto ? 'rgba(212,175,55,0.5)' : 'rgba(255,255,255,0.15)'}`,
-          color: abierto ? '#d4af37' : 'rgba(255,255,255,0.4)',
-          fontSize: '0.72rem', fontWeight: 800, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'all 0.15s', flexShrink: 0,
+          display: 'flex', alignItems: 'center', gap: 5,
+          padding: '3px 10px 3px 8px',
+          borderRadius: 20,
+          background: abierto ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.05)',
+          border: `1px solid ${abierto ? 'rgba(212,175,55,0.45)' : 'rgba(255,255,255,0.12)'}`,
+          color: abierto ? '#d4af37' : 'rgba(255,255,255,0.5)',
+          fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer',
+          transition: 'all 0.15s', flexShrink: 0, whiteSpace: 'nowrap',
         }}
       >
-        ?
+        <span style={{
+          width: 16, height: 16, borderRadius: '50%',
+          background: abierto ? 'rgba(212,175,55,0.25)' : 'rgba(255,255,255,0.1)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '0.65rem', fontWeight: 900, flexShrink: 0,
+        }}>?</span>
+        ¿Cómo ganar sobres?
       </button>
 
       {abierto && (
@@ -465,7 +471,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, cantidade
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>
             <div style={{
               fontSize: '0.78rem', color: 'var(--accent-gold)', fontWeight: 700,
               background: 'rgba(212,175,55,0.1)',
