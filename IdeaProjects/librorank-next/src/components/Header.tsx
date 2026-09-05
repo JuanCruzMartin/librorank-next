@@ -64,6 +64,13 @@ const NAV_ITEMS: { href: string; label: string; icon: React.ReactNode }[] = [
   { href: '/cuento',      label: 'Cuento',       icon: <PencilLine size={16} weight="duotone" /> },
 ]
 
+interface EstadoHoy {
+  sobre_disponible: boolean
+  pregunta_respondida: boolean
+  misiones_reclamables: number
+  pendientes: number
+}
+
 export default function Header({ user }: HeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
@@ -72,7 +79,10 @@ export default function Header({ user }: HeaderProps) {
   const [notifAbierto, setNotifAbierto] = useState(false)
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [misionesPendientes, setMisionesPendientes] = useState(0)
+  const [hoyAbierto, setHoyAbierto] = useState(false)
+  const [estadoHoy, setEstadoHoy] = useState<EstadoHoy | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const hoyRef = useRef<HTMLDivElement>(null)
 
   const isActive = (path: string) =>
     pathname.startsWith(path) ? 'nav-link-custom active-nav' : 'nav-link-custom'
@@ -86,14 +96,16 @@ export default function Header({ user }: HeaderProps) {
   // Cerrar menú al cambiar de ruta
   useEffect(() => { setMenuAbierto(false) }, [pathname])
 
-  // Cargar notificaciones + misiones pendientes
+  // Cargar notificaciones + misiones pendientes + estado del día
   useEffect(() => {
     if (!user) return
     fetchNotifs()
     fetchMisionesPendientes()
+    fetchEstadoHoy()
     const interval = setInterval(() => {
       fetchNotifs()
       fetchMisionesPendientes()
+      fetchEstadoHoy()
     }, 120_000)
     window.addEventListener('mision-reclamada', fetchMisionesPendientes)
     return () => {
@@ -102,11 +114,14 @@ export default function Header({ user }: HeaderProps) {
     }
   }, [user])
 
-  // Cerrar dropdown notif al hacer clic fuera
+  // Cerrar dropdowns al hacer clic fuera
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setNotifAbierto(false)
+      }
+      if (hoyRef.current && !hoyRef.current.contains(e.target as Node)) {
+        setHoyAbierto(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -129,6 +144,14 @@ export default function Header({ user }: HeaderProps) {
       if (!res.ok) return
       const data = await res.json()
       setMisionesPendientes(data.pendientes ?? 0)
+    } catch { /* silencioso */ }
+  }
+
+  async function fetchEstadoHoy() {
+    try {
+      const res = await fetch('/api/hoy')
+      if (!res.ok) return
+      setEstadoHoy(await res.json())
     } catch { /* silencioso */ }
   }
 
@@ -225,6 +248,142 @@ export default function Header({ user }: HeaderProps) {
             }}>
               <Star size={13} weight="fill" /> {user.puntos ?? 0}
             </span>
+
+            {/* Hub "Hoy" */}
+            {estadoHoy && (
+              <div ref={hoyRef} style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setHoyAbierto(v => !v)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    padding: '0.25rem 0.6rem',
+                    borderRadius: 20,
+                    background: hoyAbierto
+                      ? 'rgba(124,58,237,0.25)'
+                      : estadoHoy.pendientes > 0
+                        ? 'rgba(124,58,237,0.12)'
+                        : 'rgba(255,255,255,0.05)',
+                    border: hoyAbierto
+                      ? '1px solid rgba(167,139,250,0.6)'
+                      : estadoHoy.pendientes > 0
+                        ? '1px solid rgba(167,139,250,0.35)'
+                        : '1px solid rgba(255,255,255,0.1)',
+                    color: estadoHoy.pendientes > 0 ? '#c4b5fd' : 'rgba(255,255,255,0.4)',
+                    fontSize: '0.72rem', fontWeight: 700,
+                    cursor: 'pointer', transition: 'all 0.15s',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {estadoHoy.pendientes > 0 && (
+                    <span style={{
+                      width: 18, height: 18, borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+                      color: '#fff', fontSize: '0.6rem', fontWeight: 900,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0, animation: 'hoy-pulse 2s ease-in-out infinite',
+                    }}>
+                      {estadoHoy.pendientes}
+                    </span>
+                  )}
+                  ✨ Hoy
+                </button>
+
+                {hoyAbierto && (
+                  <div style={{
+                    position: 'absolute', top: 'calc(100% + 10px)', right: 0,
+                    width: 290,
+                    background: 'linear-gradient(160deg, rgba(18,12,40,0.99), rgba(10,6,25,0.99))',
+                    border: '1px solid rgba(124,58,237,0.35)',
+                    borderRadius: 14,
+                    boxShadow: '0 12px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)',
+                    zIndex: 9999, overflow: 'hidden',
+                  }}>
+                    <div style={{ padding: '0.75rem 1rem 0.5rem', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                      <p style={{ margin: 0, fontWeight: 800, fontSize: '0.82rem', color: '#c4b5fd' }}>
+                        ✨ Tareas de hoy
+                      </p>
+                      <p style={{ margin: '2px 0 0', fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)' }}>
+                        {estadoHoy.pendientes === 0
+                          ? '¡Todo completado por hoy! 🎉'
+                          : `${estadoHoy.pendientes} acción${estadoHoy.pendientes !== 1 ? 'es' : ''} pendiente${estadoHoy.pendientes !== 1 ? 's' : ''}`}
+                      </p>
+                    </div>
+
+                    <div style={{ padding: '0.5rem 0.75rem 0.75rem', display: 'flex', flexDirection: 'column', gap: 6 }}>
+
+                      {/* Sobre diario */}
+                      <a href="/coleccion" onClick={() => setHoyAbierto(false)} style={{ textDecoration: 'none' }}>
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          background: estadoHoy.sobre_disponible ? 'rgba(212,175,55,0.08)' : 'rgba(255,255,255,0.02)',
+                          border: `1px solid ${estadoHoy.sobre_disponible ? 'rgba(212,175,55,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                          borderRadius: 10, padding: '0.55rem 0.65rem',
+                          cursor: 'pointer', transition: 'background 0.15s',
+                        }}>
+                          <span style={{ fontSize: '1.3rem', flexShrink: 0 }}>🎁</span>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ margin: 0, fontWeight: 700, fontSize: '0.75rem', color: '#fff' }}>Sobre diario gratis</p>
+                            <p style={{ margin: 0, fontSize: '0.65rem', color: estadoHoy.sobre_disponible ? '#d4af37' : 'rgba(255,255,255,0.3)' }}>
+                              {estadoHoy.sobre_disponible ? '¡Disponible! Ir a Colección →' : 'Ya lo recibiste hoy ✓'}
+                            </p>
+                          </div>
+                          {estadoHoy.sobre_disponible
+                            ? <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#d4af37', flexShrink: 0 }} />
+                            : <span style={{ fontSize: '0.85rem' }}>✅</span>}
+                        </div>
+                      </a>
+
+                      {/* Pregunta del día */}
+                      <a href="/arena" onClick={() => setHoyAbierto(false)} style={{ textDecoration: 'none' }}>
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          background: !estadoHoy.pregunta_respondida ? 'rgba(124,58,237,0.08)' : 'rgba(255,255,255,0.02)',
+                          border: `1px solid ${!estadoHoy.pregunta_respondida ? 'rgba(124,58,237,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                          borderRadius: 10, padding: '0.55rem 0.65rem',
+                          cursor: 'pointer', transition: 'background 0.15s',
+                        }}>
+                          <span style={{ fontSize: '1.3rem', flexShrink: 0 }}>🧠</span>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ margin: 0, fontWeight: 700, fontSize: '0.75rem', color: '#fff' }}>Pregunta del día</p>
+                            <p style={{ margin: 0, fontSize: '0.65rem', color: !estadoHoy.pregunta_respondida ? '#a78bfa' : 'rgba(255,255,255,0.3)' }}>
+                              {!estadoHoy.pregunta_respondida ? 'Respondé y ganá un sobre →' : 'Ya respondiste hoy ✓'}
+                            </p>
+                          </div>
+                          {!estadoHoy.pregunta_respondida
+                            ? <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#7c3aed', flexShrink: 0 }} />
+                            : <span style={{ fontSize: '0.85rem' }}>✅</span>}
+                        </div>
+                      </a>
+
+                      {/* Misiones */}
+                      <a href="/arena?tab=misiones" onClick={() => setHoyAbierto(false)} style={{ textDecoration: 'none' }}>
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          background: estadoHoy.misiones_reclamables > 0 ? 'rgba(39,174,96,0.08)' : 'rgba(255,255,255,0.02)',
+                          border: `1px solid ${estadoHoy.misiones_reclamables > 0 ? 'rgba(39,174,96,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                          borderRadius: 10, padding: '0.55rem 0.65rem',
+                          cursor: 'pointer', transition: 'background 0.15s',
+                        }}>
+                          <span style={{ fontSize: '1.3rem', flexShrink: 0 }}>🎯</span>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ margin: 0, fontWeight: 700, fontSize: '0.75rem', color: '#fff' }}>Misiones</p>
+                            <p style={{ margin: 0, fontSize: '0.65rem', color: estadoHoy.misiones_reclamables > 0 ? '#27ae60' : 'rgba(255,255,255,0.3)' }}>
+                              {estadoHoy.misiones_reclamables > 0
+                                ? `${estadoHoy.misiones_reclamables} recompensa${estadoHoy.misiones_reclamables !== 1 ? 's' : ''} por reclamar →`
+                                : 'Sin recompensas pendientes ✓'}
+                            </p>
+                          </div>
+                          {estadoHoy.misiones_reclamables > 0
+                            ? <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#27ae60', flexShrink: 0 }} />
+                            : <span style={{ fontSize: '0.85rem' }}>✅</span>}
+                        </div>
+                      </a>
+
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Campana de notificaciones */}
             <div ref={dropdownRef} style={{ position: 'relative' }}>
