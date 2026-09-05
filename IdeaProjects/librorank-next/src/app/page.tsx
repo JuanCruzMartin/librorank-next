@@ -86,11 +86,12 @@ export default async function LandingPage() {
                   Los libros más leídos
                 </h2>
               </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
-                gap: '1rem',
-              }}>
+              <style>{`
+                .libros-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; }
+                @media (max-width: 768px) { .libros-grid { grid-template-columns: repeat(4, 1fr); } }
+                @media (max-width: 480px) { .libros-grid { grid-template-columns: repeat(3, 1fr); } }
+              `}</style>
+              <div className="libros-grid">
                 {masLeidos.map(libro => {
                   const nota = libro.nota_media ? Math.round(Number(libro.nota_media) * 10) / 10 : null
                   return (
