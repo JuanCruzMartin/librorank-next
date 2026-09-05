@@ -5,6 +5,7 @@ import * as libroDAO from '@/lib/dao/libroDAO'
 import * as logroDAO from '@/lib/dao/logroDAO'
 import * as cartaDAO from '@/lib/dao/cartaDAO'
 import * as amigoDAO from '@/lib/dao/amigoDAO'
+import { migrarTablaCuentos, obtenerCuentosPublicos } from '@/lib/dao/cuentoPersonalDAO'
 import { calcularPersonaje } from '@/lib/personaje'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -38,7 +39,9 @@ export default async function PerfilUsernamePage({ params }: Props) {
   const usuarioTarget = await usuarioDAO.buscarPorUsername(username)
   if (!usuarioTarget) notFound()
 
-  const [authUsuario, stats, ultimasLecturas, logros, leidosEsteAnio, totalLeidos, topGeneros, resenasPublicas, paginasLeidas, librosDestacados, promedioEstrellas, totalResenas, generosDistintos, coleccionCartas, leyendoAhora, totalAmigos] = await Promise.all([
+  await migrarTablaCuentos()
+
+  const [authUsuario, stats, ultimasLecturas, logros, leidosEsteAnio, totalLeidos, topGeneros, resenasPublicas, paginasLeidas, librosDestacados, promedioEstrellas, totalResenas, generosDistintos, coleccionCartas, leyendoAhora, totalAmigos, cuentosPublicos] = await Promise.all([
     authUser ? usuarioDAO.buscarPorId(authUser.id) : Promise.resolve(null),
     libroDAO.obtenerStatsPorUsuario(usuarioTarget.id),
     libroDAO.obtenerUltimasLecturas(usuarioTarget.id, 5),
@@ -55,6 +58,7 @@ export default async function PerfilUsernamePage({ params }: Props) {
     cartaDAO.obtenerColeccion(usuarioTarget.id),
     libroDAO.obtenerLeyendoAhora(usuarioTarget.id),
     amigoDAO.contarAmigos(usuarioTarget.id),
+    obtenerCuentosPublicos(usuarioTarget.id),
   ])
 
   const personaje = calcularPersonaje(
@@ -86,6 +90,7 @@ export default async function PerfilUsernamePage({ params }: Props) {
           coleccionCartas={coleccionCartas}
           leyendoAhora={leyendoAhora}
           totalAmigos={totalAmigos}
+          cuentos={cuentosPublicos}
         />
       </main>
       <Footer />
