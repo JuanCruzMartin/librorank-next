@@ -15,14 +15,39 @@ interface Props {
   params: Promise<{ username: string }>
 }
 
+const BASE = 'https://librorank-next.vercel.app'
+
 export async function generateMetadata({ params }: Props) {
   const { username: rawUsername } = await params
   const username = decodeURIComponent(rawUsername)
   const usuario = await usuarioDAO.buscarPorUsername(username)
   if (!usuario) return { title: 'Usuario no encontrado — LibroRank' }
+
+  const title = `@${usuario.username} en LibroRank`
+  const description = usuario.bio
+    ? usuario.bio
+    : `Mirá los libros, reseñas y colección de cartas de ${usuario.nombre} en LibroRank.`
+  const url = `${BASE}/perfil/${encodeURIComponent(usuario.username)}`
+  const image = usuario.avatar_url ?? `${BASE}/og-default.png`
+
   return {
-    title: `@${usuario.username} — LibroRank`,
-    description: usuario.bio ?? `Mirá la biblioteca de ${usuario.nombre} en LibroRank.`,
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: 'LibroRank',
+      type: 'profile',
+      images: [{ url: image, width: 400, height: 400, alt: usuario.nombre }],
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+      images: [image],
+    },
   }
 }
 

@@ -1,26 +1,12 @@
-import type { MetadataRoute } from 'next'
+import { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: '*',
-        allow: ['/', '/ranking', '/perfil/'],
-        disallow: [
-          '/api/',
-          '/biblioteca',
-          '/home',
-          '/misiones',
-          '/bingo',
-          '/retos',
-          '/amigos',
-          '/perfil',
-          '/stats',
-          '/diario',
-          '/cuento',
-          '/clubes',
-          '/recomendaciones',
-        ],
+        allow: ['/', '/libro/', '/perfil/', '/ranking'],
+        disallow: ['/api/', '/biblioteca', '/coleccion', '/arena', '/amigos', '/cuento'],
       },
     ],
     sitemap: 'https://librorank-next.vercel.app/sitemap.xml',

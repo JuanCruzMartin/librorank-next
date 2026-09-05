@@ -76,6 +76,12 @@ export async function obtenerLectores(libroGlobalId: number, limite = 20): Promi
   )
 }
 
+export async function obtenerTodosParaSitemap(): Promise<{ id: number; updated_at?: string }[]> {
+  return query<{ id: number; updated_at?: string }>(
+    `SELECT id FROM libros_global ORDER BY id DESC LIMIT 5000`
+  )
+}
+
 export async function obtenerDistribucionEstrellas(libroGlobalId: number): Promise<DistribucionEstrellas[]> {
   return query<DistribucionEstrellas>(
     `SELECT estrellas, COUNT(*) AS cantidad

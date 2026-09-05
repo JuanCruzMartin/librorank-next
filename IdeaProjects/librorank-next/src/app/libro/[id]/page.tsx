@@ -17,13 +17,38 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
+const BASE = 'https://librorank-next.vercel.app'
+
 export async function generateMetadata({ params }: Props) {
   const { id } = await params
   const libro = await buscarLibroGlobal(Number(id))
   if (!libro) return { title: 'Libro no encontrado — LibroRank' }
+
+  const title = `${libro.titulo} de ${libro.autor} — LibroRank`
+  const description = libro.nota_media
+    ? `"${libro.titulo}" de ${libro.autor} tiene ${Math.round(Number(libro.nota_media) * 10) / 10}⭐ y ${libro.total_lectores} lectores en LibroRank. Leé reseñas de la comunidad.`
+    : `Mirá reseñas y opiniones de "${libro.titulo}" de ${libro.autor} en LibroRank, la app de lectura gamificada.`
+  const url = `${BASE}/libro/${id}`
+  const image = libro.portada_url?.replace('http://', 'https://') ?? `${BASE}/og-default.png`
+
   return {
-    title: `${libro.titulo} — LibroRank`,
-    description: `Reseñas y opiniones de "${libro.titulo}" por ${libro.autor} en LibroRank.`,
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: 'LibroRank',
+      type: 'book',
+      images: [{ url: image, width: 400, height: 600, alt: libro.titulo }],
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description,
+      images: [image],
+    },
   }
 }
 
