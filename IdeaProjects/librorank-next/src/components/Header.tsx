@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import React, { useState, useEffect, useRef } from 'react'
 import {
   Books, Sword, Cards, ArrowsLeftRight, Trophy,
-  UsersThree, PencilLine, Bell, UserCircle, Fire, Star, GameController, Storefront,
+  UsersThree, Bell, UserCircle, Fire, Star, GameController,
 } from '@phosphor-icons/react'
 
 interface Notificacion {
@@ -60,7 +60,6 @@ const NAV_ITEMS: { href: string; label: string; icon: React.ReactNode }[] = [
   { href: '/ranking',     label: 'Ranking',      icon: <Trophy size={16} weight="duotone" /> },
   { href: '/amigos',      label: 'Comunidad',    icon: <UsersThree size={16} weight="duotone" /> },
   { href: '/arena',       label: 'Arena',        icon: <GameController size={16} weight="duotone" /> },
-  { href: '/cuento',      label: 'Cuento',       icon: <PencilLine size={16} weight="duotone" /> },
 ]
 
 interface EstadoHoy {
@@ -488,6 +487,15 @@ export default function Header({ user }: HeaderProps) {
               <UserCircle size={15} weight="duotone" /> Perfil
             </Link>
 
+            <Link href="/cuento" className="header-perfil-desktop" style={{
+              fontSize: '0.72rem', padding: '0.3rem 0.8rem',
+              borderRadius: 8, fontWeight: 700, textDecoration: 'none',
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              ✍️ Mis cuentos
+            </Link>
+
             {/* Salir — oculto en mobile */}
             <button
               onClick={handleLogout}
@@ -633,6 +641,21 @@ export default function Header({ user }: HeaderProps) {
                   }}
                 >
                   👤 Perfil
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/cuento"
+                  onClick={() => setMenuAbierto(false)}
+                  style={{
+                    display: 'block', padding: '0.85rem 1rem', borderRadius: 10,
+                    fontWeight: 700, fontSize: '1rem', textDecoration: 'none',
+                    background: pathname.startsWith('/cuento') ? 'rgba(212,175,55,0.12)' : 'transparent',
+                    color: pathname.startsWith('/cuento') ? '#d4af37' : 'rgba(255,255,255,0.8)',
+                    borderLeft: pathname.startsWith('/cuento') ? '3px solid #d4af37' : '3px solid transparent',
+                  }}
+                >
+                  ✍️ Escribí tu propio cuento
                 </Link>
               </li>
             </ul>

@@ -8,6 +8,7 @@ import type { Usuario, NivelInfo } from '@/lib/dao/usuarioDAO'
 import type { Libro, PerfilStats, LibroFavorito } from '@/lib/dao/libroDAO'
 import type { Logro } from '@/lib/dao/logroDAO'
 import type { Personaje } from '@/lib/personaje'
+import type { Cuento } from '@/lib/dao/cuentoPersonalDAO'
 import PersonajeCard from '@/components/PersonajeCard'
 import CartaPersonaje from '@/components/CartaPersonaje'
 import { CARTAS, RAREZAS, rarezaVisual } from '@/lib/cartas'
@@ -67,12 +68,13 @@ interface Props {
   coleccionCartas: string[]
   leyendoAhora: Libro[]
   totalAmigos: number
+  cuentos: Cuento[]
 }
 
 export default function PerfilClient({
   usuario, stats, ultimasLecturas, logros,
   leidosEsteAnio, totalLeidos, nivelInfo, esMiPerfil, topGeneros, resenasPublicas,
-  paginasLeidas, librosDestacados, promedioEstrellas, personaje, coleccionCartas, leyendoAhora, totalAmigos,
+  paginasLeidas, librosDestacados, promedioEstrellas, personaje, coleccionCartas, leyendoAhora, totalAmigos, cuentos,
 }: Props) {
   const router = useRouter()
   const [tab, setTab] = useState<'resumen' | 'anio' | 'config' | 'personaje' | 'coleccion'>('resumen')
@@ -600,6 +602,49 @@ export default function PerfilClient({
                           </p>
                         </div>
                       </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Cuentos */}
+              {cuentos.length > 0 && (
+                <div className="card p-4 mb-4">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
+                    <h5 className="font-title mb-0" style={{ color: 'var(--accent-gold)' }}>
+                      ✍️ Cuentos
+                      <span style={{ marginLeft: 8, fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', fontWeight: 400 }}>
+                        {cuentos.length} cuento{cuentos.length !== 1 ? 's' : ''}
+                      </span>
+                    </h5>
+                    {esMiPerfil && (
+                      <a href="/cuento" style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '2px 10px' }}>
+                        ✍️ Escribí tu propio cuento
+                      </a>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {cuentos.map(c => (
+                      <a key={c.id} href={`/cuento`} style={{ textDecoration: 'none' }}>
+                        <div style={{
+                          background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+                          borderRadius: 10, padding: '0.85rem 1rem', transition: 'border-color 0.15s',
+                        }}>
+                          <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.9rem', fontFamily: 'Georgia, serif', marginBottom: 4 }}>
+                            {c.titulo}
+                          </div>
+                          <p style={{
+                            margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)',
+                            lineHeight: 1.5, overflow: 'hidden',
+                            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                          }}>
+                            {c.contenido}
+                          </p>
+                          <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.2)', marginTop: 6 }}>
+                            {new Date(c.created_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </div>
+                        </div>
+                      </a>
                     ))}
                   </div>
                 </div>
