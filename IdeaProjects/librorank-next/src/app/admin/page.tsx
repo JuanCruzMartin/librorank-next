@@ -8,6 +8,8 @@ export default function AdminPage() {
   const [newPassword, setNewPassword] = useState('')
   const [resultado, setResultado] = useState<{ ok?: boolean; error?: string; mensaje?: string } | null>(null)
   const [loading, setLoading] = useState(false)
+  const [backfillLoading, setBackfillLoading] = useState(false)
+  const [backfillRes, setBackfillRes] = useState<{ ok?: boolean; mensaje?: string; detalle?: { titulo: string; genero: string }[]; error?: string } | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -29,6 +31,25 @@ export default function AdminPage() {
       setResultado({ error: 'Error de red' })
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleBackfill() {
+    if (!secret) { setBackfillRes({ error: 'Ingresá la clave admin primero' }); return }
+    setBackfillLoading(true)
+    setBackfillRes(null)
+    try {
+      const res = await fetch('/api/admin/backfill-generos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret }),
+      })
+      const data = await res.json()
+      setBackfillRes(data)
+    } catch {
+      setBackfillRes({ error: 'Error de red' })
+    } finally {
+      setBackfillLoading(false)
     }
   }
 
@@ -134,6 +155,59 @@ export default function AdminPage() {
             {resultado.ok ? `✅ ${resultado.mensaje}` : `❌ ${resultado.error}`}
           </div>
         )}
+
+        {/* ── Backfill géneros ── */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '2rem', paddingTop: '2rem' }}>
+          <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+            <div style={{ fontSize: '1.5rem', marginBottom: '0.3rem' }}>🎭</div>
+            <h2 style={{ color: '#d4af37', fontSize: '1rem', fontWeight: 800, margin: 0 }}>Auto-asignar géneros</h2>
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.72rem', marginTop: '0.3rem' }}>
+              Busca en Google Books los libros sin género y los actualiza automáticamente
+            </p>
+          </div>
+          <button
+            onClick={handleBackfill}
+            disabled={backfillLoading}
+            style={{
+              width: '100%',
+              background: backfillLoading ? 'rgba(93,173,226,0.3)' : 'linear-gradient(135deg,#2980b9,#5dade2)',
+              color: '#fff',
+              fontWeight: 800,
+              fontSize: '0.9rem',
+              border: 'none',
+              borderRadius: 10,
+              padding: '0.75rem',
+              cursor: backfillLoading ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {backfillLoading ? 'Buscando géneros… (puede tardar 1-2 min)' : 'Asignar géneros automáticamente'}
+          </button>
+
+          {backfillRes && (
+            <div style={{ marginTop: '1rem' }}>
+              <div style={{
+                padding: '0.85rem 1rem', borderRadius: 10,
+                background: backfillRes.ok ? 'rgba(74,158,122,0.12)' : 'rgba(231,76,60,0.12)',
+                border: `1px solid ${backfillRes.ok ? 'rgba(74,158,122,0.3)' : 'rgba(231,76,60,0.3)'}`,
+                fontSize: '0.85rem',
+                color: backfillRes.ok ? '#4cd137' : '#e74c3c',
+                textAlign: 'center',
+                marginBottom: backfillRes.detalle?.length ? '0.75rem' : 0,
+              }}>
+                {backfillRes.ok ? `✅ ${backfillRes.mensaje}` : `❌ ${backfillRes.error}`}
+              </div>
+              {backfillRes.detalle && backfillRes.detalle.length > 0 && (
+                <div style={{ maxHeight: 200, overflowY: 'auto', fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>
+                  {backfillRes.detalle.map((d, i) => (
+                    <div key={i} style={{ padding: '0.25rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <span style={{ color: '#fff' }}>{d.titulo}</span> → <span style={{ color: '#d4af37' }}>{d.genero}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
