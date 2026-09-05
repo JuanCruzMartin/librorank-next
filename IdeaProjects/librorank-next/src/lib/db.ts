@@ -18,8 +18,8 @@ if (!g._dbPool) {
     timezone: '+00:00',
     connectTimeout: 10000,
     waitForConnections: true,
-    connectionLimit: 2,
-    queueLimit: 50,
+    connectionLimit: 5,
+    queueLimit: 100,
     idleTimeout: 60000,
   })
 }
