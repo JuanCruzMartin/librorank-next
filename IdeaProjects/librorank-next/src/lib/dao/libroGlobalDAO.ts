@@ -82,6 +82,20 @@ export async function obtenerTodosParaSitemap(): Promise<{ id: number; updated_a
   )
 }
 
+export async function obtenerMasLeidos(limite = 12): Promise<LibroGlobal[]> {
+  return query<LibroGlobal>(
+    `SELECT lg.*,
+            (SELECT AVG(estrellas) FROM libros_usuario WHERE libro_global_id=lg.id AND estrellas>0) as nota_media,
+            (SELECT COUNT(*) FROM libros_usuario WHERE libro_global_id=lg.id) as total_lectores
+     FROM libros_global lg
+     WHERE lg.portada_url IS NOT NULL
+     HAVING total_lectores > 0
+     ORDER BY total_lectores DESC, nota_media DESC
+     LIMIT ?`,
+    [limite]
+  )
+}
+
 export async function obtenerDistribucionEstrellas(libroGlobalId: number): Promise<DistribucionEstrellas[]> {
   return query<DistribucionEstrellas>(
     `SELECT estrellas, COUNT(*) AS cantidad

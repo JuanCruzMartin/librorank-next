@@ -2,6 +2,7 @@
 import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/lib/auth'
 import { obtenerRankingLectores, getNivelLector } from '@/lib/dao/usuarioDAO'
+import { obtenerMasLeidos } from '@/lib/dao/libroGlobalDAO'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import AppPreview from '@/components/AppPreview'
@@ -10,7 +11,10 @@ export default async function LandingPage() {
   const user = await getAuthUser()
   if (user) redirect('/home')
 
-  const top3 = await obtenerRankingLectores(3)
+  const [top3, masLeidos] = await Promise.all([
+    obtenerRankingLectores(3),
+    obtenerMasLeidos(12),
+  ])
 
   return (
     <>
@@ -43,7 +47,7 @@ export default async function LandingPage() {
               </p>
               <div className="hero-btns">
                 <Link href="/signup" className="btn-main text-decoration-none">Empezar gratis →</Link>
-                <Link href="#como-funciona" className="btn-secondary text-decoration-none">¿Cómo funciona?</Link>
+                <Link href="#mas-leidos" className="btn-secondary text-decoration-none">Ver libros populares</Link>
               </div>
 
               {/* Señales de credibilidad */}
@@ -70,6 +74,54 @@ export default async function LandingPage() {
           </div>
         </section>
 
+        {/* ── LIBROS MÁS LEÍDOS ── */}
+        {masLeidos.length > 0 && (
+          <div id="mas-leidos" style={{ background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '3rem 0' }}>
+            <div className="container">
+              <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#d4af37', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+                  En la comunidad ahora
+                </p>
+                <h2 style={{ color: '#fff', fontSize: '1.6rem', fontWeight: 800, margin: 0 }}>
+                  Los libros más leídos
+                </h2>
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+                gap: '1rem',
+              }}>
+                {masLeidos.map(libro => {
+                  const nota = libro.nota_media ? Math.round(Number(libro.nota_media) * 10) / 10 : null
+                  return (
+                    <Link key={libro.id} href={`/libro/${libro.id}`} style={{ textDecoration: 'none' }}>
+                      <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', aspectRatio: '2/3', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
+                        className="libro-landing-card">
+                        <img
+                          src={libro.portada_url!.replace('http://', 'https://')}
+                          alt={libro.titulo}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        />
+                        <div className="libro-landing-overlay">
+                          <p style={{ margin: 0, fontSize: '0.65rem', fontWeight: 700, color: '#fff', lineHeight: 1.3, marginBottom: 4 }}>
+                            {libro.titulo.length > 40 ? libro.titulo.slice(0, 38) + '…' : libro.titulo}
+                          </p>
+                          {nota && <span style={{ fontSize: '0.6rem', color: '#d4af37' }}>⭐ {nota}</span>}
+                        </div>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+              <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+                <Link href="/ranking" style={{ color: '#d4af37', fontWeight: 700, textDecoration: 'none', fontSize: '0.85rem' }}>
+                  Ver ranking completo →
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="container" id="mas-info">
 
           {/* ── ¿QUÉ INCLUYE? ── */}
@@ -89,6 +141,10 @@ export default async function LandingPage() {
               <style>{`
                 .feature-tile { transition: transform 0.2s, border-color 0.2s; }
                 .feature-tile:hover { transform: translateY(-4px); }
+                .libro-landing-card { transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
+                .libro-landing-card:hover { transform: scale(1.04); box-shadow: 0 8px 32px rgba(212,175,55,0.25) !important; }
+                .libro-landing-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%); padding: 0.5rem 0.4rem 0.4rem; opacity: 0; transition: opacity 0.2s; }
+                .libro-landing-card:hover .libro-landing-overlay { opacity: 1; }
               `}</style>
               {[
                 {
