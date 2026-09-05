@@ -114,7 +114,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
     setPuntosRetador(resRonda.puntosRetador)
     setPuntosRival(resRonda.puntosRival)
 
-    await new Promise(resolve => setTimeout(resolve, 3500))
+    await new Promise(resolve => setTimeout(resolve, 5000))
     if (!mountedRef.current) return
 
     setResultadoRonda(null)
@@ -516,9 +516,18 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
 
         {/* Respuesta correcta */}
         {pregunta && resultadoRonda.respuestaCorrecta !== undefined && (
-          <div style={{ background: 'rgba(39,174,96,0.1)', border: '1px solid rgba(39,174,96,0.3)', borderRadius: 10, padding: '0.6rem 1rem', fontSize: '0.82rem', color: '#fff', maxWidth: 400, textAlign: 'center' }}>
-            <span style={{ color: '#27ae60', fontWeight: 700 }}>✓ </span>
-            {pregunta.opciones[resultadoRonda.respuestaCorrecta]}
+          <div style={{ background: 'rgba(39,174,96,0.12)', border: '2px solid rgba(39,174,96,0.5)', borderRadius: 14, padding: '1rem 1.25rem', maxWidth: 440, textAlign: 'center', width: '100%' }}>
+            <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.4rem' }}>
+              Respuesta correcta
+            </div>
+            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#27ae60' }}>
+              ✓ {pregunta.opciones[resultadoRonda.respuestaCorrecta]}
+            </div>
+            {pregunta.texto && (
+              <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', marginTop: '0.4rem', fontStyle: 'italic' }}>
+                {pregunta.texto}
+              </div>
+            )}
           </div>
         )}
 
@@ -530,7 +539,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
         </div>
 
         <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px' }}>
-          Ronda {resultadoRonda.ronda + 1} en unos segundos...
+          Ronda {resultadoRonda.ronda + 1} en 5 segundos...
         </div>
       </div>
     )
