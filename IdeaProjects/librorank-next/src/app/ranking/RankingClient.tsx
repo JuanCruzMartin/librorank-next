@@ -42,8 +42,8 @@ interface Props {
   ranking: UsuarioRanking[]
   rankingSemanal: UsuarioSemanal[]
   rankingAutores: AutorRanking[]
-  usuarioId: number
-  puntosUsuario: number
+  usuarioId: number | null
+  puntosUsuario: number | null
 }
 
 // ── Medallas top 3 ───────────────────────────────────────────────────────────
@@ -78,7 +78,8 @@ const TABS: { key: TabKey; label: string; emoji: string; color: string }[] = [
 ]
 
 export default function RankingClient({ ranking, rankingSemanal, rankingAutores, usuarioId, puntosUsuario }: Props) {
-  const ligaActual = getLigaActual(puntosUsuario)
+  const ligaActual = getLigaActual(puntosUsuario ?? 0)
+  const estaLogueado = usuarioId !== null
 
   const [tab, setTab] = useState<TabKey>('paginas')
 
@@ -107,38 +108,68 @@ export default function RankingClient({ ranking, rankingSemanal, rankingAutores,
         <div className="container">
           <div className="row align-items-center g-4">
 
-            {/* Info liga del usuario */}
+            {/* Info liga */}
             <div className="col-md-6 text-center text-md-start">
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: '0.6rem',
-                background: ligaActual.colorBg,
-                border: `1px solid ${ligaActual.border}`,
-                borderRadius: 12, padding: '0.4rem 1rem',
-                fontSize: '0.8rem', fontWeight: 700,
-                color: ligaActual.color, marginBottom: '1rem',
-              }}>
-                {ligaActual.emoji} Tu liga: {ligaActual.nombre}
-              </div>
+              {estaLogueado ? (
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.6rem',
+                  background: ligaActual.colorBg,
+                  border: `1px solid ${ligaActual.border}`,
+                  borderRadius: 12, padding: '0.4rem 1rem',
+                  fontSize: '0.8rem', fontWeight: 700,
+                  color: ligaActual.color, marginBottom: '1rem',
+                }}>
+                  {ligaActual.emoji} Tu liga: {ligaActual.nombre}
+                </div>
+              ) : (
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.6rem',
+                  background: 'rgba(212,175,55,0.1)',
+                  border: '1px solid rgba(212,175,55,0.3)',
+                  borderRadius: 12, padding: '0.4rem 1rem',
+                  fontSize: '0.8rem', fontWeight: 700,
+                  color: '#d4af37', marginBottom: '1rem',
+                }}>
+                  🏆 Comunidad lectora
+                </div>
+              )}
 
               <h1 className="font-title display-5 mb-2" style={{ color: '#fff' }}>
                 🏆 Ranking Global
               </h1>
               <p className="text-muted" style={{ fontSize: '1rem' }}>
-                Competí con lectores de toda la comunidad. Leé más, subí de liga.
+                {estaLogueado
+                  ? 'Competí con lectores de toda la comunidad. Leé más, subí de liga.'
+                  : 'Los lectores más dedicados de LibroRank. ¿Te animás a competir?'}
               </p>
+              {!estaLogueado && (
+                <a href="/signup" style={{
+                  display: 'inline-block', marginTop: '0.75rem',
+                  background: 'linear-gradient(135deg,#d4af37,#f1c40f)',
+                  color: '#000', fontWeight: 700, fontSize: '0.85rem',
+                  padding: '0.55rem 1.5rem', borderRadius: 10, textDecoration: 'none',
+                }}>
+                  Unirme al ranking →
+                </a>
+              )}
             </div>
 
-            {/* Tus stats rápidos */}
+            {/* Stats */}
             <div className="col-md-6">
               <div style={{
                 display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem',
                 maxWidth: 360, marginLeft: 'auto',
               }}>
-                {[
+                {estaLogueado ? [
                   { label: 'Tu liga',           value: `${ligaActual.emoji} ${ligaActual.nombre}`, color: ligaActual.color },
                   { label: 'Total lectores',    value: `👥 ${ranking.length}`,                  color: '#fff' },
                   { label: 'Páginas leídas',    value: `📄 ${(ranking.find(u => u.id === usuarioId)?.total_paginas ?? 0).toLocaleString('es-AR')}`, color: '#3498db' },
                   { label: 'Libros leídos',     value: `📚 ${ranking.find(u => u.id === usuarioId)?.total_leidos ?? 0}`, color: '#4a9e7a' },
+                ] : [
+                  { label: 'Lectores activos',  value: `👥 ${ranking.length}`,  color: '#fff' },
+                  { label: 'En ranking semanal',value: `🔥 ${rankingSemanal.length}`, color: '#e91e8c' },
+                  { label: 'Más páginas leídas',value: `📄 ${(ranking[0]?.total_paginas ?? 0).toLocaleString('es-AR')}`, color: '#3498db' },
+                  { label: 'Más libros leídos', value: `📚 ${ranking.slice().sort((a,b)=>b.total_leidos-a.total_leidos)[0]?.total_leidos ?? 0}`, color: '#4a9e7a' },
                 ].map(stat => (
                   <div key={stat.label} style={{
                     background: 'rgba(255,255,255,0.04)',

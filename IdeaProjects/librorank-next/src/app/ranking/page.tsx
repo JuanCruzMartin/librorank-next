@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/lib/auth'
 import { buscarPorId, obtenerRankingLectores, obtenerRankingSemanal, obtenerRankingAutores } from '@/lib/dao/usuarioDAO'
 import { obtenerIdsAmigos } from '@/lib/dao/amigoDAO'
@@ -16,19 +15,16 @@ export const metadata: Metadata = {
 
 export default async function RankingPage() {
   const authUser = await getAuthUser()
-  if (!authUser) redirect('/login')
 
   await ensureResetSemanal().catch(() => {})
 
   const [usuario, rankingRaw, idsAmigos, rankingSemanalRaw, rankingAutores] = await Promise.all([
-    buscarPorId(authUser.id),
+    authUser ? buscarPorId(authUser.id) : Promise.resolve(null),
     obtenerRankingLectores(200),
-    obtenerIdsAmigos(authUser.id),
+    authUser ? obtenerIdsAmigos(authUser.id) : Promise.resolve([] as number[]),
     obtenerRankingSemanal(100),
     obtenerRankingAutores(30),
   ])
-
-  if (!usuario) redirect('/login')
 
   const ranking = rankingRaw.map(u => ({
     id: u.id,
@@ -39,7 +35,7 @@ export default async function RankingPage() {
     total_paginas: u.total_paginas ?? 0,
     avatar_url: u.avatar_url ?? null,
     es_amigo: idsAmigos.includes(u.id),
-    es_yo: u.id === authUser.id,
+    es_yo: authUser ? u.id === authUser.id : false,
   }))
 
   const rankingSemanal = rankingSemanalRaw.map(u => ({
@@ -49,20 +45,20 @@ export default async function RankingPage() {
     avatar_url: u.avatar_url ?? null,
     puntos: u.puntos ?? 0,
     libros_semana: u.libros_semana ?? 0,
-    es_yo: u.id === authUser.id,
+    es_yo: authUser ? u.id === authUser.id : false,
     es_amigo: idsAmigos.includes(u.id),
   }))
 
   return (
     <>
-      <Header user={usuario} />
+      <Header user={usuario ?? null} />
       <main>
         <RankingClient
           ranking={ranking}
           rankingSemanal={rankingSemanal}
           rankingAutores={rankingAutores}
-          usuarioId={authUser.id}
-          puntosUsuario={usuario.puntos ?? 0}
+          usuarioId={authUser?.id ?? null}
+          puntosUsuario={usuario?.puntos ?? null}
         />
       </main>
       <Footer />
