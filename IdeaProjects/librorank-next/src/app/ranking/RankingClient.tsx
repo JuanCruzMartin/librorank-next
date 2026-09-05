@@ -160,7 +160,7 @@ export default function RankingClient({ ranking, rankingSemanal, rankingAutores,
                 display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem',
                 maxWidth: 360, marginLeft: 'auto',
               }}>
-                {estaLogueado ? [
+                {(estaLogueado ? [
                   { label: 'Tu liga',           value: `${ligaActual.emoji} ${ligaActual.nombre}`, color: ligaActual.color },
                   { label: 'Total lectores',    value: `👥 ${ranking.length}`,                  color: '#fff' },
                   { label: 'Páginas leídas',    value: `📄 ${(ranking.find(u => u.id === usuarioId)?.total_paginas ?? 0).toLocaleString('es-AR')}`, color: '#3498db' },
@@ -170,7 +170,7 @@ export default function RankingClient({ ranking, rankingSemanal, rankingAutores,
                   { label: 'En ranking semanal',value: `🔥 ${rankingSemanal.length}`, color: '#e91e8c' },
                   { label: 'Más páginas leídas',value: `📄 ${(ranking[0]?.total_paginas ?? 0).toLocaleString('es-AR')}`, color: '#3498db' },
                   { label: 'Más libros leídos', value: `📚 ${ranking.slice().sort((a,b)=>b.total_leidos-a.total_leidos)[0]?.total_leidos ?? 0}`, color: '#4a9e7a' },
-                ].map(stat => (
+                ]).map(stat => (
                   <div key={stat.label} style={{
                     background: 'rgba(255,255,255,0.04)',
                     border: '1px solid rgba(255,255,255,0.08)',
