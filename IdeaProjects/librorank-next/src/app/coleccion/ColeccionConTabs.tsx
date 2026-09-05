@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import ColeccionClient from './ColeccionClient'
 import IntercambiosClient from '../intercambios/IntercambiosClient'
+import TiendaClient from '../tienda/TiendaClient'
+import type { ItemTienda } from '@/lib/tienda'
 
 const SS_INTERCAMBIOS = 'lr_banner_intercambios_visto'
 
@@ -14,18 +16,21 @@ interface Props {
   cantidades: Record<string, number>
   tiradas: number
   usuarioId: number
+  puntos: number
+  itemsTienda: ItemTienda[]
   amigos: Amigo[]
-  tabInicial: 'coleccion' | 'intercambios'
+  tabInicial: 'coleccion' | 'intercambios' | 'tienda'
 }
 
 const TABS = [
   { id: 'coleccion',    label: '🎴 Mi Colección' },
   { id: 'intercambios', label: '🔄 Intercambios' },
+  { id: 'tienda',       label: '🛒 Tienda' },
 ] as const
 
 type Tab = typeof TABS[number]['id']
 
-export default function ColeccionConTabs({ coleccion, cantidades, tiradas, usuarioId, amigos, tabInicial }: Props) {
+export default function ColeccionConTabs({ coleccion, cantidades, tiradas, usuarioId, puntos, itemsTienda, amigos, tabInicial }: Props) {
   const [tab, setTab] = useState<Tab>(tabInicial)
   const [bannerVisible, setBannerVisible] = useState(false)
   const router = useRouter()
@@ -43,7 +48,7 @@ export default function ColeccionConTabs({ coleccion, cantidades, tiradas, usuar
       sessionStorage.setItem(SS_INTERCAMBIOS, '1')
       setBannerVisible(false)
     }
-    const url = t === 'intercambios' ? `${pathname}?tab=intercambios` : pathname
+    const url = t !== 'coleccion' ? `${pathname}?tab=${t}` : pathname
     router.replace(url, { scroll: false })
   }
 
@@ -139,6 +144,11 @@ export default function ColeccionConTabs({ coleccion, cantidades, tiradas, usuar
           miColeccion={coleccion}
           amigos={amigos}
         />
+      )}
+      {tab === 'tienda' && (
+        <div style={{ padding: '1.5rem 1rem' }}>
+          <TiendaClient items={itemsTienda} puntosIniciales={puntos} />
+        </div>
       )}
     </div>
   )

@@ -60,7 +60,6 @@ const NAV_ITEMS: { href: string; label: string; icon: React.ReactNode }[] = [
   { href: '/ranking',     label: 'Ranking',      icon: <Trophy size={16} weight="duotone" /> },
   { href: '/amigos',      label: 'Comunidad',    icon: <UsersThree size={16} weight="duotone" /> },
   { href: '/arena',       label: 'Arena',        icon: <GameController size={16} weight="duotone" /> },
-  { href: '/tienda',      label: 'Tienda',       icon: <Storefront size={16} weight="duotone" /> },
   { href: '/cuento',      label: 'Cuento',       icon: <PencilLine size={16} weight="duotone" /> },
 ]
 
