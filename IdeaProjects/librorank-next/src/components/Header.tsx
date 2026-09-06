@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import React, { useState, useEffect, useRef } from 'react'
 import {
@@ -175,8 +176,8 @@ export default function Header({ user }: HeaderProps) {
     return (
       <header className="site-header">
         <div className="container d-flex justify-content-between align-items-center">
-          <Link href="/" className="logo-landing text-decoration-none">
-            LIBRO<span>RANK</span>
+          <Link href="/" className="logo-landing text-decoration-none" style={{ display: 'flex', alignItems: 'center' }}>
+            <Image src="/logo.jpg" alt="LibroRank" width={120} height={40} style={{ objectFit: 'contain' }} priority />
           </Link>
           <div className="d-flex align-items-center gap-4">
             <Link href="/ranking" className="nav-link-custom">Ranking</Link>
@@ -195,8 +196,8 @@ export default function Header({ user }: HeaderProps) {
         <div className="container d-flex justify-content-between align-items-center">
 
           {/* Logo */}
-          <Link href="/home" className="logo text-decoration-none" style={{ flexShrink: 0 }}>
-            Libro<span>Rank</span>
+          <Link href="/home" style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+            <Image src="/logo.jpg" alt="LibroRank" width={120} height={40} style={{ objectFit: 'contain' }} priority />
           </Link>
 
           {/* Nav desktop */}
@@ -542,8 +543,8 @@ export default function Header({ user }: HeaderProps) {
         }}>
           {/* Header del menú */}
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <Link href="/home" className="logo text-decoration-none" onClick={() => setMenuAbierto(false)}>
-              Libro<span>Rank</span>
+            <Link href="/home" onClick={() => setMenuAbierto(false)} style={{ display: 'flex', alignItems: 'center' }}>
+              <Image src="/logo.jpg" alt="LibroRank" width={110} height={36} style={{ objectFit: 'contain' }} />
             </Link>
             <button
               onClick={() => setMenuAbierto(false)}
