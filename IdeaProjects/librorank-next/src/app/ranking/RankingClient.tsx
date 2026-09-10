@@ -100,7 +100,7 @@ export default function RankingClient({ ranking, rankingSemanal, rankingAutores,
     <div style={{ minHeight: '100vh' }}>
 
       {/* ── HERO ── */}
-      <div style={{
+      <div className="ranking-hero" style={{
         background: `linear-gradient(135deg, #0a0a0a 0%, #111 60%, ${ligaActual.color}08 100%)`,
         borderBottom: `2px solid ${ligaActual.border}`,
         padding: '3.5rem 0 3rem',
@@ -156,7 +156,7 @@ export default function RankingClient({ ranking, rankingSemanal, rankingAutores,
 
             {/* Stats */}
             <div className="col-md-6">
-              <div style={{
+              <div className="ranking-stats-grid" style={{
                 display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem',
                 maxWidth: 360, marginLeft: 'auto',
               }}>
@@ -191,7 +191,7 @@ export default function RankingClient({ ranking, rankingSemanal, rankingAutores,
       <div className="container py-5">
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+        <div className="ranking-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
           {TABS.map(t => {
             const activa = t.key === tab
             const count = t.key === 'semanal' ? rankingSemanal.length : t.key === 'autores' ? rankingAutores.length : ranking.length

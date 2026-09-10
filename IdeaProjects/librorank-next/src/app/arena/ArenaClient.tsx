@@ -769,7 +769,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
                 const rarezaLabel = carta ? rarezaVisual(carta.rareza).toUpperCase() : '?'
                 const esApuesta = d.tipo === 'apuesta'
                 return (
-                  <div key={d.id} className="card p-3" style={{ border: `1px solid ${color}40`, position: 'relative' }}>
+                  <div key={d.id} className="card p-3 arena-sala-card" style={{ border: `1px solid ${color}40`, position: 'relative' }}>
                     {/* Badges */}
                     <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6 }}>
                       <div style={{

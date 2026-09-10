@@ -1733,10 +1733,18 @@ textarea.form-control {
 }
 
 /* ── Ranking ── */
+@media (max-width: 768px) {
+  /* Hero: padding reducido en mobile */
+  .ranking-hero { padding: 2rem 0 1.5rem !important; }
+
+  /* Stats grid: quitamos el marginLeft auto para que ocupe todo el ancho en mobile */
+  .ranking-stats-grid { max-width: 100% !important; margin-left: 0 !important; }
+}
+
 @media (max-width: 576px) {
   /* Stats grid hero: 2 col → 1 col */
   .ranking-stats-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr 1fr !important;
     max-width: 100% !important;
     margin-left: 0 !important;
   }
@@ -1810,6 +1818,13 @@ textarea.form-control {
   }
   .ranking-tabs::-webkit-scrollbar { display: none; }
   .ranking-tabs > * { flex-shrink: 0; }
+}
+
+/* ── Arena sala cards — badges no tapan el botón en mobile ── */
+@media (max-width: 576px) {
+  .arena-sala-card {
+    padding-top: 2.75rem !important;
+  }
 }
 
 /* ── Modal responsive (biblioteca agregar libro) ── */
