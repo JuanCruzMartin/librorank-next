@@ -1820,6 +1820,19 @@ textarea.form-control {
   .ranking-tabs > * { flex-shrink: 0; }
 }
 
+/* ── Dropdown "Hoy" — no desborda el viewport en pantallas pequeñas ── */
+@media (max-width: 480px) {
+  .hoy-dropdown {
+    position: fixed !important;
+    top: 60px !important;
+    left: 0.75rem !important;
+    right: 0.75rem !important;
+    width: auto !important;
+    max-height: calc(100vh - 70px);
+    overflow-y: auto;
+  }
+}
+
 /* ── Arena sala cards — badges no tapan el botón en mobile ── */
 @media (max-width: 576px) {
   .arena-sala-card {

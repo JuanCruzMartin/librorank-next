@@ -288,7 +288,7 @@ export default function Header({ user }: HeaderProps) {
                 </button>
 
                 {hoyAbierto && (
-                  <div style={{
+                  <div className="hoy-dropdown" style={{
                     position: 'absolute', top: 'calc(100% + 10px)', right: 0,
                     width: 290,
                     background: 'linear-gradient(160deg, rgba(18,12,40,0.99), rgba(10,6,25,0.99))',
