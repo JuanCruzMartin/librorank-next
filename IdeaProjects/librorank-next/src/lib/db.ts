@@ -18,9 +18,9 @@ if (!g._dbPool) {
     timezone: '+00:00',
     connectTimeout: 10000,
     waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-    idleTimeout: 60000,
+    connectionLimit: 3,   // Vercel: múltiples instancias × connectionLimit = total conexiones
+    queueLimit: 20,
+    idleTimeout: 30000,   // cierra conexiones ociosas más rápido para liberar slots
   })
 }
 
