@@ -173,15 +173,16 @@ export default function ColeccionClient({ coleccion: coleccionInicial, cantidade
   const [abriendoCofre, setAbriendoCofre] = useState<number | null>(null)
   const [cofreAbierto, setCofreAbierto] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [isNarrow, setIsNarrow] = useState(false)
   const [carouselIdx, setCarouselIdx] = useState<Record<string, number>>({})
 
   const CARDS_PER_PAGE = 2
 
-  function prevPage(key: string) {
-    setCarouselIdx(p => ({ ...p, [key]: Math.max(0, (p[key] ?? 0) - CARDS_PER_PAGE) }))
+  function prevPage(key: string, cpp = CARDS_PER_PAGE) {
+    setCarouselIdx(p => ({ ...p, [key]: Math.max(0, (p[key] ?? 0) - cpp) }))
   }
-  function nextPage(key: string, total: number) {
-    setCarouselIdx(p => ({ ...p, [key]: Math.min(total - CARDS_PER_PAGE, (p[key] ?? 0) + CARDS_PER_PAGE) }))
+  function nextPage(key: string, total: number, cpp = CARDS_PER_PAGE) {
+    setCarouselIdx(p => ({ ...p, [key]: Math.min(total - cpp, (p[key] ?? 0) + cpp) }))
   }
 
   const totalObtenidas = new Set(coleccion).size
@@ -208,7 +209,10 @@ export default function ColeccionClient({ coleccion: coleccionInicial, cantidade
   }, [])
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth <= 640)
+    const check = () => {
+      setIsMobile(window.innerWidth <= 640)
+      setIsNarrow(window.innerWidth <= 375)
+    }
     check()
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
@@ -626,12 +630,14 @@ export default function ColeccionClient({ coleccion: coleccionInicial, cantidade
 
                 <div className="coleccion-seccion-inner" style={{ padding: '0.75rem 0' }}>
                   {isMobile ? (() => {
+                    const cpp = isNarrow ? 1 : CARDS_PER_PAGE
+                    const btnSz = isNarrow ? 32 : 40
                     const idx = carouselIdx[col.id] ?? 0
-                    const pagina = cartasCol.slice(idx, idx + CARDS_PER_PAGE)
+                    const pagina = cartasCol.slice(idx, idx + cpp)
                     return (
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0 0.75rem' }}>
-                          <button onClick={() => prevPage(col.id)} disabled={idx === 0} style={{ width: 40, height: 40, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.07)', color: '#fff', fontSize: '1.4rem', cursor: idx === 0 ? 'not-allowed' : 'pointer', opacity: idx === 0 ? 0.3 : 1, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+                          <button onClick={() => prevPage(col.id, cpp)} disabled={idx === 0} style={{ width: btnSz, height: btnSz, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.07)', color: '#fff', fontSize: '1.4rem', cursor: idx === 0 ? 'not-allowed' : 'pointer', opacity: idx === 0 ? 0.3 : 1, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
                           <div style={{ display: 'flex', gap: '0.5rem', flex: 1, justifyContent: 'center' }}>
                             {pagina.map(carta => {
                               const tengo = coleccion.includes(carta.id)
@@ -645,10 +651,10 @@ export default function ColeccionClient({ coleccion: coleccionInicial, cantidade
                               )
                             })}
                           </div>
-                          <button onClick={() => nextPage(col.id, cartasCol.length)} disabled={idx + CARDS_PER_PAGE >= cartasCol.length} style={{ width: 40, height: 40, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.07)', color: '#fff', fontSize: '1.4rem', cursor: idx + CARDS_PER_PAGE >= cartasCol.length ? 'not-allowed' : 'pointer', opacity: idx + CARDS_PER_PAGE >= cartasCol.length ? 0.3 : 1, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
+                          <button onClick={() => nextPage(col.id, cartasCol.length, cpp)} disabled={idx + cpp >= cartasCol.length} style={{ width: btnSz, height: btnSz, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.07)', color: '#fff', fontSize: '1.4rem', cursor: idx + cpp >= cartasCol.length ? 'not-allowed' : 'pointer', opacity: idx + cpp >= cartasCol.length ? 0.3 : 1, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
                         </div>
                         <p style={{ textAlign: 'center', fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>
-                          {idx + 1}–{Math.min(idx + CARDS_PER_PAGE, cartasCol.length)} de {cartasCol.length}
+                          {idx + 1}–{Math.min(idx + cpp, cartasCol.length)} de {cartasCol.length}
                         </p>
                       </div>
                     )
@@ -732,12 +738,14 @@ export default function ColeccionClient({ coleccion: coleccionInicial, cantidade
                 </div>
 
                 {isMobile ? (() => {
+                  const cpp = isNarrow ? 1 : CARDS_PER_PAGE
+                  const btnSz = isNarrow ? 32 : 40
                   const idx = carouselIdx[rareza] ?? 0
-                  const pagina = cartasDeRareza.slice(idx, idx + CARDS_PER_PAGE)
+                  const pagina = cartasDeRareza.slice(idx, idx + cpp)
                   return (
                     <div style={{ marginTop: '0.75rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0 0.25rem' }}>
-                        <button onClick={() => prevPage(rareza)} disabled={idx === 0} style={{ width: 40, height: 40, borderRadius: '50%', border: `1px solid ${r.color}40`, background: `${r.color}15`, color: '#fff', fontSize: '1.4rem', cursor: idx === 0 ? 'not-allowed' : 'pointer', opacity: idx === 0 ? 0.3 : 1, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+                        <button onClick={() => prevPage(rareza, cpp)} disabled={idx === 0} style={{ width: btnSz, height: btnSz, borderRadius: '50%', border: `1px solid ${r.color}40`, background: `${r.color}15`, color: '#fff', fontSize: '1.4rem', cursor: idx === 0 ? 'not-allowed' : 'pointer', opacity: idx === 0 ? 0.3 : 1, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
                         <div style={{ display: 'flex', gap: '0.5rem', flex: 1, justifyContent: 'center' }}>
                           {pagina.map(carta => {
                             const tengo = coleccion.includes(carta.id)
@@ -751,10 +759,10 @@ export default function ColeccionClient({ coleccion: coleccionInicial, cantidade
                             )
                           })}
                         </div>
-                        <button onClick={() => nextPage(rareza, cartasDeRareza.length)} disabled={idx + CARDS_PER_PAGE >= cartasDeRareza.length} style={{ width: 40, height: 40, borderRadius: '50%', border: `1px solid ${r.color}40`, background: `${r.color}15`, color: '#fff', fontSize: '1.4rem', cursor: idx + CARDS_PER_PAGE >= cartasDeRareza.length ? 'not-allowed' : 'pointer', opacity: idx + CARDS_PER_PAGE >= cartasDeRareza.length ? 0.3 : 1, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
+                        <button onClick={() => nextPage(rareza, cartasDeRareza.length, cpp)} disabled={idx + cpp >= cartasDeRareza.length} style={{ width: btnSz, height: btnSz, borderRadius: '50%', border: `1px solid ${r.color}40`, background: `${r.color}15`, color: '#fff', fontSize: '1.4rem', cursor: idx + cpp >= cartasDeRareza.length ? 'not-allowed' : 'pointer', opacity: idx + cpp >= cartasDeRareza.length ? 0.3 : 1, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
                       </div>
                       <p style={{ textAlign: 'center', fontSize: '0.65rem', color: r.color, opacity: 0.5, marginTop: 6 }}>
-                        {idx + 1}–{Math.min(idx + CARDS_PER_PAGE, cartasDeRareza.length)} de {cartasDeRareza.length}
+                        {idx + 1}–{Math.min(idx + cpp, cartasDeRareza.length)} de {cartasDeRareza.length}
                       </p>
                     </div>
                   )
