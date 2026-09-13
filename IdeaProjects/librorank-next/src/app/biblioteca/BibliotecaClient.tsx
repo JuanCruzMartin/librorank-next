@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, lazy, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+
+const BarcodeScanner = lazy(() => import('@/components/BarcodeScanner'))
 import type { Libro, PerfilStats } from '@/lib/dao/libroDAO'
 import type { Usuario } from '@/lib/dao/usuarioDAO'
 import BannerExplicativo from '@/components/BannerExplicativo'
@@ -54,6 +56,8 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   const [libroAEliminar, setLibroAEliminar] = useState<Libro | null>(null)
   const [eliminando, setEliminando] = useState(false)
   const [imgErrors, setImgErrors] = useState<Set<number>>(new Set())
+  const [showScanner, setShowScanner] = useState(false)
+  const [scannerBuscando, setScannerBuscando] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
 
   // Atajo "/" enfoca el buscador de la biblioteca
@@ -83,6 +87,29 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
       setTimeout(() => setLigaToast({ nombre: ligaDespues.nombre, emoji: ligaDespues.emoji, color: ligaDespues.color }), 1200)
     }
   }
+
+  const handleIsbnDetected = useCallback(async (isbn: string) => {
+    setShowScanner(false)
+    setScannerBuscando(true)
+    setShowModal(true)
+    try {
+      const res = await fetch(`/api/libros/buscar?q=${encodeURIComponent(`isbn:${isbn}`)}`)
+      const results = await res.json()
+      if (results.length > 0) {
+        const s = results[0]
+        setFormNuevo({ titulo: s.titulo, autor: s.autor, anio: s.anio, paginas: String(s.paginas), portada_url: s.portada, genero: s.genero || '' })
+        setBusquedaModal(s.titulo)
+        setSugerencias([])
+      } else {
+        setMensaje(`No encontramos el libro con ISBN ${isbn}. Podés cargarlo manualmente.`)
+        setModoManual(true)
+      }
+    } catch {
+      setMensaje('Error al buscar el libro. Intentá de nuevo.')
+    } finally {
+      setScannerBuscando(false)
+    }
+  }, [])
 
   const buscarLibros = useCallback(async (q: string) => {
     if (q.length < 3) { setSugerencias([]); return }
@@ -827,7 +854,22 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                         onChange={e => { setBusquedaModal(e.target.value); buscarLibros(e.target.value) }}
                         autoFocus
                       />
+                      <button
+                        type="button"
+                        className="btn"
+                        title="Escanear código de barras"
+                        onClick={() => setShowScanner(true)}
+                        style={{ background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', color: '#d4af37', fontWeight: 700, fontSize: '1rem', padding: '0 0.85rem' }}
+                      >
+                        📷
+                      </button>
                     </div>
+                    {scannerBuscando && (
+                      <div style={{ marginTop: '0.5rem', fontSize: '0.78rem', color: 'rgba(212,175,55,0.8)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', border: '2px solid #d4af37', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
+                        Buscando por ISBN...
+                      </div>
+                    )}
 
                     {/* Resultados */}
                     {sugerencias.length > 0 && (
@@ -1093,6 +1135,22 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
           </div>
         </div>
       )}
+
+      {/* ── Scanner de código de barras ── */}
+      {showScanner && (
+        <Suspense fallback={null}>
+          <BarcodeScanner
+            onDetected={handleIsbnDetected}
+            onClose={() => setShowScanner(false)}
+          />
+        </Suspense>
+      )}
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </>
   )
 }
