@@ -114,11 +114,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(olGeneral)
     }
 
-    // Búsqueda normal por título/autor
-    const googleResults = await buscarEnGoogle(q)
-    if (googleResults.length > 0) return NextResponse.json(googleResults)
-    const olResults = await buscarEnOpenLibrary(q)
-    return NextResponse.json(olResults)
+    // Búsqueda normal: Google y Open Library en paralelo, se mezclan los resultados
+    const [googleResults, olResults] = await Promise.all([
+      buscarEnGoogle(q),
+      buscarEnOpenLibrary(q),
+    ])
+    // Preferimos resultados de Google, pero completamos con OL si Google devuelve pocos
+    const vistos = new Set(googleResults.map(r => r.titulo.toLowerCase().trim()))
+    const olNuevos = olResults.filter(r => !vistos.has(r.titulo.toLowerCase().trim()))
+    return NextResponse.json([...googleResults, ...olNuevos].slice(0, 12))
 
   } catch (err) {
     console.error('Error buscando libros:', err)
