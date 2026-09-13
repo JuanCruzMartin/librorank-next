@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect, lazy, Suspense } from 'react'
+import { useState, useCallback, useRef, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 
-const BarcodeScanner = lazy(() => import('@/components/BarcodeScanner'))
+const BarcodeScanner = dynamic(() => import('@/components/BarcodeScanner'), { ssr: false })
 import type { Libro, PerfilStats } from '@/lib/dao/libroDAO'
 import type { Usuario } from '@/lib/dao/usuarioDAO'
 import BannerExplicativo from '@/components/BannerExplicativo'
