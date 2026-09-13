@@ -12,9 +12,11 @@ interface ResultadoBusqueda {
   fuente?: 'google' | 'openlibrary'
 }
 
-async function buscarEnGoogle(q: string): Promise<ResultadoBusqueda[]> {
+async function buscarEnGoogle(q: string, esBusquedaIsbn = false): Promise<ResultadoBusqueda[]> {
   const apiKey = process.env.GOOGLE_BOOKS_API_KEY
-  const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=10&langRestrict=es${apiKey ? `&key=${apiKey}` : ''}`
+  // No restringir por idioma cuando buscamos por ISBN: el ISBN es único y langRestrict filtra resultados válidos
+  const langParam = esBusquedaIsbn ? '' : '&langRestrict=es'
+  const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=10${langParam}${apiKey ? `&key=${apiKey}` : ''}`
   const res = await fetch(url, { next: { revalidate: 300 } })
   const data = await res.json()
 
@@ -38,6 +40,29 @@ async function buscarEnGoogle(q: string): Promise<ResultadoBusqueda[]> {
     genero: item.volumeInfo.categories?.length ? mapearGeneroGoogle(item.volumeInfo.categories) : '',
     fuente: 'google' as const,
   }))
+}
+
+async function buscarIsbnEnOpenLibrary(isbn: string): Promise<ResultadoBusqueda | null> {
+  try {
+    const url = `https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`
+    const res = await fetch(url, { next: { revalidate: 3600 } })
+    const data = await res.json()
+    const book = data[`ISBN:${isbn}`]
+    if (!book) return null
+    const coverId = book.cover?.medium || book.cover?.large || book.cover?.small || ''
+    return {
+      id: `ol_isbn_${isbn}`,
+      titulo: book.title || '',
+      autor: (book.authors || []).map((a: { name: string }) => a.name).slice(0, 2).join(', '),
+      anio: book.publish_date ? book.publish_date.match(/\d{4}/)?.[0] || '' : '',
+      paginas: book.number_of_pages || '',
+      portada: coverId,
+      genero: book.subjects?.length ? mapearGeneroGoogle(book.subjects.slice(0, 3).map((s: { name?: string } | string) => typeof s === 'string' ? s : s.name || '')) : '',
+      fuente: 'openlibrary' as const,
+    }
+  } catch {
+    return null
+  }
 }
 
 async function buscarEnOpenLibrary(q: string): Promise<ResultadoBusqueda[]> {
@@ -71,22 +96,32 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get('q')
   if (!q) return NextResponse.json([])
 
-  try {
-    // Primero probamos Google Books
-    const googleResults = await buscarEnGoogle(q)
+  const isbnMatch = q.match(/(?:isbn[:\s]*)?(\d{10,13})/i)
+  const esIsbn = isbnMatch != null
 
-    // Si Google devuelve resultados, los usamos
-    if (googleResults.length > 0) {
-      return NextResponse.json(googleResults)
+  try {
+    if (esIsbn) {
+      const isbn = isbnMatch![1]
+      // Para ISBNs: Google Books sin langRestrict + Open Library ISBN directo en paralelo
+      const [googleResults, olDirect] = await Promise.all([
+        buscarEnGoogle(`isbn:${isbn}`, true),
+        buscarIsbnEnOpenLibrary(isbn),
+      ])
+      if (googleResults.length > 0) return NextResponse.json(googleResults)
+      if (olDirect) return NextResponse.json([olDirect])
+      // Último intento: búsqueda general con el ISBN como texto
+      const olGeneral = await buscarEnOpenLibrary(isbn)
+      return NextResponse.json(olGeneral)
     }
 
-    // Fallback: Open Library (especialmente útil para libros en español)
+    // Búsqueda normal por título/autor
+    const googleResults = await buscarEnGoogle(q)
+    if (googleResults.length > 0) return NextResponse.json(googleResults)
     const olResults = await buscarEnOpenLibrary(q)
     return NextResponse.json(olResults)
 
   } catch (err) {
     console.error('Error buscando libros:', err)
-    // Intentar Open Library si Google falla
     try {
       const olResults = await buscarEnOpenLibrary(q)
       return NextResponse.json(olResults)

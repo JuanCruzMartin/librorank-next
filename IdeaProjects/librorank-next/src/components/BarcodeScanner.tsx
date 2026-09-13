@@ -25,8 +25,8 @@ export default function BarcodeScanner({ onDetected, onClose }: Props) {
       (result, err) => {
         if (result && !detectedRef.current) {
           const text = result.getText()
-          // ISBNs son EAN-13 que empiezan con 978 o 979
-          if (/^97[89]\d{10}$/.test(text)) {
+          // ISBN-13 (EAN-13: 978/979) o ISBN-10
+          if (/^97[89]\d{10}$/.test(text) || /^\d{9}[\dX]$/.test(text)) {
             detectedRef.current = true
             setScanning(false)
             reader.reset()
