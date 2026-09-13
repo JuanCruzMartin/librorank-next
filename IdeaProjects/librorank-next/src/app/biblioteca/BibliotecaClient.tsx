@@ -400,42 +400,76 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                 </div>
               </div>
 
-              {/* Buscador para agregar — solo visible en mi propia biblioteca */}
+              {/* Agregar libro — solo visible en mi propia biblioteca */}
               {!soloLectura && (
-                <div className="p-3 rounded-4" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', position: 'relative' }}>
-                  <label className="form-label text-gold fw-bold mb-2 text-uppercase" style={{ letterSpacing: '1.5px', fontSize: '0.8rem' }}>
-                    <i className="bi bi-plus-circle-fill me-2"></i>Buscar libro para añadir
-                  </label>
-                  <div className="input-group">
-                    <input type="text" className="form-control" placeholder="Escribe el título de un libro..."
-                      style={{ border: '1px solid rgba(212,175,55,0.3)' }}
-                      value={busquedaHeader}
-                      onChange={e => { setBusquedaHeader(e.target.value); buscarHeader(e.target.value) }} />
-                    <button className="btn btn-gold px-4 border-0" type="button" onClick={() => setShowModal(true)}>
-                      <i className="bi bi-search fw-bold"></i>
-                    </button>
-                  </div>
-                  {sugerenciasHeader.length > 0 && (
-                    <div style={{ position: 'absolute', left: 0, right: 0, top: '100%', background: '#2c2724', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 10, zIndex: 999, maxHeight: 320, overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.6)', marginTop: 4 }}>
-                      {sugerenciasHeader.map((s, i) => (
-                        <button key={i} onClick={() => seleccionarDesdeHeader(s)}
-                          style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#fff', cursor: 'pointer', textAlign: 'left' }}
-                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,175,55,0.08)')}
-                          onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-                        >
-                          {s.portada
-                            ? <img src={s.portada} alt={s.titulo} style={{ width: 38, height: 56, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
-                            : <div style={{ width: 38, height: 56, background: '#36302c', borderRadius: 4, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>📚</div>
-                          }
-                          <div>
-                            <div style={{ fontWeight: 700, fontSize: '0.82rem', lineHeight: 1.3 }}>{s.titulo}</div>
-                            <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>{s.autor}</div>
-                            {s.anio && <div style={{ fontSize: '0.65rem', color: 'rgba(212,175,55,0.6)' }}>{s.anio}</div>}
-                          </div>
-                        </button>
-                      ))}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                  {/* CTA principal: escanear */}
+                  <button
+                    onClick={() => setShowScanner(true)}
+                    style={{
+                      width: '100%',
+                      background: 'linear-gradient(135deg, rgba(212,175,55,0.18), rgba(212,175,55,0.08))',
+                      border: '1.5px solid rgba(212,175,55,0.45)',
+                      borderRadius: 14,
+                      padding: '1rem 1.25rem',
+                      cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: '1rem',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <div style={{
+                      width: 48, height: 48, flexShrink: 0,
+                      background: 'rgba(212,175,55,0.15)',
+                      borderRadius: 12,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '1.5rem',
+                    }}>
+                      📷
                     </div>
-                  )}
+                    <div>
+                      <div style={{ color: '#d4af37', fontWeight: 800, fontSize: '0.92rem', lineHeight: 1.2 }}>
+                        Escaneá el código de barras
+                      </div>
+                      <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.75rem', marginTop: 3 }}>
+                        Apuntá la cámara al libro y lo agregamos automáticamente
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Búsqueda por texto — opción secundaria */}
+                  <div style={{ position: 'relative' }}>
+                    <div className="input-group">
+                      <input type="text" className="form-control" placeholder="O buscá por título..."
+                        style={{ border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: '0.85rem' }}
+                        value={busquedaHeader}
+                        onChange={e => { setBusquedaHeader(e.target.value); buscarHeader(e.target.value) }} />
+                      <button className="btn border-0" type="button" onClick={() => setShowModal(true)}
+                        style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}>
+                        <i className="bi bi-search"></i>
+                      </button>
+                    </div>
+                    {sugerenciasHeader.length > 0 && (
+                      <div style={{ position: 'absolute', left: 0, right: 0, top: '100%', background: '#2c2724', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 10, zIndex: 999, maxHeight: 320, overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.6)', marginTop: 4 }}>
+                        {sugerenciasHeader.map((s, i) => (
+                          <button key={i} onClick={() => seleccionarDesdeHeader(s)}
+                            style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#fff', cursor: 'pointer', textAlign: 'left' }}
+                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,175,55,0.08)')}
+                            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                          >
+                            {s.portada
+                              ? <img src={s.portada} alt={s.titulo} style={{ width: 38, height: 56, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
+                              : <div style={{ width: 38, height: 56, background: '#36302c', borderRadius: 4, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>📚</div>
+                            }
+                            <div>
+                              <div style={{ fontWeight: 700, fontSize: '0.82rem', lineHeight: 1.3 }}>{s.titulo}</div>
+                              <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)' }}>{s.autor}</div>
+                              {s.anio && <div style={{ fontSize: '0.65rem', color: 'rgba(212,175,55,0.6)' }}>{s.anio}</div>}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
