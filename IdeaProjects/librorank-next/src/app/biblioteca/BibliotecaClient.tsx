@@ -102,8 +102,12 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
         setBusquedaModal(s.titulo)
         setSugerencias([])
       } else {
-        setMensaje(`No encontramos el libro con ISBN ${isbn}. Podés cargarlo manualmente.`)
-        setModoManual(true)
+        // ISBN no encontrado (ediciones locales/argentinas no están en Google Books ni OL)
+        // Volvemos al modo búsqueda para que el usuario escriba el título
+        setBusquedaModal('')
+        setSugerencias([])
+        setModoManual(false)
+        setMensaje(`ISBN ${isbn} no encontrado en el catálogo. Escribí el título para buscarlo.`)
       }
     } catch {
       setMensaje('Error al buscar el libro. Intentá de nuevo.')
@@ -873,6 +877,14 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
               </div>
 
               <div className="modal-body pt-3 pb-4">
+
+                {/* Aviso cuando el ISBN no se encontró */}
+                {mensaje && !modoManual && (
+                  <div style={{ background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 10, padding: '0.65rem 1rem', marginBottom: '1rem', fontSize: '0.8rem', color: 'rgba(255,255,255,0.65)', display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                    <span>📵</span>
+                    <span>{mensaje}</span>
+                  </div>
+                )}
 
                 {/* ── Modo búsqueda ── */}
                 {!modoManual && (
