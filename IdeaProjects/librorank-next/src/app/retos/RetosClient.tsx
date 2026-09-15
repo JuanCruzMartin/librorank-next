@@ -12,7 +12,7 @@ interface Props {
 
 function esVencido(fechaFin: string | null): boolean {
   if (!fechaFin) return false
-  return new Date(fechaFin) < new Date(new Date().toDateString())
+  return new Date(fechaFin) < new Date()
 }
 
 function calcularGanador(reto: RetoAmigo): { ganadores: string[]; hayGanador: boolean; mejorProgreso: number; mejorUsuario: string } {

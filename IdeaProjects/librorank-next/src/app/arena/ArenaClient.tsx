@@ -7,6 +7,23 @@ import { rarezaVisual, RAREZA_VISUAL_COLOR } from '@/lib/cartas'
 
 const RAREZA_COLOR = RAREZA_VISUAL_COLOR
 
+function MiniCarta({ cartaId, size = 'sm', cartasMap }: { cartaId: string; size?: 'sm' | 'md'; cartasMap: Record<string, Carta> }) {
+  const c = cartasMap[cartaId]
+  if (!c) return <div style={{ width: size === 'md' ? 80 : 52, height: size === 'md' ? 110 : 72, background: 'rgba(255,255,255,0.05)', borderRadius: 8 }} />
+  const color = RAREZA_COLOR[rarezaVisual(c.rareza)]
+  const w = size === 'md' ? 80 : 52
+  const h = size === 'md' ? 110 : 72
+  return (
+    <div style={{ width: w, height: h, borderRadius: 8, border: `2px solid ${color}`, overflow: 'hidden', background: '#111', flexShrink: 0, position: 'relative' }}>
+      <img src={c.imagen} alt={c.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${c.posicionX}% ${c.posicionY}%` }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent,rgba(0,0,0,0.85))', padding: '2px 4px' }}>
+        <div style={{ fontSize: size === 'md' ? '0.6rem' : '0.48rem', color: '#fff', fontWeight: 700, lineHeight: 1.2, textAlign: 'center' }}>{c.nombre}</div>
+        <div style={{ fontSize: '0.42rem', color, textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.rareza}</div>
+      </div>
+    </div>
+  )
+}
+
 function seededShuffle<T>(arr: T[], seed: number): T[] {
   const result = [...arr]
   let s = seed
@@ -326,6 +343,15 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
     }
   }
 
+  // Cuando el timer llega a 0 sin respuesta, notificamos al servidor con -1 (timeout)
+  useEffect(() => {
+    if (timer === 0 && respuestaSeleccionada === null && dueloActivo?.estado === 'en_curso') {
+      enviarRespuesta(-1)
+    }
+  // enviarRespuesta es estable por ser function declaration en el mismo scope
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timer])
+
   async function cancelarDesafio() {
     if (!dueloActivo) return
     await fetch('/api/duelos', {
@@ -377,23 +403,6 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
     return '1px solid rgba(255,255,255,0.08)'
   }
 
-  function MiniCarta({ cartaId, size = 'sm' }: { cartaId: string; size?: 'sm' | 'md' }) {
-    const c = cartasMap[cartaId]
-    if (!c) return <div style={{ width: size === 'md' ? 80 : 52, height: size === 'md' ? 110 : 72, background: 'rgba(255,255,255,0.05)', borderRadius: 8 }} />
-    const color = RAREZA_COLOR[rarezaVisual(c.rareza)]
-    const w = size === 'md' ? 80 : 52
-    const h = size === 'md' ? 110 : 72
-    return (
-      <div style={{ width: w, height: h, borderRadius: 8, border: `2px solid ${color}`, overflow: 'hidden', background: '#111', flexShrink: 0, position: 'relative' }}>
-        <img src={c.imagen} alt={c.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: `${c.posicionX}% ${c.posicionY}%` }} />
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent,rgba(0,0,0,0.85))', padding: '2px 4px' }}>
-          <div style={{ fontSize: size === 'md' ? '0.6rem' : '0.48rem', color: '#fff', fontWeight: 700, lineHeight: 1.2, textAlign: 'center' }}>{c.nombre}</div>
-          <div style={{ fontSize: '0.42rem', color, textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.rareza}</div>
-        </div>
-      </div>
-    )
-  }
-
   function ScoreDots({ pts, max = 2, color }: { pts: number; max?: number; color: string }) {
     return (
       <div style={{ display: 'flex', gap: 5 }}>
@@ -438,7 +447,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
           <div>
             <p style={{ color: 'rgba(255,255,255,0.7)' }}>Te llevás la carta de tu rival:</p>
             <div className="d-flex justify-content-center mt-2 mb-3">
-              <MiniCarta cartaId={resultado.cartaGanada} size="md" />
+              <MiniCarta cartaId={resultado.cartaGanada} size="md" cartasMap={cartasMap} />
             </div>
           </div>
         )}
@@ -580,7 +589,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
         <div className="d-flex align-items-center justify-content-between mb-3 gap-3">
           <div className="text-center" style={{ flex: 1 }}>
             <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>Tu carta</div>
-            {miCarta && <MiniCarta cartaId={miCarta} size="md" />}
+            {miCarta && <MiniCarta cartaId={miCarta} size="md" cartasMap={cartasMap} />}
           </div>
 
           <div className="text-center">
@@ -609,7 +618,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
 
           <div className="text-center" style={{ flex: 1 }}>
             <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>Carta rival</div>
-            {rival.carta && <MiniCarta cartaId={rival.carta} size="md" />}
+            {rival.carta && <MiniCarta cartaId={rival.carta} size="md" cartasMap={cartasMap} />}
           </div>
         </div>
 
@@ -719,7 +728,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <MiniCarta cartaId={dueloActivo.carta_retador} size="md" />
+                  <MiniCarta cartaId={dueloActivo.carta_retador} size="md" cartasMap={cartasMap} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '0.78rem', color: color, fontWeight: 700, marginBottom: 4 }}>
                       {carta?.nombre ?? dueloActivo.carta_retador}
@@ -816,7 +825,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
                         </div>
                       </div>
 
-                      <MiniCarta cartaId={d.carta_retador} size="sm" />
+                      <MiniCarta cartaId={d.carta_retador} size="sm" cartasMap={cartasMap} />
 
                       <button
                         onClick={() => { setDueloParaUnirse(d); setModal('unirse') }}
@@ -973,7 +982,7 @@ export default function ArenaClient({ usuarioId, salaInicial, dueloActivoInicial
               const esApuesta = dueloParaUnirse.tipo === 'apuesta'
               return (
                 <div style={{ background: `${colorRiv}12`, border: `1px solid ${colorRiv}35`, borderRadius: 10, padding: '0.6rem 0.85rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <MiniCarta cartaId={dueloParaUnirse.carta_retador} size="sm" />
+                  <MiniCarta cartaId={dueloParaUnirse.carta_retador} size="sm" cartasMap={cartasMap} />
                   <div>
                     <div style={{ fontSize: '0.7rem', color: esApuesta ? '#d4af37' : '#27ae60', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       {esApuesta ? '🃏 Duelo de apuesta' : '⚡ Duelo estándar'}

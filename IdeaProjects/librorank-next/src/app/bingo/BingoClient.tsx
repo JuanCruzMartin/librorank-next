@@ -17,6 +17,7 @@ export default function BingoClient({ bingo: bingoIni, misLibros }: Props) {
   const [libroSeleccionado, setLibroSeleccionado] = useState('')
   const [nota, setNota] = useState('')
   const [marcando, setMarcando] = useState(false)
+  const [error, setError] = useState('')
 
   // Modal detalle (casilla ya completada)
   const [detalle, setDetalle] = useState<BingoCasilla | null>(null)
@@ -52,6 +53,8 @@ export default function BingoClient({ bingo: bingoIni, misLibros }: Props) {
         setSeleccionada(null)
         setLibroSeleccionado('')
         setNota('')
+      } else {
+        setError('No se pudo marcar la casilla. Intentá de nuevo.')
       }
     } finally {
       setMarcando(false)
@@ -147,13 +150,21 @@ export default function BingoClient({ bingo: bingoIni, misLibros }: Props) {
 
       {/* ── Grilla 5×5 ── */}
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', margin: '0 auto', maxWidth: 750 }}>
-      <div className="bingo-grid" style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(5, minmax(62px, 1fr))',
-        gap: '0.5rem',
-        minWidth: 340,
-        margin: '0 auto',
-      }}>
+      <style>{`
+        .bingo-grid { display: grid; grid-template-columns: repeat(5, minmax(56px, 1fr)); gap: 0.5rem; margin: 0 auto; }
+        .bingo-cell { aspect-ratio: 1; min-height: 62px; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem; padding: 0.5rem; transition: all 0.2s; position: relative; overflow: hidden; border: none; }
+        .bingo-cell-icon { font-size: 1.3rem; line-height: 1; flex-shrink: 0; }
+        .bingo-cell-title { font-size: 0.6rem; line-height: 1.2; text-align: center; max-width: 95%; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .bingo-cell-book { font-size: 0.52rem; line-height: 1.2; text-align: center; max-width: 95%; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; border-top: 1px solid rgba(212,175,55,0.2); padding-top: 0.2rem; margin-top: 0.1rem; width: 100%; }
+        @media (max-width: 480px) {
+          .bingo-grid { gap: 0.25rem !important; }
+          .bingo-cell { min-height: 54px !important; padding: 0.3rem !important; border-radius: 8px !important; }
+          .bingo-cell-icon { font-size: 1.1rem !important; }
+          .bingo-cell-title { font-size: 0.62rem !important; -webkit-line-clamp: 2 !important; }
+          .bingo-cell-book { display: none !important; }
+        }
+      `}</style>
+      <div className="bingo-grid">
         {grid.map((casilla, i) => {
           if (!casilla) return (
             <div key={i} style={{
@@ -170,50 +181,28 @@ export default function BingoClient({ bingo: bingoIni, misLibros }: Props) {
               key={casilla.id}
               onClick={() => done ? setDetalle(casilla) : setSeleccionada(casilla)}
               style={{
-                aspectRatio: '1', minHeight: 62,
                 background: done ? 'rgba(212,175,55,0.1)' : 'var(--bg-card)',
                 border: done ? '2px solid var(--accent-gold)' : '1px solid rgba(212,175,55,0.2)',
-                borderRadius: 12,
-                cursor: 'pointer',
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center',
-                gap: '0.25rem', padding: '0.5rem',
-                transition: 'all 0.2s',
-                position: 'relative', overflow: 'hidden',
               }}
-              className={done ? 'bingo-done' : 'bingo-hover'}
+              className={`bingo-cell ${done ? 'bingo-done' : 'bingo-hover'}`}
             >
               {/* Icono */}
               <i
-                className={done ? 'bi bi-check-square-fill' : 'bi bi-square'}
-                style={{
-                  fontSize: '1.3rem',
-                  color: done ? 'var(--accent-gold)' : 'rgba(212,175,55,0.35)',
-                  lineHeight: 1, flexShrink: 0,
-                }}
+                className={`${done ? 'bi bi-check-square-fill' : 'bi bi-square'} bingo-cell-icon`}
+                style={{ color: done ? 'var(--accent-gold)' : 'rgba(212,175,55,0.35)' }}
               />
 
               {/* Texto del reto */}
-              <span style={{
-                fontSize: '0.58rem', lineHeight: 1.2,
-                color: done ? 'var(--accent-gold)' : 'var(--text-muted)',
-                textAlign: 'center', fontWeight: done ? 700 : 400,
-                maxWidth: '95%',
-                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-              }}>
+              <span
+                className="bingo-cell-title"
+                style={{ color: done ? 'var(--accent-gold)' : 'var(--text-muted)', fontWeight: done ? 700 : 400 }}
+              >
                 {casilla.titulo_reto}
               </span>
 
               {/* Mini nombre del libro si está completada */}
               {done && casilla.libro_titulo && (
-                <span style={{
-                  fontSize: '0.5rem', lineHeight: 1.2,
-                  color: 'rgba(255,255,255,0.5)',
-                  textAlign: 'center', maxWidth: '95%',
-                  display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                  borderTop: '1px solid rgba(212,175,55,0.2)',
-                  paddingTop: '0.2rem', marginTop: '0.1rem', width: '100%',
-                }}>
+                <span className="bingo-cell-book" style={{ color: 'rgba(255,255,255,0.5)' }}>
                   📖 {casilla.libro_titulo}
                 </span>
               )}
@@ -291,15 +280,19 @@ export default function BingoClient({ bingo: bingoIni, misLibros }: Props) {
               />
             </div>
 
+            {error && (
+              <div className="alert alert-danger py-2 px-3 small mb-0">{error}</div>
+            )}
+
             <div className="d-flex gap-2">
               <button
-                onClick={marcarCasilla}
+                onClick={() => { setError(''); marcarCasilla() }}
                 disabled={!libroSeleccionado || marcando}
                 className="btn-gold flex-fill"
               >
                 {marcando ? 'Guardando...' : '✓ Marcar como completada'}
               </button>
-              <button onClick={() => { setSeleccionada(null); setLibroSeleccionado(''); setNota('') }} className="btn btn-outline-secondary">
+              <button onClick={() => { setSeleccionada(null); setLibroSeleccionado(''); setNota(''); setError('') }} className="btn btn-outline-secondary">
                 Cancelar
               </button>
             </div>

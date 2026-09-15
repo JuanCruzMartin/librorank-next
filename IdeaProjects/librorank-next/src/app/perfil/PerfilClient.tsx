@@ -625,7 +625,7 @@ export default function PerfilClient({
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {cuentos.map(c => (
-                      <a key={c.id} href={`/cuento`} style={{ textDecoration: 'none' }}>
+                      <a key={c.id} href={`/cuento/${c.id}`} style={{ textDecoration: 'none' }}>
                         <div style={{
                           background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
                           borderRadius: 10, padding: '0.85rem 1rem', transition: 'border-color 0.15s',
@@ -787,7 +787,7 @@ export default function PerfilClient({
                   </div>
 
                   {/* Stats grandes */}
-                  <div className="perfil-wrapped-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <div className="perfil-wrapped-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
                     {[
                       { valor: wrapped.resumen.total, label: 'libros leídos', icon: '📚', color: '#d4af37' },
                       { valor: wrapped.resumen.paginas.toLocaleString(), label: 'páginas', icon: '📄', color: '#4cd137' },

@@ -17,15 +17,17 @@ export default function DiarioClient({ libro, entradas: entradasIni, citas: cita
   const [entradas, setEntradas] = useState(entradasIni)
   const [citas, setCitas] = useState(citasIni)
   const [tab, setTab] = useState<'entradas' | 'citas'>('entradas')
-  const [guardando, setGuardando] = useState(false)
+  const [guardandoEntrada, setGuardandoEntrada] = useState(false)
+  const [guardandoCita, setGuardandoCita] = useState(false)
   const [eliminando, setEliminando] = useState<number | null>(null)
+  const [confirmarEliminar, setConfirmarEliminar] = useState<{ id: number; tipo: 'entrada' | 'cita' } | null>(null)
   const formEntradaRef = useRef<HTMLFormElement>(null)
   const formCitaRef = useRef<HTMLFormElement>(null)
 
   async function agregarEntrada(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (guardando) return
-    setGuardando(true)
+    if (guardandoEntrada) return
+    setGuardandoEntrada(true)
     const fd = new FormData(e.currentTarget)
     try {
       const res = await fetch('/api/diario', {
@@ -39,14 +41,14 @@ export default function DiarioClient({ libro, entradas: entradasIni, citas: cita
         formEntradaRef.current?.reset()
       }
     } finally {
-      setGuardando(false)
+      setGuardandoEntrada(false)
     }
   }
 
   async function agregarCita(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (guardando) return
-    setGuardando(true)
+    if (guardandoCita) return
+    setGuardandoCita(true)
     const fd = new FormData(e.currentTarget)
     try {
       const res = await fetch('/api/diario', {
@@ -60,13 +62,14 @@ export default function DiarioClient({ libro, entradas: entradasIni, citas: cita
         formCitaRef.current?.reset()
       }
     } finally {
-      setGuardando(false)
+      setGuardandoCita(false)
     }
   }
 
   async function eliminar(id: number, tipo: 'entrada' | 'cita') {
     if (eliminando !== null) return
     setEliminando(id)
+    setConfirmarEliminar(null)
     try {
       const res = await fetch('/api/diario', {
         method: 'DELETE',
@@ -140,8 +143,8 @@ export default function DiarioClient({ libro, entradas: entradasIni, citas: cita
                 <label className="form-label text-muted small">Comentario *</label>
                 <textarea name="comentario" rows={4} className="form-control" required placeholder="¿Qué te pareció esta parte?..." />
               </div>
-              <button type="submit" className="btn-gold w-100 mt-auto" disabled={guardando}>
-                {guardando ? 'Guardando...' : 'Guardar entrada'}
+              <button type="submit" className="btn-gold w-100 mt-auto" disabled={guardandoEntrada}>
+                {guardandoEntrada ? 'Guardando...' : 'Guardar entrada'}
               </button>
             </form>
           </div>
@@ -159,8 +162,8 @@ export default function DiarioClient({ libro, entradas: entradasIni, citas: cita
                 <label className="form-label text-muted small">Página (opcional)</label>
                 <input name="pagina" type="text" className="form-control" placeholder="Ej: 142" />
               </div>
-              <button type="submit" className="btn-gold w-100 mt-auto" disabled={guardando}>
-                {guardando ? 'Guardando...' : 'Guardar cita'}
+              <button type="submit" className="btn-gold w-100 mt-auto" disabled={guardandoCita}>
+                {guardandoCita ? 'Guardando...' : 'Guardar cita'}
               </button>
             </form>
           </div>
@@ -214,7 +217,7 @@ export default function DiarioClient({ libro, entradas: entradasIni, citas: cita
                         </span>
                       </div>
                       <button
-                        onClick={() => eliminar(e.id!, 'entrada')}
+                        onClick={() => setConfirmarEliminar({ id: e.id!, tipo: 'entrada' })}
                         disabled={eliminando === e.id}
                         style={{
                           background: 'none', border: 'none', cursor: 'pointer',
@@ -255,7 +258,7 @@ export default function DiarioClient({ libro, entradas: entradasIni, citas: cita
                   }}>
                     {/* Botón eliminar */}
                     <button
-                      onClick={() => eliminar(c.id!, 'cita')}
+                      onClick={() => setConfirmarEliminar({ id: c.id!, tipo: 'cita' })}
                       disabled={eliminando === c.id}
                       style={{
                         position: 'absolute', top: 10, right: 10,
@@ -284,6 +287,27 @@ export default function DiarioClient({ libro, entradas: entradasIni, citas: cita
         </div>
       )}
 
+      {/* Modal confirmación eliminar */}
+      {confirmarEliminar && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div className="card p-4" style={{ maxWidth: 360, width: '100%' }}>
+            <h6 className="mb-3">¿Eliminar {confirmarEliminar.tipo === 'entrada' ? 'esta entrada' : 'esta cita'}?</h6>
+            <p className="text-muted small mb-4">Esta acción no se puede deshacer.</p>
+            <div className="d-flex gap-2">
+              <button
+                onClick={() => eliminar(confirmarEliminar.id, confirmarEliminar.tipo)}
+                disabled={eliminando !== null}
+                className="btn btn-danger flex-fill"
+              >
+                {eliminando !== null ? 'Eliminando...' : 'Eliminar'}
+              </button>
+              <button onClick={() => setConfirmarEliminar(null)} className="btn btn-outline-secondary flex-fill">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

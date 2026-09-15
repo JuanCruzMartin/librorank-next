@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import type { MisionConProgreso, TipoMision } from '@/lib/dao/misionDAO'
 import BannerExplicativo from '@/components/BannerExplicativo'
 
@@ -17,6 +18,7 @@ const TABS: { key: TipoMision | 'todas'; label: string; emoji: string }[] = [
 ]
 
 export default function MisionesClient({ misionesIniciales, puntos: puntosIni }: Props) {
+  const router = useRouter()
   const [misiones, setMisiones] = useState(misionesIniciales)
   const [puntos, setPuntos] = useState(puntosIni)
   const [tab, setTab] = useState<TipoMision | 'todas'>('todas')
@@ -68,6 +70,14 @@ export default function MisionesClient({ misionesIniciales, puntos: puntosIni }:
         padding: '3.5rem 0 3rem',
       }}>
         <div className="container text-center">
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+            <button
+              onClick={() => router.refresh()}
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)', borderRadius: 10, padding: '0.35rem 0.9rem', fontSize: '0.78rem', cursor: 'pointer' }}
+            >
+              ↻ Actualizar
+            </button>
+          </div>
           <div style={{ fontSize: '3.5rem', marginBottom: '0.5rem', lineHeight: 1 }}>🎯</div>
           <h1 className="font-title display-5 mb-2" style={{ color: '#fff' }}>Misiones</h1>
           <p className="text-muted" style={{ fontSize: '1.05rem', maxWidth: 480, margin: '0 auto 1.5rem' }}>

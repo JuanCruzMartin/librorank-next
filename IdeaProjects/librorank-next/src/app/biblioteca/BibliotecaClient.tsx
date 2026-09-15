@@ -85,7 +85,10 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
     setPuntosLocales(p => p + puntos)
     setToast({ puntos, mensaje })
     if (ligaDespues.key !== ligaAntes.key) {
-      setTimeout(() => setLigaToast({ nombre: ligaDespues.nombre, emoji: ligaDespues.emoji, color: ligaDespues.color }), 1200)
+      setTimeout(() => {
+        setLigaToast({ nombre: ligaDespues.nombre, emoji: ligaDespues.emoji, color: ligaDespues.color })
+        setTimeout(() => setLigaToast(null), 5000)
+      }, 1200)
     }
   }
 
@@ -118,14 +121,18 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
 
   const buscarLibros = useCallback(async (q: string) => {
     if (q.length < 3) { setSugerencias([]); return }
-    const res = await fetch(`/api/libros/buscar?q=${encodeURIComponent(q)}`)
-    setSugerencias(await res.json())
+    try {
+      const res = await fetch(`/api/libros/buscar?q=${encodeURIComponent(q)}`)
+      if (res.ok) setSugerencias(await res.json())
+    } catch { /* silencioso */ }
   }, [])
 
   const buscarHeader = useCallback(async (q: string) => {
     if (q.length < 3) { setSugerenciasHeader([]); return }
-    const res = await fetch(`/api/libros/buscar?q=${encodeURIComponent(q)}`)
-    setSugerenciasHeader(await res.json())
+    try {
+      const res = await fetch(`/api/libros/buscar?q=${encodeURIComponent(q)}`)
+      if (res.ok) setSugerenciasHeader(await res.json())
+    } catch { /* silencioso */ }
   }, [])
 
   const seleccionarSugerencia = (s: Sugerencia) => {
@@ -231,14 +238,20 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   async function confirmarEliminar() {
     if (!libroAEliminar) return
     setEliminando(true)
-    await fetch('/api/libros', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accion: 'eliminar', id: libroAEliminar.id }),
-    })
-    setLibros(prev => prev.filter(l => l.id !== libroAEliminar.id))
-    setLibroAEliminar(null)
-    setEliminando(false)
+    try {
+      const res = await fetch('/api/libros', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'eliminar', id: libroAEliminar.id }),
+      })
+      if (!res.ok) return
+      setLibros(prev => prev.filter(l => l.id !== libroAEliminar.id))
+      setLibroAEliminar(null)
+    } catch {
+      // no eliminar del estado si hubo error de red
+    } finally {
+      setEliminando(false)
+    }
   }
 
   const hayFiltrosActivos = filtro !== 'TODOS' || filtroGenero !== 'TODOS' || filtroEstrellas > 0 || filtroAnio > 0 || busqueda !== ''
@@ -443,7 +456,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                   {/* Búsqueda por texto — opción secundaria */}
                   <div style={{ position: 'relative' }}>
                     <div className="input-group">
-                      <input type="text" className="form-control" placeholder="O buscá por título..."
+                      <input type="text" className="form-control" placeholder="O buscá por título o pegá el código de barras..."
                         style={{ border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: '0.85rem' }}
                         value={busquedaHeader}
                         onChange={e => { setBusquedaHeader(e.target.value); buscarHeader(e.target.value) }} />
@@ -764,6 +777,13 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
             )}
           </div>
         ) : (
+          <>
+          <style>{`
+            @media (hover: none) {
+              .libro-card-overlay { opacity: 1 !important; transform: translateY(0) !important; }
+              .libro-delete-btn { opacity: 1 !important; }
+            }
+          `}</style>
           <div className="biblioteca-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '1rem' }}>
             {librosFiltrados.map(libro => {
               const hovered = hoveredId === libro.id
@@ -800,13 +820,14 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                   {/* Botón eliminar — solo en mi propia biblioteca */}
                   {!soloLectura && (
                     <button onClick={e => { e.stopPropagation(); setLibroAEliminar(libro) }}
+                      className="libro-delete-btn"
                       style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.65)', border: 'none', borderRadius: '50%', width: 26, height: 26, color: '#ff5e57', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: hovered ? 1 : 0, transition: 'opacity 0.2s' }}>
                       <i className="bi bi-trash3" />
                     </button>
                   )}
 
                   {/* Overlay hover */}
-                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.75) 55%, transparent 100%)', padding: '1.2rem 0.65rem 0.75rem', transform: hovered ? 'translateY(0)' : 'translateY(35%)', opacity: hovered ? 1 : 0, transition: 'all 0.25s ease' }}>
+                  <div className="libro-card-overlay" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.75) 55%, transparent 100%)', padding: '1.2rem 0.65rem 0.75rem', transform: hovered ? 'translateY(0)' : 'translateY(35%)', opacity: hovered ? 1 : 0, transition: 'all 0.25s ease' }}>
                     <p style={{ margin: '0 0 2px', fontWeight: 700, fontSize: '0.75rem', color: '#fff', lineHeight: 1.25, overflow: 'hidden', maxHeight: '2.5rem' } as React.CSSProperties}>{libro.titulo}</p>
                     <p style={{ margin: '0 0 6px', fontSize: '0.65rem', color: 'rgba(255,255,255,0.55)' }}>{libro.autor}</p>
                     {(libro.estrellas ?? 0) > 0 && (
@@ -844,6 +865,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
               )
             })}
           </div>
+          </>
         )}
         </>
         )}
@@ -852,7 +874,13 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
       {/* Modal: Agregar libro — solo en mi propia biblioteca */}
       {!soloLectura && showModal && (
         <div className="modal show d-block" tabIndex={-1} style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
-          <div className="modal-dialog modal-dialog-centered modal-lg">
+          <style>{`
+            @media (max-width: 576px) {
+              .agregar-libro-dialog { margin: 0.5rem !important; max-width: calc(100vw - 1rem) !important; }
+              .agregar-libro-dialog .modal-content { max-height: calc(100dvh - 160px); overflow-y: auto; }
+            }
+          `}</style>
+          <div className="modal-dialog modal-dialog-centered modal-lg agregar-libro-dialog">
             <div className="modal-content" style={{ background: '#1a1714', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 20 }}>
 
               {/* Header */}
@@ -896,7 +924,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                       <input
                         type="text"
                         className="form-control"
-                        placeholder="Escribí el título o autor..."
+                        placeholder="Título, autor o código de barras (ISBN)..."
                         value={busquedaModal}
                         onChange={e => { setBusquedaModal(e.target.value); buscarLibros(e.target.value) }}
                         autoFocus
@@ -997,6 +1025,21 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                 {/* ── Formulario (siempre visible en modo manual, o después de seleccionar) ── */}
                 {(modoManual || formNuevo.titulo) && (
                   <form id="formNuevo" onSubmit={agregarLibro}>
+
+                    {/* Preview del libro encontrado (solo en modo búsqueda) */}
+                    {!modoManual && formNuevo.titulo && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1.25rem', padding: '0.75rem 1rem', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12 }}>
+                        {formNuevo.portada_url
+                          ? <img src={formNuevo.portada_url} alt={formNuevo.titulo} style={{ height: 80, width: 54, objectFit: 'cover', borderRadius: 6, flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                          : <div style={{ height: 80, width: 54, background: 'rgba(255,255,255,0.05)', borderRadius: 6, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>📚</div>
+                        }
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff', lineHeight: 1.3 }}>{formNuevo.titulo}</div>
+                          <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', marginTop: 3 }}>{formNuevo.autor}</div>
+                          {formNuevo.anio && <div style={{ fontSize: '0.7rem', color: 'rgba(212,175,55,0.65)', marginTop: 3 }}>{formNuevo.anio}{formNuevo.paginas ? ` · ${formNuevo.paginas} pág.` : ''}</div>}
+                        </div>
+                      </div>
+                    )}
                     {mensaje && (
                       <div className="alert alert-danger py-2 mb-3" style={{ fontSize: '0.85rem' }}>
                         ⚠️ {mensaje}
