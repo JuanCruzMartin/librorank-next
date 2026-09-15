@@ -877,7 +877,8 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
           <style>{`
             @media (max-width: 576px) {
               .agregar-libro-dialog { margin: 0.5rem !important; max-width: calc(100vw - 1rem) !important; }
-              .agregar-libro-dialog .modal-content { max-height: calc(100dvh - 160px); overflow-y: auto; }
+              .agregar-libro-dialog .modal-content { max-height: calc(100dvh - 1rem); overflow-y: auto; }
+              .agregar-libro-dialog .modal-body { padding-bottom: 160px !important; }
             }
           `}</style>
           <div className="modal-dialog modal-dialog-centered modal-lg agregar-libro-dialog">
