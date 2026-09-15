@@ -969,8 +969,8 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                       </div>
                     )}
 
-                    {/* "No lo encontrás?" — aparece cuando buscaste pero no hay resultados */}
-                    {busquedaModal.length >= 3 && sugerencias.length === 0 && (
+                    {/* "No lo encontrás?" — solo cuando buscaste, no hay resultados Y tampoco seleccionaste libro */}
+                    {busquedaModal.length >= 3 && sugerencias.length === 0 && !formNuevo.titulo && (
                       <div style={{
                         marginTop: '0.75rem',
                         background: 'rgba(255,255,255,0.03)',
@@ -1022,24 +1022,25 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                   </div>
                 )}
 
+                {/* ── Preview del libro encontrado (búsqueda o scanner) ── */}
+                {formNuevo.titulo && !modoManual && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1.25rem', padding: '0.85rem 1rem', background: 'rgba(212,175,55,0.07)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 12 }}>
+                    {formNuevo.portada_url
+                      ? <img src={formNuevo.portada_url} alt={formNuevo.titulo} style={{ height: 90, width: 60, objectFit: 'cover', borderRadius: 6, flexShrink: 0, boxShadow: '0 4px 16px rgba(0,0,0,0.6)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                      : <div style={{ height: 90, width: 60, background: 'rgba(255,255,255,0.05)', borderRadius: 6, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem' }}>📚</div>
+                    }
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: '0.62rem', fontWeight: 700, color: 'rgba(212,175,55,0.7)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 4 }}>Libro encontrado</div>
+                      <div style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', lineHeight: 1.3 }}>{formNuevo.titulo}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: 3 }}>{formNuevo.autor}</div>
+                      {formNuevo.anio && <div style={{ fontSize: '0.72rem', color: 'rgba(212,175,55,0.65)', marginTop: 4 }}>{formNuevo.anio}{formNuevo.paginas ? ` · ${formNuevo.paginas} pág.` : ''}</div>}
+                    </div>
+                  </div>
+                )}
+
                 {/* ── Formulario (siempre visible en modo manual, o después de seleccionar) ── */}
                 {(modoManual || formNuevo.titulo) && (
                   <form id="formNuevo" onSubmit={agregarLibro}>
-
-                    {/* Preview del libro encontrado (solo en modo búsqueda) */}
-                    {!modoManual && formNuevo.titulo && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1.25rem', padding: '0.75rem 1rem', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12 }}>
-                        {formNuevo.portada_url
-                          ? <img src={formNuevo.portada_url} alt={formNuevo.titulo} style={{ height: 80, width: 54, objectFit: 'cover', borderRadius: 6, flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                          : <div style={{ height: 80, width: 54, background: 'rgba(255,255,255,0.05)', borderRadius: 6, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>📚</div>
-                        }
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff', lineHeight: 1.3 }}>{formNuevo.titulo}</div>
-                          <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)', marginTop: 3 }}>{formNuevo.autor}</div>
-                          {formNuevo.anio && <div style={{ fontSize: '0.7rem', color: 'rgba(212,175,55,0.65)', marginTop: 3 }}>{formNuevo.anio}{formNuevo.paginas ? ` · ${formNuevo.paginas} pág.` : ''}</div>}
-                        </div>
-                      </div>
-                    )}
                     {mensaje && (
                       <div className="alert alert-danger py-2 mb-3" style={{ fontSize: '0.85rem' }}>
                         ⚠️ {mensaje}
