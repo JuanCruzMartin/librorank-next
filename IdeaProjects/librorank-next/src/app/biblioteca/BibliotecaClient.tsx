@@ -946,9 +946,9 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                       </div>
                     )}
 
-                    {/* Resultados */}
+                    {/* Resultados — en flujo normal para no quedar cortados por overflow del modal */}
                     {sugerencias.length > 0 && (
-                      <div className="position-absolute w-100" style={{ background: '#2c2724', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 10, top: '100%', zIndex: 999, maxHeight: 320, overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.6)', marginTop: 4 }}>
+                      <div style={{ background: '#2c2724', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 10, zIndex: 999, maxHeight: 320, overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.6)', marginTop: 4 }}>
                         {sugerencias.map((s, i) => (
                           <button key={i} onClick={() => seleccionarSugerencia(s)}
                             style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', width: '100%', padding: '0.65rem 0.75rem', background: 'none', border: 'none', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', textAlign: 'left' }}
