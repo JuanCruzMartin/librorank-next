@@ -13,6 +13,8 @@ interface LibroExterno {
   portada: string
   genero: string
   descripcion: string
+  // campos que devuelve /api/libros/buscar
+  id?: string
 }
 
 interface Review {
@@ -91,14 +93,35 @@ export default function EscanearClient() {
     setAgregadoMsg('')
 
     try {
-      const res = await fetch(`/api/escanear?isbn=${encodeURIComponent(isbn)}`)
-      if (res.status === 404) {
+      // Usamos el mismo endpoint de búsqueda que biblioteca (incluye fallback ML para ediciones argentinas)
+      const buscarRes = await fetch(`/api/libros/buscar?q=${encodeURIComponent(isbn)}`)
+      const buscarData: LibroExterno[] = await buscarRes.json()
+      const libroRaw = buscarData[0]
+
+      if (!libroRaw || !libroRaw.titulo) {
         setError('No encontramos información sobre este libro. Probá buscarlo en biblioteca.')
         return
       }
-      if (!res.ok) throw new Error('Error del servidor')
-      const data: ResultadoEscaneo = await res.json()
-      setResultado(data)
+
+      // Normalizar descripción: la API buscar no la devuelve, la buscamos en paralelo con comunidad
+      const [googleExtra, comunidadRes] = await Promise.all([
+        fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&maxResults=1`).then(r => r.json()).catch(() => null),
+        fetch(`/api/escanear?titulo=${encodeURIComponent(libroRaw.titulo)}&autor=${encodeURIComponent(libroRaw.autor)}`).then(r => r.json()).catch(() => ({ nota_media: 0, total_lectores: 0, reviews: [], distribucion: [] })),
+      ])
+
+      const descripcion = googleExtra?.items?.[0]?.volumeInfo?.description || ''
+
+      const libro: LibroExterno = {
+        titulo: libroRaw.titulo,
+        autor: libroRaw.autor,
+        anio: libroRaw.anio,
+        paginas: libroRaw.paginas,
+        portada: libroRaw.portada,
+        genero: libroRaw.genero,
+        descripcion,
+      }
+
+      setResultado({ libro, comunidad: comunidadRes })
     } catch {
       setError('Ocurrió un error al buscar el libro. Intentá de nuevo.')
     } finally {
