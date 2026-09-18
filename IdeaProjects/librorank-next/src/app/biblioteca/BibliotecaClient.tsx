@@ -161,7 +161,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
       body: JSON.stringify({ accion: 'nuevo', titulo: fd.get('titulo'), autor: fd.get('autor'), anio: fd.get('anio'), paginas: fd.get('paginas'), estado: fd.get('estado'), portada_url: fd.get('portada_url'), genero: fd.get('genero'), mood: fd.get('mood'), isbn: isbnDetectado }),
     })
     const json = await res.json()
-    if (!res.ok) { setMensaje(json.error); return }
+    if (!res.ok) { setMensaje(json.error === 'ya_existe' ? 'Ya tenés este libro en tu biblioteca' : json.error); return }
     setShowModal(false)
     setBusquedaModal('')
     setBusquedaHeader('')
@@ -615,7 +615,36 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
             )}
           </div>
 
-          {/* Fila 2: Género + Calificación + Ordenar + Búsqueda — scroll en móvil */}
+          {/* Búsqueda full-width */}
+          <div style={{ position: 'relative', marginBottom: '0.75rem' }}>
+            <input
+              ref={searchRef}
+              type="text"
+              placeholder={soloLectura ? '🔍 Buscar en esta biblioteca...' : '🔍 Buscar por título o autor...'}
+              value={busqueda}
+              onChange={e => setBusqueda(e.target.value)}
+              style={{
+                width: '100%',
+                background: busqueda ? 'rgba(212,175,55,0.08)' : 'rgba(255,255,255,0.05)',
+                border: busqueda ? '1px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 20, padding: '0.5rem 2.5rem 0.5rem 1.2rem',
+                fontSize: '0.85rem', color: '#fff', outline: 'none',
+                transition: 'border-color 0.15s',
+              }}
+            />
+            {busqueda ? (
+              <button onClick={() => setBusqueda('')}
+                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '0.9rem', padding: 0 }}>
+                ✕
+              </button>
+            ) : (
+              <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', color: 'rgba(255,255,255,0.25)', pointerEvents: 'none' }}>
+                🔍
+              </span>
+            )}
+          </div>
+
+          {/* Fila 2: Género + Calificación + Ordenar — scroll en móvil */}
           <div className="tabs-scroll-x d-flex gap-2 align-items-center" style={{ flexWrap: 'nowrap' }}>
 
             {/* Género */}
@@ -704,33 +733,6 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
               </>
             )}
 
-            {/* Búsqueda dentro de la biblioteca */}
-            <div style={{ position: 'relative', marginLeft: 'auto', flex: '1 1 180px', maxWidth: 280 }}>
-              <input
-                ref={searchRef}
-                type="text"
-                placeholder={soloLectura ? '🔍 Buscar en esta biblioteca...' : '🔍 Buscar  (/)'}
-                value={busqueda}
-                onChange={e => setBusqueda(e.target.value)}
-                style={{
-                  background: busqueda ? 'rgba(212,175,55,0.08)' : 'rgba(255,255,255,0.05)',
-                  border: busqueda ? '1px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 20, padding: '0.35rem 2rem 0.35rem 1rem',
-                  fontSize: '0.75rem', color: '#fff', outline: 'none',
-                  width: '100%', transition: 'border-color 0.15s',
-                }}
-              />
-              {busqueda ? (
-                <button onClick={() => setBusqueda('')}
-                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}>
-                  ✕
-                </button>
-              ) : (
-                <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: '0.6rem', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none', fontWeight: 700 }}>
-                  /
-                </span>
-              )}
-            </div>
           </div>
 
           {/* Resultado + limpiar filtros */}
