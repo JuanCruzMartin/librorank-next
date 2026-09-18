@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 
 const BarcodeScanner = dynamic(() => import('@/components/BarcodeScanner'), { ssr: false })
@@ -13,7 +13,6 @@ interface LibroExterno {
   portada: string
   genero: string
   descripcion: string
-  // campos que devuelve /api/libros/buscar
   id?: string
 }
 
@@ -79,55 +78,90 @@ export default function EscanearClient() {
   const [showScanner, setShowScanner] = useState(false)
   const [cargando, setCargando] = useState(false)
   const [resultado, setResultado] = useState<ResultadoEscaneo | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const [isbnEscaneado, setIsbnEscaneado] = useState<string | null>(null)
   const [agregando, setAgregando] = useState(false)
   const [agregadoMsg, setAgregadoMsg] = useState('')
 
+  // Fallback búsqueda por título cuando ISBN no se encuentra
+  const [isbnNoEncontrado, setIsbnNoEncontrado] = useState(false)
+  const [busquedaFallback, setBusquedaFallback] = useState('')
+  const [sugerencias, setSugerencias] = useState<LibroExterno[]>([])
+  const [cargandoSugerencias, setCargandoSugerencias] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  async function cargarResultado(libro: LibroExterno, isbn?: string) {
+    setCargando(true)
+    try {
+      const [googleExtra, comunidadRes] = await Promise.all([
+        isbn
+          ? fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&maxResults=1`).then(r => r.json()).catch(() => null)
+          : Promise.resolve(null),
+        fetch(`/api/escanear?titulo=${encodeURIComponent(libro.titulo)}&autor=${encodeURIComponent(libro.autor)}`).then(r => r.json()).catch(() => ({ nota_media: 0, total_lectores: 0, reviews: [], distribucion: [] })),
+      ])
+
+      const descripcion = googleExtra?.items?.[0]?.volumeInfo?.description || ''
+
+      setResultado({
+        libro: { ...libro, descripcion },
+        comunidad: comunidadRes,
+      })
+      setIsbnNoEncontrado(false)
+      setSugerencias([])
+      setBusquedaFallback('')
+    } finally {
+      setCargando(false)
+    }
+  }
+
   const onDetected = useCallback(async (isbn: string) => {
     setShowScanner(false)
     setCargando(true)
-    setError(null)
     setResultado(null)
+    setIsbnNoEncontrado(false)
+    setSugerencias([])
+    setBusquedaFallback('')
     setIsbnEscaneado(isbn)
     setAgregadoMsg('')
 
     try {
-      // Usamos el mismo endpoint de búsqueda que biblioteca (incluye fallback ML para ediciones argentinas)
       const buscarRes = await fetch(`/api/libros/buscar?q=${encodeURIComponent(isbn)}`)
       const buscarData: LibroExterno[] = await buscarRes.json()
       const libroRaw = buscarData[0]
 
       if (!libroRaw || !libroRaw.titulo) {
-        setError('No encontramos información sobre este libro. Probá buscarlo en biblioteca.')
+        // ISBN no encontrado → activar fallback de búsqueda por título
+        setCargando(false)
+        setIsbnNoEncontrado(true)
         return
       }
 
-      // Normalizar descripción: la API buscar no la devuelve, la buscamos en paralelo con comunidad
-      const [googleExtra, comunidadRes] = await Promise.all([
-        fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&maxResults=1`).then(r => r.json()).catch(() => null),
-        fetch(`/api/escanear?titulo=${encodeURIComponent(libroRaw.titulo)}&autor=${encodeURIComponent(libroRaw.autor)}`).then(r => r.json()).catch(() => ({ nota_media: 0, total_lectores: 0, reviews: [], distribucion: [] })),
-      ])
-
-      const descripcion = googleExtra?.items?.[0]?.volumeInfo?.description || ''
-
-      const libro: LibroExterno = {
-        titulo: libroRaw.titulo,
-        autor: libroRaw.autor,
-        anio: libroRaw.anio,
-        paginas: libroRaw.paginas,
-        portada: libroRaw.portada,
-        genero: libroRaw.genero,
-        descripcion,
-      }
-
-      setResultado({ libro, comunidad: comunidadRes })
+      await cargarResultado(libroRaw, isbn)
     } catch {
-      setError('Ocurrió un error al buscar el libro. Intentá de nuevo.')
-    } finally {
       setCargando(false)
+      setIsbnNoEncontrado(true)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  function onBusquedaFallbackChange(valor: string) {
+    setBusquedaFallback(valor)
+    setSugerencias([])
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (!valor.trim() || valor.trim().length < 2) { setCargandoSugerencias(false); return }
+
+    setCargandoSugerencias(true)
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/libros/buscar?q=${encodeURIComponent(valor.trim())}`)
+        const data: LibroExterno[] = await res.json()
+        setSugerencias(data.slice(0, 6))
+      } catch {
+        setSugerencias([])
+      } finally {
+        setCargandoSugerencias(false)
+      }
+    }, 350)
+  }
 
   async function agregarABiblioteca() {
     if (!resultado || agregando) return
@@ -164,14 +198,15 @@ export default function EscanearClient() {
 
   function resetear() {
     setResultado(null)
-    setError(null)
+    setIsbnNoEncontrado(false)
     setIsbnEscaneado(null)
+    setSugerencias([])
+    setBusquedaFallback('')
     setAgregadoMsg('')
   }
 
   return (
     <main className="container py-5" style={{ maxWidth: 680 }}>
-      {/* Título */}
       <div className="mb-5">
         <h1 className="font-title display-5 mb-2">📷 Escanear libro</h1>
         <p className="text-muted">
@@ -179,8 +214,8 @@ export default function EscanearClient() {
         </p>
       </div>
 
-      {/* Estado: sin resultado */}
-      {!resultado && !cargando && !error && (
+      {/* Estado: pantalla inicial */}
+      {!resultado && !cargando && !isbnNoEncontrado && (
         <div className="card p-5 text-center" style={{ border: '2px dashed rgba(212,175,55,0.3)' }}>
           <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📚</div>
           <h5 className="font-title mb-2" style={{ color: 'var(--accent-gold)' }}>¿Vale la pena leerlo?</h5>
@@ -194,9 +229,7 @@ export default function EscanearClient() {
           >
             📷 Escanear código de barras
           </button>
-          <p className="text-muted mt-3" style={{ fontSize: '0.75rem' }}>
-            Compatible con códigos ISBN-13 e ISBN-10
-          </p>
+          <p className="text-muted mt-3" style={{ fontSize: '0.75rem' }}>Compatible con códigos ISBN-13 e ISBN-10</p>
         </div>
       )}
 
@@ -210,16 +243,77 @@ export default function EscanearClient() {
         </div>
       )}
 
-      {/* Estado: error */}
-      {error && (
-        <div className="card p-4 text-center">
-          <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>😕</div>
-          <p className="text-white mb-3">{error}</p>
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => setShowScanner(true)} className="btn-gold">
+      {/* Estado: ISBN no encontrado → búsqueda manual por título */}
+      {isbnNoEncontrado && !cargando && (
+        <div className="card p-4">
+          <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔎</div>
+            <p style={{ fontWeight: 700, color: '#fff', marginBottom: '0.25rem' }}>
+              ISBN no encontrado en bases de datos
+            </p>
+            {isbnEscaneado && (
+              <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', marginBottom: '0.5rem' }}>
+                ISBN escaneado: {isbnEscaneado}
+              </p>
+            )}
+            <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.45)', marginBottom: 0 }}>
+              Buscalo por título para ver el puntaje de la comunidad.
+            </p>
+          </div>
+
+          {/* Buscador por título */}
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Escribí el título o autor..."
+              value={busquedaFallback}
+              onChange={e => onBusquedaFallbackChange(e.target.value)}
+              autoFocus
+              style={{ paddingRight: cargandoSugerencias ? '2.5rem' : undefined }}
+            />
+            {cargandoSugerencias && (
+              <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)' }}>
+                ⏳
+              </span>
+            )}
+          </div>
+
+          {/* Sugerencias */}
+          {sugerencias.length > 0 && (
+            <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              {sugerencias.map((s, i) => (
+                <button
+                  key={i}
+                  onClick={() => cargarResultado(s)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 10, padding: '0.65rem 0.85rem',
+                    cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(212,175,55,0.08)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+                >
+                  {s.portada ? (
+                    <img src={s.portada} alt={s.titulo} style={{ width: 36, height: 50, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                  ) : (
+                    <div style={{ width: 36, height: 50, background: 'rgba(255,255,255,0.05)', borderRadius: 4, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>📚</div>
+                  )}
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.titulo}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)' }}>{s.autor}{s.anio ? ` · ${s.anio}` : ''}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '0.6rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+            <button onClick={() => { resetear(); setShowScanner(true) }} className="btn-gold" style={{ flex: 1 }}>
               📷 Escanear de nuevo
             </button>
-            <button onClick={resetear} style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)', borderRadius: 10, padding: '0.6rem 1.25rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+            <button onClick={resetear} style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)', borderRadius: 10, padding: '0.6rem 1rem', cursor: 'pointer', fontSize: '0.85rem' }}>
               Cancelar
             </button>
           </div>
@@ -230,10 +324,8 @@ export default function EscanearClient() {
       {resultado && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
-          {/* Card principal del libro */}
           <div className="card p-4">
             <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-start' }}>
-              {/* Portada */}
               <div style={{ flexShrink: 0 }}>
                 {resultado.libro.portada ? (
                   <img
@@ -246,8 +338,6 @@ export default function EscanearClient() {
                   <div style={{ width: 90, height: 135, background: 'rgba(255,255,255,0.05)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem' }}>📚</div>
                 )}
               </div>
-
-              {/* Info */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'rgba(212,175,55,0.6)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 4 }}>
                   Libro encontrado
@@ -258,7 +348,7 @@ export default function EscanearClient() {
                 <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.55)', marginBottom: '0.5rem' }}>
                   {resultado.libro.autor}
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
                   {resultado.libro.anio && (
                     <span style={{ fontSize: '0.72rem', color: 'rgba(212,175,55,0.7)', background: 'rgba(212,175,55,0.08)', padding: '2px 8px', borderRadius: 20 }}>
                       {resultado.libro.anio}
@@ -277,8 +367,6 @@ export default function EscanearClient() {
                 </div>
               </div>
             </div>
-
-            {/* Descripción */}
             {resultado.libro.descripcion && (
               <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, marginTop: '1rem', marginBottom: 0, display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                 {resultado.libro.descripcion}
@@ -286,12 +374,10 @@ export default function EscanearClient() {
             )}
           </div>
 
-          {/* Card comunidad */}
           <div className="card p-4">
             <h6 className="font-title mb-4" style={{ color: 'var(--accent-gold)', marginBottom: '1rem' }}>
               🌎 Comunidad LibroRank
             </h6>
-
             {resultado.comunidad.total_lectores === 0 ? (
               <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
                 <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🌱</div>
@@ -301,7 +387,6 @@ export default function EscanearClient() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                {/* Puntaje */}
                 <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '3rem', fontWeight: 900, color: '#d4af37', lineHeight: 1 }}>
@@ -316,8 +401,6 @@ export default function EscanearClient() {
                     <BarraDistribucion distribucion={resultado.comunidad.distribucion} />
                   </div>
                 </div>
-
-                {/* Reseñas */}
                 {resultado.comunidad.reviews.length > 0 && (
                   <div>
                     <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '0.75rem' }}>
@@ -340,19 +423,13 @@ export default function EscanearClient() {
             )}
           </div>
 
-          {/* Acciones */}
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             {agregadoMsg ? (
               <div style={{ flex: 1, textAlign: 'center', padding: '0.85rem', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 12, fontSize: '0.9rem', color: '#d4af37', fontWeight: 600 }}>
                 {agregadoMsg}
               </div>
             ) : (
-              <button
-                onClick={agregarABiblioteca}
-                disabled={agregando}
-                className="btn-gold"
-                style={{ flex: 1, padding: '0.85rem', fontSize: '0.95rem' }}
-              >
+              <button onClick={agregarABiblioteca} disabled={agregando} className="btn-gold" style={{ flex: 1, padding: '0.85rem', fontSize: '0.95rem' }}>
                 {agregando ? 'Agregando...' : '+ Agregar a mi biblioteca'}
               </button>
             )}
