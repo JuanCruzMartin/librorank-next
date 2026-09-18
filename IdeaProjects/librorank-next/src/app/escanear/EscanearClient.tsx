@@ -124,12 +124,22 @@ export default function EscanearClient() {
     setAgregadoMsg('')
 
     try {
+      // 1º: nuestra propia DB por ISBN (crece con cada libro argentino que agrega un usuario)
+      const dbRes = await fetch(`/api/escanear?isbn=${encodeURIComponent(isbn)}`)
+      if (dbRes.ok) {
+        const data = await dbRes.json()
+        setResultado(data)
+        setCargando(false)
+        return
+      }
+
+      // 2º: APIs externas (Google Books → Open Library → Mercado Libre)
       const buscarRes = await fetch(`/api/libros/buscar?q=${encodeURIComponent(isbn)}`)
       const buscarData: LibroExterno[] = await buscarRes.json()
       const libroRaw = buscarData[0]
 
       if (!libroRaw || !libroRaw.titulo) {
-        // ISBN no encontrado → activar fallback de búsqueda por título
+        // 3º: ninguna fuente lo encontró → fallback de búsqueda por título
         setCargando(false)
         setIsbnNoEncontrado(true)
         return
@@ -171,6 +181,7 @@ export default function EscanearClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          accion: 'nuevo',
           titulo: resultado.libro.titulo,
           autor: resultado.libro.autor,
           anio: resultado.libro.anio || null,
@@ -179,6 +190,7 @@ export default function EscanearClient() {
           genero: resultado.libro.genero || null,
           estado: 'PENDIENTE',
           mood: null,
+          isbn: isbnEscaneado,
         }),
       })
       const json = await res.json()

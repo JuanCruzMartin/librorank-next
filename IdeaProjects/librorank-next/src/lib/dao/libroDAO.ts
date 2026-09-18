@@ -27,10 +27,11 @@ export interface PerfilStats {
   pausa: number
 }
 
-export async function agregar(libro: Omit<Libro, 'id'>): Promise<number | false> {
+export async function agregar(libro: Omit<Libro, 'id'>, isbn?: string | null): Promise<number | false> {
   const globalId = await obtenerOCrear({
     titulo: libro.titulo, autor: libro.autor,
     portada_url: libro.portada_url, anio: libro.anio, paginas: libro.paginas,
+    isbn: isbn || null,
   })
 
   const estadoUp = libro.estado.toUpperCase()

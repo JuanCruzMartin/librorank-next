@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     const { accion } = body
 
     if (accion === 'nuevo') {
-      const { titulo, autor, anio, paginas, estado, portada_url, genero, mood } = body
+      const { titulo, autor, anio, paginas, estado, portada_url, genero, mood, isbn } = body
 
       if (!titulo || !autor) {
         return NextResponse.json({ error: 'Título y autor son obligatorios' }, { status: 400 })
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
       const existe = await libroDAO.existeRegistroPrevio(user.id, titulo, autor)
       if (existe) {
-        return NextResponse.json({ error: 'Ya tienes este libro registrado' }, { status: 409 })
+        return NextResponse.json({ error: 'ya_existe' }, { status: 409 })
       }
 
       const nuevoId = await libroDAO.agregar({
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         genero: genero || null,
         mood: mood || null,
         estrellas: 0, resena: null, fecha_leido: null,
-      })
+      }, isbn || null)
 
       let puntosGanados = 0
       let toastMsg = ''

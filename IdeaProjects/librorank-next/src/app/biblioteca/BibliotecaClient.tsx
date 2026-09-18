@@ -59,6 +59,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   const [imgErrors, setImgErrors] = useState<Set<number>>(new Set())
   const [showScanner, setShowScanner] = useState(false)
   const [scannerBuscando, setScannerBuscando] = useState(false)
+  const [isbnDetectado, setIsbnDetectado] = useState<string | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
   // Atajo "/" enfoca el buscador de la biblioteca
@@ -96,8 +97,9 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
     setShowScanner(false)
     setScannerBuscando(true)
     setShowModal(true)
+    setIsbnDetectado(isbn)
     try {
-      const res = await fetch(`/api/libros/buscar?q=${encodeURIComponent(`isbn:${isbn}`)}`)
+      const res = await fetch(`/api/libros/buscar?q=${encodeURIComponent(isbn)}`)
       const results = await res.json()
       if (results.length > 0) {
         const s = results[0]
@@ -105,8 +107,6 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
         setBusquedaModal(s.titulo)
         setSugerencias([])
       } else {
-        // ISBN no encontrado (ediciones locales/argentinas no están en Google Books ni OL)
-        // Volvemos al modo búsqueda para que el usuario escriba el título
         setBusquedaModal('')
         setSugerencias([])
         setModoManual(false)
@@ -158,7 +158,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
     if (duplicado) { setMensaje('Ya tenés este libro en tu biblioteca'); return }
     const res = await fetch('/api/libros', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accion: 'nuevo', titulo: fd.get('titulo'), autor: fd.get('autor'), anio: fd.get('anio'), paginas: fd.get('paginas'), estado: fd.get('estado'), portada_url: fd.get('portada_url'), genero: fd.get('genero'), mood: fd.get('mood') }),
+      body: JSON.stringify({ accion: 'nuevo', titulo: fd.get('titulo'), autor: fd.get('autor'), anio: fd.get('anio'), paginas: fd.get('paginas'), estado: fd.get('estado'), portada_url: fd.get('portada_url'), genero: fd.get('genero'), mood: fd.get('mood'), isbn: isbnDetectado }),
     })
     const json = await res.json()
     if (!res.ok) { setMensaje(json.error); return }
@@ -187,6 +187,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
     }
     setLibros(prev => [nuevoLibro, ...prev])
     setFormNuevo({ titulo: '', autor: '', anio: '', paginas: '', portada_url: '', genero: '' })
+    setIsbnDetectado(null)
     if (json.puntosGanados > 0) mostrarToast(json.puntosGanados, json.toastMsg)
   }
 
