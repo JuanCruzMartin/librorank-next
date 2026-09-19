@@ -60,25 +60,27 @@ export default function ColeccionConTabs({ coleccion, cantidades, tiradas, usuar
   return (
     <div>
       {/* Tab bar */}
+      <style>{`@media (max-width: 480px) { .coleccion-tab-label { display: none; } }`}</style>
       <div style={{
-        display: 'flex', justifyContent: 'center', padding: '1rem 1rem 0',
+        display: 'flex', gap: 4, padding: '0.75rem 0.75rem 0',
         borderBottom: '1px solid rgba(255,255,255,0.08)',
         background: 'rgba(0,0,0,0.25)',
         position: 'sticky', top: 0, zIndex: 100,
         backdropFilter: 'blur(10px)',
       }}>
-        <div style={{ display: 'flex', gap: 6 }}>
           {TABS.map(t => (
             <button
               key={t.id}
               onClick={() => cambiarTab(t.id)}
               style={{
-                padding: '0.6rem 1.5rem',
+                flex: 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
+                padding: '0.6rem 0.25rem',
                 borderRadius: '10px 10px 0 0',
                 border: 'none',
                 cursor: 'pointer',
                 fontWeight: tab === t.id ? 800 : 500,
-                fontSize: '0.9rem',
+                fontSize: '0.85rem',
                 background: tab === t.id
                   ? 'rgba(139,92,246,0.25)'
                   : 'rgba(255,255,255,0.04)',
@@ -93,10 +95,10 @@ export default function ColeccionConTabs({ coleccion, cantidades, tiradas, usuar
                 whiteSpace: 'nowrap',
               }}
             >
-              {t.label}
+              <span style={{ fontSize: '1.1rem' }}>{t.label.split(' ')[0]}</span>
+              <span className="coleccion-tab-label">{t.label.split(' ').slice(1).join(' ')}</span>
             </button>
           ))}
-        </div>
       </div>
 
       {/* Banner de descubrimiento — solo en pestaña colección */}
