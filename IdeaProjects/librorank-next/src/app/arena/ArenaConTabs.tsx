@@ -235,27 +235,27 @@ export default function ArenaConTabs({
     <div>
       {/* Tab bar */}
       <div style={{
-        display: 'flex', gap: 8, padding: '1rem 1.25rem', justifyContent: 'center',
+        display: 'flex', gap: 6, padding: '0.75rem 0.75rem',
         background: 'linear-gradient(180deg, rgba(20,10,40,0.95) 0%, rgba(10,5,25,0.9) 100%)',
         borderBottom: '2px solid rgba(124,58,237,0.35)',
         boxShadow: '0 4px 24px rgba(0,0,0,0.5), 0 1px 0 rgba(124,58,237,0.2)',
         position: 'sticky', top: 0, zIndex: 100,
         backdropFilter: 'blur(16px)',
-        overflowX: 'auto',
       }}>
         {TABS.map(t => (
           <button
             key={t.key}
             onClick={() => cambiarTab(t.key)}
             style={{
-              display: 'flex', alignItems: 'center', gap: '0.5rem',
-              padding: '0.65rem 1.5rem',
+              flex: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
+              padding: '0.6rem 0.25rem',
               borderRadius: 12,
               border: tab === t.key ? '1px solid rgba(167,139,250,0.4)' : '1px solid rgba(255,255,255,0.07)',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
               fontWeight: tab === t.key ? 700 : 500,
-              fontSize: '0.88rem',
+              fontSize: '0.8rem',
               background: tab === t.key
                 ? 'linear-gradient(135deg, rgba(124,58,237,0.45) 0%, rgba(99,46,196,0.35) 100%)'
                 : 'rgba(255,255,255,0.04)',
@@ -264,7 +264,7 @@ export default function ArenaConTabs({
               transition: 'all 0.18s',
             }}
           >
-            <span style={{ fontSize: '1rem' }}>{t.emoji}</span>
+            <span style={{ fontSize: '0.95rem' }}>{t.emoji}</span>
             <span>{t.label}</span>
           </button>
         ))}
