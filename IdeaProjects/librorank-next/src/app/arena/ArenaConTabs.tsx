@@ -234,6 +234,7 @@ export default function ArenaConTabs({
   return (
     <div>
       {/* Tab bar */}
+      <style>{`@media (max-width: 480px) { .arena-tab-label { display: none; } }`}</style>
       <div style={{
         display: 'flex', gap: 6, padding: '0.75rem 0.75rem',
         background: 'linear-gradient(180deg, rgba(20,10,40,0.95) 0%, rgba(10,5,25,0.9) 100%)',
@@ -253,7 +254,6 @@ export default function ArenaConTabs({
               borderRadius: 12,
               border: tab === t.key ? '1px solid rgba(167,139,250,0.4)' : '1px solid rgba(255,255,255,0.07)',
               cursor: 'pointer',
-              whiteSpace: 'nowrap',
               fontWeight: tab === t.key ? 700 : 500,
               fontSize: '0.8rem',
               background: tab === t.key
@@ -264,8 +264,8 @@ export default function ArenaConTabs({
               transition: 'all 0.18s',
             }}
           >
-            <span style={{ fontSize: '0.95rem' }}>{t.emoji}</span>
-            <span>{t.label}</span>
+            <span style={{ fontSize: '1.1rem' }}>{t.emoji}</span>
+            <span className="arena-tab-label">{t.label}</span>
           </button>
         ))}
       </div>
