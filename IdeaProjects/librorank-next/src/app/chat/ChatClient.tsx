@@ -27,6 +27,14 @@ export default function ChatClient({ usuarioId, amigos, conversacionesIniciales,
   const [enviando, setEnviando] = useState(false)
   const [busqueda, setBusqueda] = useState('')
   const [mobileVista, setMobileVista] = useState<'lista' | 'chat'>('lista')
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
   const bottomRef = useRef<HTMLDivElement>(null)
   const lastIdRef = useRef(0)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -174,14 +182,12 @@ export default function ChatClient({ usuarioId, amigos, conversacionesIniciales,
 
       {/* ── SIDEBAR ── */}
       <div style={{
-        width: 300, flexShrink: 0,
+        width: isMobile ? '100%' : 300, flexShrink: 0,
         borderRight: '1px solid rgba(255,255,255,0.06)',
         background: 'var(--bg-card)',
-        display: 'flex', flexDirection: 'column',
-        ...(mobileVista === 'chat' ? { display: 'none' } : {}),
-      }}
-        className="chat-sidebar"
-      >
+        display: isMobile && mobileVista === 'chat' ? 'none' : 'flex',
+        flexDirection: 'column',
+      }}>
         {/* Header sidebar */}
         <div style={{ padding: '1.25rem 1rem 0.75rem', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <h2 className="font-title" style={{ color: '#fff', fontSize: '1.1rem', marginBottom: '0.75rem' }}>💬 Mensajes</h2>
@@ -247,11 +253,9 @@ export default function ChatClient({ usuarioId, amigos, conversacionesIniciales,
 
       {/* ── PANEL CHAT ── */}
       <div style={{
-        flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden',
-        ...(mobileVista === 'lista' ? { display: 'none' } : {}),
-      }}
-        className="chat-panel"
-      >
+        flex: 1, display: isMobile && mobileVista === 'lista' ? 'none' : 'flex',
+        flexDirection: 'column', overflow: 'hidden',
+      }}>
         {!conActivo ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.25)' }}>
             <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>💬</div>
@@ -263,8 +267,7 @@ export default function ChatClient({ usuarioId, amigos, conversacionesIniciales,
             <div style={{ padding: '0.9rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'var(--bg-card)', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
               <button
                 onClick={() => setMobileVista('lista')}
-                className="chat-back-btn"
-                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '1.2rem', padding: '0 0.5rem 0 0', display: 'none' }}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '1.2rem', padding: '0 0.5rem 0 0', display: isMobile ? 'block' : 'none' }}
               >
                 ←
               </button>
@@ -370,17 +373,6 @@ export default function ChatClient({ usuarioId, amigos, conversacionesIniciales,
         )}
       </div>
 
-      <style>{`
-        @media (max-width: 768px) {
-          .chat-sidebar { display: flex !important; width: 100% !important; }
-          .chat-panel { display: flex !important; width: 100% !important; }
-          .chat-back-btn { display: block !important; }
-        }
-        @media (min-width: 769px) {
-          .chat-sidebar { display: flex !important; }
-          .chat-panel { display: flex !important; }
-        }
-      `}</style>
     </div>
   )
 }
