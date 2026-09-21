@@ -122,6 +122,20 @@ export async function contarLeidosEsteAnio(usuarioId: number): Promise<number> {
   return row?.total ?? 0
 }
 
+export async function obtenerLeidosPorMes(usuarioId: number, anio?: number): Promise<{ mes: number; total: number }[]> {
+  const year = anio ?? new Date().getFullYear()
+  return query<{ mes: number; total: number }>(
+    `SELECT MONTH(COALESCE(fecha_leido, fecha_creacion)) AS mes, COUNT(*) AS total
+     FROM libros_usuario
+     WHERE usuario_id=?
+       AND UPPER(estado) IN ('LEIDO','LEÍDO')
+       AND YEAR(COALESCE(fecha_leido, fecha_creacion))=?
+     GROUP BY mes
+     ORDER BY mes`,
+    [usuarioId, year]
+  )
+}
+
 export async function contarLeidosTotal(usuarioId: number): Promise<number> {
   const row = await queryOne<{ total: number }>(
     `SELECT COUNT(*) AS total FROM libros_usuario WHERE usuario_id=? AND UPPER(estado) IN ('LEIDO','LEÍDO')`,

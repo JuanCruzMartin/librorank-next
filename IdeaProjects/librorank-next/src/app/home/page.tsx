@@ -4,7 +4,7 @@ import { getAuthUser } from '@/lib/auth'
 import { buscarPorId } from '@/lib/dao/usuarioDAO'
 import { obtenerFeedAmigos } from '@/lib/dao/actividadDAO'
 import { obtenerCitaAleatoria } from '@/lib/dao/citaDAO'
-import { obtenerLeyendoAhora, contarLeidosEsteAnio } from '@/lib/dao/libroDAO'
+import { obtenerLeyendoAhora, contarLeidosEsteAnio, obtenerLeidosPorMes } from '@/lib/dao/libroDAO'
 import { obtenerMisionesConProgreso } from '@/lib/dao/misionDAO'
 import { crearTabla, obtenerLogsHoy } from '@/lib/dao/registroLecturaDAO'
 import Header from '@/components/Header'
@@ -13,6 +13,7 @@ import FeedClient from './FeedClient'
 import LigaNotif from '@/components/LigaNotif'
 import MisionesWidget from './MisionesWidget'
 import LeyendoAhoraWidget from './LeyendoAhoraWidget'
+import ProgresoMensualWidget from './ProgresoMensualWidget'
 
 
 export default async function HomePage() {
@@ -21,7 +22,8 @@ export default async function HomePage() {
 
   await crearTabla()
 
-  const [usuario, feed, citaDelDia, librosLeyendo, leidosEsteAnio, misiones, logsHoy] = await Promise.all([
+  const anioActual = new Date().getFullYear()
+  const [usuario, feed, citaDelDia, librosLeyendo, leidosEsteAnio, misiones, logsHoy, leidosPorMes] = await Promise.all([
     buscarPorId(authUser.id),
     obtenerFeedAmigos(authUser.id),
     obtenerCitaAleatoria(authUser.id),
@@ -29,6 +31,7 @@ export default async function HomePage() {
     contarLeidosEsteAnio(authUser.id),
     obtenerMisionesConProgreso(authUser.id),
     obtenerLogsHoy(authUser.id),
+    obtenerLeidosPorMes(authUser.id, anioActual),
   ])
 
   if (!usuario) redirect('/login')
@@ -126,6 +129,7 @@ export default async function HomePage() {
               </div>
 
               <MisionesWidget misionesIniciales={misiones} />
+              <ProgresoMensualWidget datos={leidosPorMes} anio={anioActual} />
             </div>
 
             {/* Columna Derecha: Feed Social */}
