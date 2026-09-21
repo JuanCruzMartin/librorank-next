@@ -1,7 +1,7 @@
 ﻿import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getAuthUser } from '@/lib/auth'
-import { buscarPorId } from '@/lib/dao/usuarioDAO'
+import { buscarPorId, obtenerPosicionRanking } from '@/lib/dao/usuarioDAO'
 import { obtenerFeedAmigos } from '@/lib/dao/actividadDAO'
 import { obtenerCitaAleatoria } from '@/lib/dao/citaDAO'
 import { obtenerLeyendoAhora, contarLeidosEsteAnio, obtenerLeidosPorMes } from '@/lib/dao/libroDAO'
@@ -23,7 +23,7 @@ export default async function HomePage() {
   await crearTabla()
 
   const anioActual = new Date().getFullYear()
-  const [usuario, feed, citaDelDia, librosLeyendo, leidosEsteAnio, misiones, logsHoy, leidosPorMes] = await Promise.all([
+  const [usuario, feed, citaDelDia, librosLeyendo, leidosEsteAnio, misiones, logsHoy, leidosPorMes, posicionRanking] = await Promise.all([
     buscarPorId(authUser.id),
     obtenerFeedAmigos(authUser.id),
     obtenerCitaAleatoria(authUser.id),
@@ -32,6 +32,7 @@ export default async function HomePage() {
     obtenerMisionesConProgreso(authUser.id),
     obtenerLogsHoy(authUser.id),
     obtenerLeidosPorMes(authUser.id, anioActual),
+    obtenerPosicionRanking(authUser.id),
   ])
 
   if (!usuario) redirect('/login')
@@ -75,6 +76,10 @@ export default async function HomePage() {
                   <div className="text-center">
                     <div className="fw-bold" style={{ color: '#D4AF37' }}>⭐ {usuario.puntos}</div>
                     <div className="small text-muted">Puntos</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="fw-bold" style={{ color: '#D4AF37' }}>🏆 #{posicionRanking}</div>
+                    <div className="small text-muted">Ranking</div>
                   </div>
                 </div>
 

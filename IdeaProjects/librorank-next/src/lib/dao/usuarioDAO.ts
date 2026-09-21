@@ -78,6 +78,33 @@ export async function buscarPorId(id: number): Promise<Usuario | null> {
   )
 }
 
+export async function obtenerPosicionRanking(usuarioId: number): Promise<number> {
+  const row = await queryOne<{ posicion: number }>(
+    `SELECT COUNT(*) + 1 AS posicion
+     FROM (
+       SELECT u.id, u.monedas AS puntos, COUNT(l.id) AS total_leidos, u.nombre
+       FROM usuarios u
+       LEFT JOIN libros_usuario l ON u.id = l.usuario_id AND UPPER(l.estado) IN ('LEIDO','LEÍDO')
+       GROUP BY u.id, u.monedas, u.nombre
+     ) todos,
+     (
+       SELECT u.monedas AS puntos, COUNT(l.id) AS total_leidos, u.nombre
+       FROM usuarios u
+       LEFT JOIN libros_usuario l ON u.id = l.usuario_id AND UPPER(l.estado) IN ('LEIDO','LEÍDO')
+       WHERE u.id = ?
+       GROUP BY u.id, u.monedas, u.nombre
+     ) yo
+     WHERE todos.id <> ?
+       AND (
+         todos.puntos > yo.puntos
+         OR (todos.puntos = yo.puntos AND todos.total_leidos > yo.total_leidos)
+         OR (todos.puntos = yo.puntos AND todos.total_leidos = yo.total_leidos AND todos.nombre < yo.nombre)
+       )`,
+    [usuarioId, usuarioId]
+  )
+  return row?.posicion ?? 1
+}
+
 export async function obtenerRankingLectores(limite = 50): Promise<Usuario[]> {
   return query<Usuario>(
     `SELECT u.id, u.nombre, u.username, u.email, u.bio, u.avatar_url, u.objetivo_anual,
