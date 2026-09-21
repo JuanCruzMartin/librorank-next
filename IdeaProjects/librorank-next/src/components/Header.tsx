@@ -69,6 +69,7 @@ interface EstadoHoy {
   pregunta_respondida: boolean
   misiones_reclamables: number
   pendientes: number
+  posicion_ranking: number
 }
 
 export default function Header({ user }: HeaderProps) {
@@ -248,6 +249,24 @@ export default function Header({ user }: HeaderProps) {
             }}>
               <Star size={13} weight="fill" /> {user.puntos ?? 0}
             </span>
+
+            {/* Posición ranking — oculta en mobile */}
+            {estadoHoy && (
+              <a
+                href="/ranking"
+                className="header-badge header-badge-hide-sm"
+                style={{
+                  background: 'rgba(212,175,55,0.08)',
+                  color: '#d4af37',
+                  border: '1px solid rgba(212,175,55,0.25)',
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                }}
+                title="Ver ranking global"
+              >
+                🏆 #{estadoHoy.posicion_ranking}
+              </a>
+            )}
 
             {/* Hub "Hoy" */}
             {estadoHoy && (
@@ -571,7 +590,10 @@ export default function Header({ user }: HeaderProps) {
             />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.9rem' }}>@{user.username}</div>
-              <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>🔥 {user.racha_actual ?? 0} racha · ⭐ {user.puntos ?? 0} pts</div>
+              <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)' }}>
+                🔥 {user.racha_actual ?? 0} · ⭐ {user.puntos ?? 0} pts
+                {estadoHoy && <> · 🏆 #{estadoHoy.posicion_ranking}</>}
+              </div>
             </div>
           </div>
 

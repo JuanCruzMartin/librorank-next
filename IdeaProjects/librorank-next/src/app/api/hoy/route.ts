@@ -3,6 +3,7 @@ import { getAuthUser } from '@/lib/auth'
 import { queryOne } from '@/lib/db'
 import { obtenerRespuestaHoy } from '@/lib/dao/preguntaDiariaDAO'
 import { obtenerMisionesConProgreso } from '@/lib/dao/misionDAO'
+import { obtenerPosicionRanking } from '@/lib/dao/usuarioDAO'
 
 export async function GET() {
   const user = await getAuthUser()
@@ -21,7 +22,10 @@ export async function GET() {
   const respuesta = await obtenerRespuestaHoy(user.id)
   const preguntaRespondida = respuesta !== null
 
-  const misiones = await obtenerMisionesConProgreso(user.id)
+  const [misiones, posicionRanking] = await Promise.all([
+    obtenerMisionesConProgreso(user.id),
+    obtenerPosicionRanking(user.id),
+  ])
   const misionesReclamables = misiones.filter(m => m.completada && !m.reclamada).length
 
   const pendientes = (sobreDisponible ? 1 : 0) + (preguntaRespondida ? 0 : 1) + misionesReclamables
@@ -31,5 +35,6 @@ export async function GET() {
     pregunta_respondida: preguntaRespondida,
     misiones_reclamables: misionesReclamables,
     pendientes,
+    posicion_ranking: posicionRanking,
   })
 }
