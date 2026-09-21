@@ -10,7 +10,9 @@ export interface Cofre {
   created_at: string
 }
 
+let _tablaCreada = false
 export async function crearTabla(): Promise<void> {
+  if (_tablaCreada) return
   await execute(`
     CREATE TABLE IF NOT EXISTS cofres_usuario (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -21,6 +23,7 @@ export async function crearTabla(): Promise<void> {
       KEY idx_usuario (usuario_id)
     )
   `, [])
+  _tablaCreada = true
 }
 
 export async function otorgarCofre(usuarioId: number, tipo: TipoCofre): Promise<void> {

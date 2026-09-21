@@ -2,7 +2,9 @@ import { query, queryOne, execute } from '@/lib/db'
 
 const MAX_COPIAS = 2
 
+let _migrated = false
 export async function migrarCantidadCartas(): Promise<void> {
+  if (_migrated) return
   const rows = await query<{ COLUMN_NAME: string }>(
     `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'cartas_usuario' AND COLUMN_NAME = 'cantidad'`,
@@ -14,6 +16,7 @@ export async function migrarCantidadCartas(): Promise<void> {
       []
     )
   }
+  _migrated = true
 }
 
 export async function obtenerColeccion(usuarioId: number): Promise<string[]> {

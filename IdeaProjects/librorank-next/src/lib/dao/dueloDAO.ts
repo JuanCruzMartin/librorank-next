@@ -63,7 +63,9 @@ function parseDuelo(raw: Record<string, unknown>): Duelo {
   } as Duelo
 }
 
+let _tablaCreada = false
 export async function crearTabla(): Promise<void> {
+  if (_tablaCreada) return
   await execute(`
     CREATE TABLE IF NOT EXISTS duelos (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -110,6 +112,7 @@ export async function crearTabla(): Promise<void> {
   for (const [col, type] of adds) {
     if (!cols.has(col)) await execute(`ALTER TABLE duelos ADD COLUMN ${col} ${type}`, [])
   }
+  _tablaCreada = true
 }
 
 export async function crearDesafio(retadorId: number, cartaId: string, tipo: TipoDuelo = 'estandar'): Promise<number> {

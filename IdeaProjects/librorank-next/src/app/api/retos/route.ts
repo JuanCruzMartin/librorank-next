@@ -55,6 +55,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok })
     }
 
+    if (accion === 'eliminar') {
+      const { retoId } = body
+      const ok = await retoDAO.eliminarReto(Number(retoId), user.id)
+      if (!ok) return NextResponse.json({ error: 'No autorizado o reto no encontrado' }, { status: 403 })
+      return NextResponse.json({ ok })
+    }
+
     return NextResponse.json({ error: 'Acción no válida' }, { status: 400 })
   } catch (err) {
     console.error('Error en /api/retos:', err)

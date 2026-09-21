@@ -1,6 +1,8 @@
 import { queryOne, execute, query } from '@/lib/db'
 
+let _tablaCreada = false
 export async function crearTabla(): Promise<void> {
+  if (_tablaCreada) return
   await execute(`
     CREATE TABLE IF NOT EXISTS registro_lectura (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -13,6 +15,7 @@ export async function crearTabla(): Promise<void> {
       KEY idx_libro (libro_usuario_id)
     )
   `, [])
+  _tablaCreada = true
 }
 
 export async function obtenerLogsHoy(usuarioId: number): Promise<{ libro_usuario_id: number; paginas: number }[]> {

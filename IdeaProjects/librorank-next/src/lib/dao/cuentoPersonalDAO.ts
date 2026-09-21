@@ -12,7 +12,9 @@ export interface Cuento {
   autor_username?: string
 }
 
+let _tablaCreada = false
 export async function migrarTablaCuentos(): Promise<void> {
+  if (_tablaCreada) return
   await execute(`
     CREATE TABLE IF NOT EXISTS cuentos (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -25,6 +27,7 @@ export async function migrarTablaCuentos(): Promise<void> {
       INDEX idx_usuario (usuario_id)
     )
   `)
+  _tablaCreada = true
 }
 
 export async function obtenerMisCuentos(usuarioId: number): Promise<Cuento[]> {

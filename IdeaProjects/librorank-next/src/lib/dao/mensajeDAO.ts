@@ -23,7 +23,9 @@ export interface Conversacion {
   no_leidos: number
 }
 
+let _tablaCreada = false
 export async function crearTabla(): Promise<void> {
+  if (_tablaCreada) return
   await execute(`
     CREATE TABLE IF NOT EXISTS mensajes (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -37,6 +39,7 @@ export async function crearTabla(): Promise<void> {
       KEY idx_created (created_at)
     )
   `, [])
+  _tablaCreada = true
 }
 
 export async function enviarMensaje(deId: number, paraId: number, texto: string): Promise<void> {

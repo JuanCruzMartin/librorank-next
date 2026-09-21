@@ -87,6 +87,16 @@ export default function RetosClient({ retos: retosIni, misLibros, usuarioId }: P
     }))
   }
 
+  async function eliminarReto(retoId: number) {
+    if (!confirm('¿Eliminar este reto? Esta acción no se puede deshacer.')) return
+    const res = await fetch('/api/retos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accion: 'eliminar', retoId }),
+    })
+    if (res.ok) setRetos(prev => prev.filter(r => r.id !== retoId))
+  }
+
   function RetoCard({ r, vencido }: { r: RetoAmigo; vencido: boolean }) {
     const miParticipacion = r.participantes.find(p => p.usuario_id === usuarioId)
     const yaParticipa = Boolean(miParticipacion)
@@ -124,11 +134,26 @@ export default function RetosClient({ retos: retosIni, misLibros, usuarioId }: P
               )}
             </div>
           </div>
-          {!vencido && !yaParticipa && (
-            <button onClick={() => unirse(r.id)} className="btn-gold btn-sm flex-shrink-0">
-              Unirse
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            {!vencido && !yaParticipa && (
+              <button onClick={() => unirse(r.id)} className="btn-gold btn-sm">
+                Unirse
+              </button>
+            )}
+            {r.creador_id === usuarioId && (
+              <button
+                onClick={() => eliminarReto(r.id)}
+                title="Eliminar reto"
+                style={{
+                  background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)',
+                  borderRadius: 6, color: 'rgba(231,76,60,0.7)', cursor: 'pointer',
+                  fontSize: '0.75rem', padding: '3px 7px', transition: 'all 0.15s',
+                }}
+              >
+                🗑️
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Libro objetivo */}

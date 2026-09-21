@@ -84,3 +84,11 @@ async function obtenerParticipantes(retoId: number): Promise<ParticipanteReto[]>
     [retoId]
   )
 }
+
+export async function eliminarReto(retoId: number, creadorId: number): Promise<boolean> {
+  const res = await execute(
+    'DELETE FROM retos_amigos WHERE id=? AND creador_id=?',
+    [retoId, creadorId]
+  )
+  return res.affectedRows > 0
+}

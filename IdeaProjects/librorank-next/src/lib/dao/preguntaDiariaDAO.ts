@@ -22,7 +22,9 @@ export async function registrarRespuesta(usuarioId: number, correcta: boolean): 
   }
 }
 
+let _tablaCreada = false
 export async function crearTablasSiNoExisten(): Promise<void> {
+  if (_tablaCreada) return
   await execute(`
     CREATE TABLE IF NOT EXISTS pregunta_diaria_respuestas (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -33,4 +35,5 @@ export async function crearTablasSiNoExisten(): Promise<void> {
       UNIQUE KEY uq_usuario_fecha (usuario_id, fecha)
     )
   `, [])
+  _tablaCreada = true
 }

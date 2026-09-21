@@ -23,7 +23,9 @@ const PUNTOS_POR_DERROTA = 10
 const DUELOS_PROMOCION_TOTAL = 3
 const VICTORIAS_PARA_ASCENDER = 2
 
+let _migrado = false
 export async function migrarLigasArena(): Promise<void> {
+  if (_migrado) return
   const cols = await query<{ COLUMN_NAME: string }>(
     `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios'`,
@@ -43,6 +45,7 @@ export async function migrarLigasArena(): Promise<void> {
       await execute(`ALTER TABLE usuarios ADD COLUMN ${col} ${type}`, [])
     }
   }
+  _migrado = true
 }
 
 export async function obtenerEstadoLiga(usuarioId: number): Promise<EstadoLigaArena> {
