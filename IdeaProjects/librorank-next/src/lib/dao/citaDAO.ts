@@ -33,10 +33,17 @@ export async function obtenerPorLibro(libroId: number, usuarioId: number): Promi
 }
 
 export async function obtenerCitaAleatoria(usuarioId: number): Promise<Cita | null> {
+  const countRow = await queryOne<{ total: number }>(
+    'SELECT COUNT(*) AS total FROM citas WHERE usuario_id=?',
+    [usuarioId]
+  )
+  const total = countRow?.total ?? 0
+  if (total === 0) return null
+  const offset = Math.floor(Math.random() * total)
   return queryOne<Cita>(
     `SELECT c.*, l.titulo AS titulo_libro
      FROM citas c JOIN libros_usuario l ON c.libro_id=l.id
-     WHERE c.usuario_id=? ORDER BY RAND() LIMIT 1`,
-    [usuarioId]
+     WHERE c.usuario_id=? LIMIT 1 OFFSET ?`,
+    [usuarioId, offset]
   )
 }

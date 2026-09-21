@@ -18,16 +18,21 @@ export async function obtenerIdsAmigos(usuarioId: number): Promise<number[]> {
 }
 
 export async function obtenerAmigos(usuarioId: number): Promise<(Usuario & { libros_en_comun: number; titulos_en_comun: string })[]> {
-  const amigos = await query<Usuario>(
-    `SELECT u.id, u.nombre, u.username, u.avatar_url
-     FROM usuarios u JOIN amigos a ON u.id=a.amigo_id WHERE a.usuario_id=?`,
-    [usuarioId]
+  return query(
+    `SELECT u.id, u.nombre, u.username, u.avatar_url,
+            COALESCE(COUNT(DISTINCT l2.id), 0) AS libros_en_comun,
+            COALESCE(GROUP_CONCAT(DISTINCT l1.titulo ORDER BY l1.titulo SEPARATOR ', '), '') AS titulos_en_comun
+     FROM usuarios u
+     JOIN amigos a ON u.id = a.amigo_id AND a.usuario_id = ?
+     LEFT JOIN libros_usuario l1
+       ON l1.usuario_id = ? AND UPPER(l1.estado) IN ('LEIDO','LEÍDO')
+     LEFT JOIN libros_usuario l2
+       ON l2.usuario_id = u.id AND UPPER(l2.estado) IN ('LEIDO','LEÍDO')
+       AND TRIM(LOWER(l1.titulo)) = TRIM(LOWER(l2.titulo))
+       AND TRIM(LOWER(l1.autor)) = TRIM(LOWER(l2.autor))
+     GROUP BY u.id, u.nombre, u.username, u.avatar_url`,
+    [usuarioId, usuarioId]
   )
-  return Promise.all(amigos.map(async a => ({
-    ...a,
-    libros_en_comun: await contarLibrosEnComun(usuarioId, a.id),
-    titulos_en_comun: await obtenerTitulosEnComun(usuarioId, a.id),
-  })))
 }
 
 export async function buscarUsuarios(queryStr: string, usuarioActualId: number) {
@@ -40,34 +45,36 @@ export async function buscarUsuarios(queryStr: string, usuarioActualId: number) 
                    WHERE usuario_id=u.id AND UPPER(estado) IN ('LEIDO','LEÍDO')
                      AND genero IS NOT NULL AND genero != ''
                    GROUP BY genero ORDER BY cnt DESC LIMIT 3) top) AS generos_favoritos
-     FROM usuarios u WHERE (u.username LIKE ? OR u.email LIKE ?) AND u.id<>? LIMIT 10`,
+     FROM usuarios u WHERE (u.username LIKE ? OR u.nombre LIKE ?) AND u.id<>? LIMIT 10`,
     [like, like, usuarioActualId]
   )
 }
 
 export async function obtenerSugerencias(usuarioId: number) {
-  const todos = await query(
-    `SELECT DISTINCT u.id, u.nombre, u.username, u.avatar_url, u.bio,
-            (SELECT COUNT(*) FROM libros_usuario lu WHERE lu.usuario_id=u.id AND UPPER(lu.estado) IN ('LEIDO','LEÍDO')) as total_leidos,
+  return query(
+    `SELECT u.id, u.nombre, u.username, u.avatar_url, u.bio,
+            (SELECT COUNT(*) FROM libros_usuario lu WHERE lu.usuario_id=u.id AND UPPER(lu.estado) IN ('LEIDO','LEÍDO')) AS total_leidos,
             (SELECT GROUP_CONCAT(g ORDER BY cnt DESC SEPARATOR ', ')
              FROM (SELECT genero AS g, COUNT(*) AS cnt FROM libros_usuario
                    WHERE usuario_id=u.id AND UPPER(estado) IN ('LEIDO','LEÍDO')
                      AND genero IS NOT NULL AND genero != ''
-                   GROUP BY genero ORDER BY cnt DESC LIMIT 3) top) AS generos_favoritos
+                   GROUP BY genero ORDER BY cnt DESC LIMIT 3) top) AS generos_favoritos,
+            COUNT(DISTINCT l2.id) AS libros_en_comun,
+            GROUP_CONCAT(DISTINCT l1.titulo ORDER BY l1.titulo SEPARATOR ', ') AS titulos_en_comun
      FROM usuarios u
-     WHERE u.id<>? AND u.id NOT IN (SELECT amigo_id FROM amigos WHERE usuario_id=?)
-     LIMIT 20`,
-    [usuarioId, usuarioId]
-  ) as Array<Usuario & { total_leidos: number }>
-
-  const conComun = await Promise.all(
-    todos.map(async u => ({
-      ...u,
-      libros_en_comun: await contarLibrosEnComun(usuarioId, u.id),
-      titulos_en_comun: await obtenerTitulosEnComun(usuarioId, u.id),
-    }))
+     LEFT JOIN libros_usuario l1
+       ON l1.usuario_id = ? AND UPPER(l1.estado) IN ('LEIDO','LEÍDO')
+     LEFT JOIN libros_usuario l2
+       ON l2.usuario_id = u.id AND UPPER(l2.estado) IN ('LEIDO','LEÍDO')
+       AND TRIM(LOWER(l1.titulo)) = TRIM(LOWER(l2.titulo))
+       AND TRIM(LOWER(l1.autor)) = TRIM(LOWER(l2.autor))
+     WHERE u.id <> ? AND u.id NOT IN (SELECT amigo_id FROM amigos WHERE usuario_id = ?)
+     GROUP BY u.id, u.nombre, u.username, u.avatar_url, u.bio
+     HAVING libros_en_comun > 0
+     ORDER BY libros_en_comun DESC
+     LIMIT 5`,
+    [usuarioId, usuarioId, usuarioId]
   )
-  return conComun.filter(u => u.libros_en_comun > 0).slice(0, 5)
 }
 
 export async function obtenerTodosLectores(usuarioId: number) {
@@ -106,27 +113,3 @@ export async function esSonAmigos(id1: number, id2: number): Promise<boolean> {
   return (row?.cnt ?? 0) > 0
 }
 
-async function contarLibrosEnComun(id1: number, id2: number): Promise<number> {
-  const row = await queryOne<{ total: number }>(
-    `SELECT COUNT(*) AS total
-     FROM libros_usuario l1
-     JOIN libros_usuario l2 ON TRIM(LOWER(l1.titulo))=TRIM(LOWER(l2.titulo)) AND TRIM(LOWER(l1.autor))=TRIM(LOWER(l2.autor))
-     WHERE l1.usuario_id=? AND l2.usuario_id=?
-       AND UPPER(l1.estado) IN ('LEIDO','LEÍDO') AND UPPER(l2.estado) IN ('LEIDO','LEÍDO')`,
-    [id1, id2]
-  )
-  return row?.total ?? 0
-}
-
-async function obtenerTitulosEnComun(id1: number, id2: number): Promise<string> {
-  const rows = await query<{ titulo: string }>(
-    `SELECT l1.titulo
-     FROM libros_usuario l1
-     JOIN libros_usuario l2 ON TRIM(LOWER(l1.titulo))=TRIM(LOWER(l2.titulo)) AND TRIM(LOWER(l1.autor))=TRIM(LOWER(l2.autor))
-     WHERE l1.usuario_id=? AND l2.usuario_id=?
-       AND UPPER(l1.estado) IN ('LEIDO','LEÍDO') AND UPPER(l2.estado) IN ('LEIDO','LEÍDO')
-     LIMIT 5`,
-    [id1, id2]
-  )
-  return rows.map(r => r.titulo).join(', ')
-}
