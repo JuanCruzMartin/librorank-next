@@ -31,8 +31,8 @@ export default async function HomePage() {
     contarLeidosEsteAnio(authUser.id),
     obtenerMisionesConProgreso(authUser.id),
     obtenerLogsHoy(authUser.id),
-    obtenerLeidosPorMes(authUser.id, anioActual),
-    obtenerPosicionRanking(authUser.id),
+    obtenerLeidosPorMes(authUser.id, anioActual).catch(() => [] as { mes: number; total: number }[]),
+    obtenerPosicionRanking(authUser.id).catch(() => 0),
   ])
 
   if (!usuario) redirect('/login')

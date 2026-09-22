@@ -34,10 +34,10 @@ export default async function ArenaPage({ searchParams }: { searchParams: Promis
     tabParam === 'coleccion'? 'coleccion':
     'arena'
 
-  await crearTabla()
-  await expirarDuelos()
-  await migrarLigasArena()
-  await migrarCantidadCartas()
+  await crearTabla().catch(() => {})
+  await expirarDuelos().catch(() => {})
+  await migrarLigasArena().catch(() => {})
+  await migrarCantidadCartas().catch(() => {})
 
   const [usuario, sala, activo, historial, coleccion, cantidades, tiradas, amigos, stats, statsPorRival, misiones, retos, bingo, misLibros, estadoLiga] = await Promise.all([
     buscarPorId(authUser.id),
