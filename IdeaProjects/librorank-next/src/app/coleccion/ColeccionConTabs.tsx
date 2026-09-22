@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
 import ColeccionClient from './ColeccionClient'
 import IntercambiosClient from '../intercambios/IntercambiosClient'
 import TiendaClient from '../tienda/TiendaClient'
@@ -33,8 +32,6 @@ type Tab = typeof TABS[number]['id']
 export default function ColeccionConTabs({ coleccion, cantidades, tiradas, usuarioId, puntos, itemsTienda, amigos, tabInicial }: Props) {
   const [tab, setTab] = useState<Tab>(tabInicial)
   const [bannerVisible, setBannerVisible] = useState(false)
-  const router = useRouter()
-  const pathname = usePathname()
 
   useEffect(() => {
     if (!sessionStorage.getItem(SS_INTERCAMBIOS)) {
@@ -48,8 +45,6 @@ export default function ColeccionConTabs({ coleccion, cantidades, tiradas, usuar
       sessionStorage.setItem(SS_INTERCAMBIOS, '1')
       setBannerVisible(false)
     }
-    const url = t !== 'coleccion' ? `${pathname}?tab=${t}` : pathname
-    router.replace(url, { scroll: false })
   }
 
   function cerrarBanner() {

@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import React, { useState, useEffect, useRef } from 'react'
 import {
-  Books, Sword, Cards, ArrowsLeftRight, Trophy,
+  Books, Sword, ArrowsLeftRight, Trophy,
   UsersThree, Bell, UserCircle, Fire, Star, GameController, Barcode,
 } from '@phosphor-icons/react'
 
@@ -58,7 +58,6 @@ interface HeaderProps {
 const NAV_ITEMS: { href: string; label: string; icon: React.ReactNode }[] = [
   { href: '/biblioteca',  label: 'Biblioteca',   icon: <Books size={16} weight="duotone" /> },
   { href: '/escanear',    label: 'Escanear',     icon: <Barcode size={16} weight="duotone" /> },
-  { href: '/coleccion',   label: 'Colección',    icon: <Cards size={16} weight="duotone" /> },
   { href: '/ranking',     label: 'Ranking',      icon: <Trophy size={16} weight="duotone" /> },
   { href: '/amigos',      label: 'Comunidad',    icon: <UsersThree size={16} weight="duotone" /> },
   { href: '/arena',       label: 'Arena',        icon: <GameController size={16} weight="duotone" /> },

@@ -15,18 +15,24 @@ import ArenaClient from './ArenaClient'
 import MisionesClient from '@/app/misiones/MisionesClient'
 import RetosClient from '@/app/retos/RetosClient'
 import BingoClient from '@/app/bingo/BingoClient'
+import ColeccionConTabs from '@/app/coleccion/ColeccionConTabs'
+import type { ItemTienda } from '@/lib/tienda'
 
-type Tab = 'arena' | 'misiones' | 'retos' | 'bingo'
+type Tab = 'arena' | 'misiones' | 'retos' | 'bingo' | 'coleccion'
 
 const TABS: { key: Tab; label: string; emoji: string }[] = [
   { key: 'arena',    label: 'Arena',    emoji: '⚔️' },
   { key: 'misiones', label: 'Misiones', emoji: '🎯' },
   { key: 'retos',    label: 'Retos',    emoji: '🤝' },
   { key: 'bingo',    label: 'Bingo',    emoji: '🎲' },
+  { key: 'coleccion',label: 'Colección',emoji: '🎴' },
 ]
+
+interface Amigo { id: number; nombre: string; avatar: string | null }
 
 interface Props {
   tabInicial: Tab
+  ctabInicial: 'coleccion' | 'intercambios' | 'tienda'
   usuarioId: number
   salaInicial: Duelo[]
   dueloActivoInicial: Duelo | null
@@ -43,6 +49,11 @@ interface Props {
   estadoLiga: EstadoLigaArena
   rankingLiga: UsuarioLigaArena[]
   todasLasLigas: LigaArena[]
+  coleccion: string[]
+  cantidades: Record<string, number>
+  tiradas: number
+  itemsTienda: ItemTienda[]
+  amigos: Amigo[]
 }
 
 // ── Sidebar de liga (sticky) ─────────────────────────────────────────────────
@@ -216,10 +227,11 @@ function SidebarLiga({ estado, ranking, todasLasLigas, usuarioId }: {
 // ── Componente principal ─────────────────────────────────────────────────────
 
 export default function ArenaConTabs({
-  tabInicial,
+  tabInicial, ctabInicial,
   usuarioId, salaInicial, dueloActivoInicial, historialInicial, misCartas, cartasMap, statsIniciales, statsPorRivalIniciales,
   misiones, puntos, retos, bingo, misLibros,
   estadoLiga, rankingLiga, todasLasLigas,
+  coleccion, cantidades, tiradas, itemsTienda, amigos,
 }: Props) {
   const [tab, setTab] = useState<Tab>(tabInicial)
   const router = useRouter()
@@ -316,6 +328,18 @@ export default function ArenaConTabs({
         <div className="container py-5">
           <BingoClient bingo={bingo} misLibros={misLibros} />
         </div>
+      )}
+      {tab === 'coleccion' && (
+        <ColeccionConTabs
+          coleccion={coleccion}
+          cantidades={cantidades}
+          tiradas={tiradas}
+          usuarioId={usuarioId}
+          puntos={puntos}
+          itemsTienda={itemsTienda}
+          amigos={amigos}
+          tabInicial={ctabInicial}
+        />
       )}
 
       <style>{`
