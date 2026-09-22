@@ -20,7 +20,7 @@ export default async function HomePage() {
   const authUser = await getAuthUser()
   if (!authUser) redirect('/login')
 
-  await crearTabla()
+  await crearTabla().catch(() => {})
 
   const anioActual = new Date().getFullYear()
   const [usuario, feed, citaDelDia, librosLeyendo, leidosEsteAnio, misiones, logsHoy, leidosPorMes, posicionRanking] = await Promise.all([
