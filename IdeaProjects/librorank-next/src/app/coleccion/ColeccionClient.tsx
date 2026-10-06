@@ -893,7 +893,7 @@ export default function ColeccionClient({ coleccion: coleccionInicial, cantidade
                     <div
                       onClick={() => !reveal.revelada && setReveal(r => r ? { ...r, revelada: true } : r)}
                       style={{
-                        width: 300, height: 480, perspective: 1200,
+                        width: 'min(300px, calc(100vw - 2rem))', height: 480, perspective: 1200,
                         cursor: reveal.revelada ? 'default' : 'pointer',
                         position: 'relative',
                       }}

@@ -229,10 +229,10 @@ export default function RankingClient({ ranking, rankingSemanal, rankingAutores,
             border: `1px solid ${tabInfo.color}33`,
             borderRadius: 12, padding: '0.85rem 1.25rem',
             marginBottom: '1.5rem',
-            display: 'flex', alignItems: 'center', gap: '0.75rem',
+            display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap',
           }}>
             <span style={{ fontSize: '1.8rem' }}>{tabInfo.emoji}</span>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 700, color: tabInfo.color, fontSize: '0.9rem' }}>
                 {esPaginas ? 'Ranking — Por páginas leídas' : esLibros ? 'Ranking — Por libros leídos' : 'Ranking Semanal — Últimos 7 días'}
               </div>

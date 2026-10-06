@@ -116,7 +116,7 @@ export default function LeyendoAhoraWidget({ libros, logsHoy: logsIniciales }: P
                       <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
                         <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg,#3498db,#5dade2)', borderRadius: 99, transition: 'width 0.4s ease' }} />
                       </div>
-                      <div style={{ fontSize: '0.58rem', color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                      <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
                         {leidas} / {libro.paginas} pgs hoy ({pct}%)
                       </div>
                     </div>
@@ -127,14 +127,14 @@ export default function LeyendoAhoraWidget({ libros, logsHoy: logsIniciales }: P
                 {yaRegistro ? (
                   <button
                     onClick={() => setAbierto(abierto === libro.id ? null : libro.id)}
-                    style={{ flexShrink: 0, background: 'rgba(39,174,96,0.12)', border: '1px solid rgba(39,174,96,0.35)', borderRadius: 6, padding: '3px 7px', fontSize: '0.62rem', color: '#27ae60', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    style={{ flexShrink: 0, background: 'rgba(39,174,96,0.12)', border: '1px solid rgba(39,174,96,0.35)', borderRadius: 6, padding: '8px 10px', fontSize: '0.72rem', color: '#27ae60', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                   >
                     ✓ {leidas} pgs +
                   </button>
                 ) : (
                   <button
                     onClick={() => setAbierto(abierto === libro.id ? null : libro.id)}
-                    style={{ flexShrink: 0, background: 'rgba(93,173,226,0.12)', border: '1px solid rgba(93,173,226,0.35)', borderRadius: 6, padding: '3px 7px', fontSize: '0.62rem', color: '#5dade2', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    style={{ flexShrink: 0, background: 'rgba(93,173,226,0.12)', border: '1px solid rgba(93,173,226,0.35)', borderRadius: 6, padding: '8px 10px', fontSize: '0.72rem', color: '#5dade2', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                   >
                     + páginas
                   </button>
@@ -152,7 +152,7 @@ export default function LeyendoAhoraWidget({ libros, logsHoy: logsIniciales }: P
 
               {/* Input inline */}
               {abierto === libro.id && (
-                <div className="d-flex gap-2 align-items-center mt-2" style={{ paddingLeft: 40 }}>
+                <div className="d-flex gap-2 align-items-center mt-2" style={{ paddingLeft: 0 }}>
                   <input
                     type="number"
                     min={1}

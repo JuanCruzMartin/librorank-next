@@ -1180,7 +1180,7 @@ export default function PerfilClient({
         position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
         zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <div className="card p-4" style={{ width: 320, textAlign: 'center' }}>
+        <div className="card p-4" style={{ width: 'min(320px, calc(100vw - 2rem))', textAlign: 'center' }}>
           <h5 className="font-title mb-2" style={{ color: 'var(--accent-gold)' }}>Ajustá tu foto</h5>
           <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', marginBottom: '1.25rem' }}>
             Arrastrá para elegir qué parte mostrar
