@@ -25,12 +25,12 @@ export default async function HomePage() {
   const anioActual = new Date().getFullYear()
   const [usuario, feed, citaDelDia, librosLeyendo, leidosEsteAnio, misiones, logsHoy, leidosPorMes, posicionRanking] = await Promise.all([
     buscarPorId(authUser.id),
-    obtenerFeedAmigos(authUser.id),
-    obtenerCitaAleatoria(authUser.id),
-    obtenerLeyendoAhora(authUser.id),
-    contarLeidosEsteAnio(authUser.id),
-    obtenerMisionesConProgreso(authUser.id),
-    obtenerLogsHoy(authUser.id),
+    obtenerFeedAmigos(authUser.id).catch(() => []),
+    obtenerCitaAleatoria(authUser.id).catch(() => null),
+    obtenerLeyendoAhora(authUser.id).catch(() => []),
+    contarLeidosEsteAnio(authUser.id).catch(() => 0),
+    obtenerMisionesConProgreso(authUser.id).catch(() => []),
+    obtenerLogsHoy(authUser.id).catch(() => []),
     obtenerLeidosPorMes(authUser.id, anioActual).catch(() => [] as { mes: number; total: number }[]),
     obtenerPosicionRanking(authUser.id).catch(() => 0),
   ])

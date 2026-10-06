@@ -103,7 +103,9 @@ function getPeriodoActual(tipo: TipoMision): string {
 
 // ── Inicializar tabla ────────────────────────────────────────────────────────
 
+let _inicializada = false
 export async function inicializarTabla(): Promise<void> {
+  if (_inicializada) return
   await execute(`
     CREATE TABLE IF NOT EXISTS misiones_reclamadas (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -113,7 +115,8 @@ export async function inicializarTabla(): Promise<void> {
       fecha_reclamo DATETIME DEFAULT NOW(),
       UNIQUE KEY uq_mision (usuario_id, mision_key, periodo)
     )
-  `, [])
+  `, []).catch(() => {})
+  _inicializada = true
 }
 
 // ── Obtener misiones reclamadas del usuario en periodo actual ────────────────
