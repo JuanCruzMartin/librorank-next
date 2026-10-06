@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/lib/auth'
 import { buscarPorId } from '@/lib/dao/usuarioDAO'
-import { buscarPorUsuario, obtenerStatsPorUsuario, obtenerAutorMasLeido, obtenerMejorCalificado, sumarPaginasLeidas, obtenerConteoPorGenero, obtenerConteoPorMood } from '@/lib/dao/libroDAO'
+import { buscarPorUsuario, obtenerStatsPorUsuario, obtenerAutorMasLeido, obtenerMejorCalificado, sumarPaginasLeidas, obtenerConteoPorGenero, obtenerConteoPorMood, migrarEstrellasDecimal } from '@/lib/dao/libroDAO'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import BibliotecaClient from './BibliotecaClient'
@@ -9,6 +9,8 @@ import BibliotecaClient from './BibliotecaClient'
 export default async function BibliotecaPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
   const authUser = await getAuthUser()
   if (!authUser) redirect('/login')
+
+  await migrarEstrellasDecimal().catch(() => {})
 
   const params = await searchParams
   const targetId = params.id ? Number(params.id) : authUser.id

@@ -11,6 +11,7 @@ import type { Personaje } from '@/lib/personaje'
 import type { Cuento } from '@/lib/dao/cuentoPersonalDAO'
 import PersonajeCard from '@/components/PersonajeCard'
 import CartaPersonaje from '@/components/CartaPersonaje'
+import StarDisplay from '@/components/StarDisplay'
 import { CARTAS, RAREZAS, rarezaVisual } from '@/lib/cartas'
 
 interface WrappedData {
@@ -459,7 +460,7 @@ export default function PerfilClient({
                               pointerEvents: 'none',
                             }}>
                               <div style={{ fontSize: '0.52rem', fontWeight: 700, color: '#fff', lineHeight: 1.25, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>{l.titulo}</div>
-                              {(l.estrellas ?? 0) > 0 && <div style={{ fontSize: '0.48rem', marginTop: 2, color: '#f1c40f' }}>{'★'.repeat(l.estrellas ?? 0)}</div>}
+                              {(l.estrellas ?? 0) > 0 && <div style={{ marginTop: 2 }}><StarDisplay value={l.estrellas ?? 0} size={8} /></div>}
                             </div>
                           )}
                         </>
@@ -590,7 +591,7 @@ export default function PerfilClient({
                           <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.88rem', marginBottom: 2 }}>{l.titulo}</div>
                           <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>{l.autor}</div>
                           {(l.estrellas ?? 0) > 0 && (
-                            <div style={{ fontSize: '0.75rem', marginBottom: 6 }}>{'⭐'.repeat(l.estrellas ?? 0)}</div>
+                            <div style={{ marginBottom: 6 }}><StarDisplay value={l.estrellas ?? 0} size={13} /></div>
                           )}
                           <p style={{
                             margin: 0, fontSize: '0.82rem', color: 'rgba(255,255,255,0.65)',
@@ -995,7 +996,7 @@ export default function PerfilClient({
                         <p style={{ fontSize: '0.65rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: '0.25rem' }}>⭐ Tu libro del año</p>
                         <p style={{ fontWeight: 700, color: '#fff', margin: '0 0 2px', fontSize: '0.9rem' }}>{wrapped.mejorLibro.titulo}</p>
                         <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', margin: 0 }}>{wrapped.mejorLibro.autor}</p>
-                        <p style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>{'⭐'.repeat(wrapped.mejorLibro.estrellas)}</p>
+                        <p style={{ margin: '4px 0 0' }}><StarDisplay value={wrapped.mejorLibro.estrellas} size={15} /></p>
                       </div>
                     </div>
                   )}

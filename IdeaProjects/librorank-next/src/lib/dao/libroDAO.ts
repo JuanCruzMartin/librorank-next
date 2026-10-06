@@ -2,6 +2,22 @@ import { query, queryOne, execute, transaction } from '@/lib/db'
 import { obtenerOCrear } from './libroGlobalDAO'
 import { crearNotificacion } from './notificacionDAO'
 
+let _decimalMigrated = false
+export async function migrarEstrellasDecimal(): Promise<void> {
+  if (_decimalMigrated) return
+  try {
+    const col = await queryOne<{ COLUMN_TYPE: string }>(
+      `SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'libros_usuario' AND COLUMN_NAME = 'estrellas'`,
+      []
+    )
+    if (col?.COLUMN_TYPE !== 'decimal(3,1)') {
+      await execute(`ALTER TABLE libros_usuario MODIFY COLUMN estrellas DECIMAL(3,1) NOT NULL DEFAULT 0`, [])
+    }
+  } catch { /* migration failed silently */ }
+  _decimalMigrated = true
+}
+
 export interface Libro {
   id: number
   usuario_id: number

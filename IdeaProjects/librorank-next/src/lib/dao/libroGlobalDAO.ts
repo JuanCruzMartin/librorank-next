@@ -118,10 +118,10 @@ export async function obtenerMasLeidos(limite = 12): Promise<LibroGlobal[]> {
 
 export async function obtenerDistribucionEstrellas(libroGlobalId: number): Promise<DistribucionEstrellas[]> {
   return query<DistribucionEstrellas>(
-    `SELECT estrellas, COUNT(*) AS cantidad
+    `SELECT ROUND(estrellas) AS estrellas, COUNT(*) AS cantidad
      FROM libros_usuario
      WHERE libro_global_id=? AND estrellas > 0
-     GROUP BY estrellas
+     GROUP BY ROUND(estrellas)
      ORDER BY estrellas DESC`,
     [libroGlobalId]
   )

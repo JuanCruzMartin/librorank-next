@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { BingoCasilla } from '@/lib/dao/bingoDAO'
 import type { Libro } from '@/lib/dao/libroDAO'
+import StarDisplay from '@/components/StarDisplay'
 
 interface Props {
   bingo: BingoCasilla[]
@@ -348,8 +349,8 @@ export default function BingoClient({ bingo: bingoIni, misLibros }: Props) {
                     </div>
                   )}
                   {(detalle.libro_estrellas ?? 0) > 0 && (
-                    <div style={{ fontSize: '0.85rem', letterSpacing: 2, marginBottom: '0.4rem' }}>
-                      {'⭐'.repeat(detalle.libro_estrellas ?? 0)}
+                    <div style={{ marginBottom: '0.4rem' }}>
+                      <StarDisplay value={detalle.libro_estrellas ?? 0} size={14} />
                     </div>
                   )}
                   {detalle.libro_resena && (

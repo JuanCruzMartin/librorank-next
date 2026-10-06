@@ -10,6 +10,8 @@ import type { Libro, PerfilStats } from '@/lib/dao/libroDAO'
 import type { Usuario } from '@/lib/dao/usuarioDAO'
 import BannerExplicativo from '@/components/BannerExplicativo'
 import Toast from '@/components/Toast'
+import StarPicker from '@/components/StarPicker'
+import StarDisplay from '@/components/StarDisplay'
 import { GENEROS } from '@/lib/generos'
 import { getLiga } from '@/lib/ligas'
 import RecomendacionesClient from '@/app/recomendaciones/RecomendacionesClient'
@@ -60,7 +62,12 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   const [showScanner, setShowScanner] = useState(false)
   const [scannerBuscando, setScannerBuscando] = useState(false)
   const [isbnDetectado, setIsbnDetectado] = useState<string | null>(null)
+  const [editEstrellas, setEditEstrellas] = useState<number>(0)
   const searchRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setEditEstrellas(editando?.estrellas ?? 0)
+  }, [editando?.id])
 
   // Atajo "/" enfoca el buscador de la biblioteca
   useEffect(() => {
@@ -202,7 +209,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
         accion: 'editar',
         id: editando.id,
         estado:   (fd.get('estado')   as string) || editando.estado,
-        estrellas:(fd.get('estrellas') as string) || '0',
+        estrellas: String(editEstrellas),
         resena:   (fd.get('resena')   as string) || '',
         genero:   (fd.get('genero')   as string) || '',
         mood:     (fd.get('mood')     as string) || '',
@@ -834,7 +841,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                     <p style={{ margin: '0 0 2px', fontWeight: 700, fontSize: '0.75rem', color: '#fff', lineHeight: 1.25, overflow: 'hidden', maxHeight: '2.5rem' } as React.CSSProperties}>{libro.titulo}</p>
                     <p style={{ margin: '0 0 6px', fontSize: '0.65rem', color: 'rgba(255,255,255,0.55)' }}>{libro.autor}</p>
                     {(libro.estrellas ?? 0) > 0 && (
-                      <p style={{ margin: '0 0 4px', fontSize: '0.65rem', letterSpacing: 1 }}>{'⭐'.repeat(libro.estrellas ?? 0)}</p>
+                      <p style={{ margin: '0 0 4px' }}><StarDisplay value={libro.estrellas ?? 0} size={11} /></p>
                     )}
                     {libro.resena && (
                       <p style={{ margin: '0 0 7px', fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
@@ -1181,14 +1188,9 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                     </div>
                     <div className="col-6">
                       <label className="form-label text-gold fw-bold mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.5px' }}>CALIFICACIÓN</label>
-                      <select name="estrellas" defaultValue={String(editando.estrellas ?? 0)} className="form-select">
-                        <option value="0">Sin calificar</option>
-                        <option value="1">⭐ (1)</option>
-                        <option value="2">⭐⭐ (2)</option>
-                        <option value="3">⭐⭐⭐ (3)</option>
-                        <option value="4">⭐⭐⭐⭐ (4)</option>
-                        <option value="5">⭐⭐⭐⭐⭐ (5)</option>
-                      </select>
+                      <div style={{ paddingTop: 4 }}>
+                        <StarPicker value={editEstrellas} onChange={setEditEstrellas} size={28} />
+                      </div>
                     </div>
                     <div className="col-6">
                       <label className="form-label text-gold fw-bold mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.5px' }}>GÉNERO</label>

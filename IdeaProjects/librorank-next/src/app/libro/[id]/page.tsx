@@ -11,6 +11,7 @@ import { buscarPorUsuario as misLibros } from '@/lib/dao/libroDAO'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
+import StarDisplay from '@/components/StarDisplay'
 import LibroDetalleClient from './LibroDetalleClient'
 
 interface Props {
@@ -158,8 +159,8 @@ export default async function LibroPage({ params }: Props) {
                           {notaMedia}
                         </div>
                         <div>
-                          <div style={{ fontSize: '1.1rem', letterSpacing: 2 }}>
-                            {'⭐'.repeat(Math.round(notaMedia))}
+                          <div>
+                            <StarDisplay value={notaMedia} size={18} />
                           </div>
                           <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
                             {totalCalificaciones} calificacion{totalCalificaciones !== 1 ? 'es' : ''}
@@ -245,7 +246,7 @@ export default async function LibroPage({ params }: Props) {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff' }}>@{l.username}</div>
                             {l.estrellas > 0 && (
-                              <div style={{ fontSize: '0.6rem', letterSpacing: 1 }}>{'⭐'.repeat(l.estrellas)}</div>
+                              <div><StarDisplay value={l.estrellas} size={10} /></div>
                             )}
                           </div>
                           <span style={{ fontSize: '0.58rem', fontWeight: 700, background: ec.bg, color: ec.color, borderRadius: 99, padding: '2px 6px', flexShrink: 0 }}>
@@ -290,7 +291,7 @@ export default async function LibroPage({ params }: Props) {
                             @{r.username}
                           </Link>
                           {r.estrellas > 0 && (
-                            <span style={{ fontSize: '0.8rem', letterSpacing: 1.5 }}>{'⭐'.repeat(r.estrellas)}</span>
+                            <StarDisplay value={r.estrellas} size={14} />
                           )}
                         </div>
                         <p style={{
