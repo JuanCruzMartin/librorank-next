@@ -41,23 +41,23 @@ export default async function ArenaPage({ searchParams }: { searchParams: Promis
 
   const [usuario, sala, activo, historial, coleccion, cantidades, tiradas, amigos, stats, statsPorRival, misiones, retos, bingo, misLibros, estadoLiga] = await Promise.all([
     buscarPorId(authUser.id),
-    obtenerSala(),
-    obtenerDueloActivo(authUser.id),
-    obtenerHistorial(authUser.id, 5),
-    obtenerColeccion(authUser.id),
-    obtenerCantidades(authUser.id),
-    obtenerTiradas(authUser.id),
-    obtenerAmigos(authUser.id),
-    obtenerStatsGlobales(authUser.id),
-    obtenerStatsPorRival(authUser.id),
-    obtenerMisionesConProgreso(authUser.id),
-    obtenerRetosActivos(authUser.id),
-    obtenerBingo(authUser.id),
-    buscarPorUsuario(authUser.id),
-    obtenerEstadoLiga(authUser.id),
+    obtenerSala().catch(() => []),
+    obtenerDueloActivo(authUser.id).catch(() => null),
+    obtenerHistorial(authUser.id, 5).catch(() => []),
+    obtenerColeccion(authUser.id).catch(() => [] as string[]),
+    obtenerCantidades(authUser.id).catch(() => ({} as Record<string, number>)),
+    obtenerTiradas(authUser.id).catch(() => 0),
+    obtenerAmigos(authUser.id).catch(() => []),
+    obtenerStatsGlobales(authUser.id).catch(() => ({ victorias: 0, derrotas: 0, empates: 0 })),
+    obtenerStatsPorRival(authUser.id).catch(() => []),
+    obtenerMisionesConProgreso(authUser.id).catch(() => []),
+    obtenerRetosActivos(authUser.id).catch(() => []),
+    obtenerBingo(authUser.id).catch(() => []),
+    buscarPorUsuario(authUser.id).catch(() => []),
+    obtenerEstadoLiga(authUser.id).catch(() => ({ liga: 'bronce' as const, puntos_arena: 0, en_promocion: false, duelos_promocion: 0, victorias_promocion: 0 })),
   ])
 
-  const rankingLiga = await obtenerRankingTodasLigas(10)
+  const rankingLiga = await obtenerRankingTodasLigas(10).catch(() => [])
 
   if (!usuario) redirect('/login')
 
