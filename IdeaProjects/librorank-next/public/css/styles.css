@@ -1846,11 +1846,11 @@ textarea.form-control {
   .modal-dialog.modal-lg { max-width: calc(100vw - 1rem) !important; }
 }
 
-/* ── Toasts y dropdowns — no desbordar el viewport ── */
+/* ── Toasts — no desbordar el viewport en mobile ── */
 @media (max-width: 576px) {
-  [style*="position: fixed"][style*="bottom"] {
+  .lr-toast {
     right: 0.75rem !important;
-    left: 0.75rem !important;
+    left: auto !important;
     max-width: calc(100vw - 1.5rem) !important;
   }
 }

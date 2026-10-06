@@ -116,7 +116,7 @@ export default function Header({ user }: HeaderProps) {
 
   // Cerrar dropdowns al hacer clic fuera
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
+    function handleClickOutside(e: MouseEvent | TouchEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setNotifAbierto(false)
       }
@@ -125,7 +125,11 @@ export default function Header({ user }: HeaderProps) {
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside as EventListener, { passive: true })
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside as EventListener)
+    }
   }, [])
 
   async function fetchNotifs() {
@@ -538,7 +542,7 @@ export default function Header({ user }: HeaderProps) {
               style={{
                 background: 'none', border: '1px solid rgba(255,255,255,0.15)',
                 borderRadius: 8, color: '#fff', cursor: 'pointer',
-                padding: '0.35rem 0.55rem', fontSize: '1rem', lineHeight: 1,
+                padding: '0.65rem 0.75rem', fontSize: '1rem', lineHeight: 1,
               }}
               aria-label="Menú"
             >

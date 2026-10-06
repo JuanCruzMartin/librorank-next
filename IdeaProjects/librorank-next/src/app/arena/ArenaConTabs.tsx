@@ -252,7 +252,7 @@ export default function ArenaConTabs({
         background: 'linear-gradient(180deg, rgba(20,10,40,0.95) 0%, rgba(10,5,25,0.9) 100%)',
         borderBottom: '2px solid rgba(124,58,237,0.35)',
         boxShadow: '0 4px 24px rgba(0,0,0,0.5), 0 1px 0 rgba(124,58,237,0.2)',
-        position: 'sticky', top: 0, zIndex: 100,
+        position: 'sticky', top: '56px', zIndex: 100,
         backdropFilter: 'blur(16px)',
       }}>
         {TABS.map(t => (

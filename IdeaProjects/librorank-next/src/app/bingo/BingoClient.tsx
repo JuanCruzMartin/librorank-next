@@ -397,7 +397,7 @@ export default function BingoClient({ bingo: bingoIni, misLibros }: Props) {
         .bingo-hover:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212,175,55,0.15); }
         @media (max-width: 480px) {
           .bingo-grid button, .bingo-grid div { min-height: 62px !important; }
-          .bingo-grid { gap: 0.35rem !important; min-width: 320px !important; }
+          .bingo-grid { gap: 0.35rem !important; min-width: 0 !important; }
         }
       `}</style>
     </div>

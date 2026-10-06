@@ -143,7 +143,7 @@ export default function MisionesWidget({ misionesIniciales }: Props) {
                       disabled={reclamando === m.key}
                       style={{
                         marginTop: 8,
-                        padding: '3px 12px',
+                        padding: '8px 14px',
                         fontSize: '0.7rem',
                         fontWeight: 700,
                         borderRadius: 99,
@@ -171,6 +171,7 @@ export default function MisionesWidget({ misionesIniciales }: Props) {
           background: 'linear-gradient(135deg, #b8860b, #d4af37)',
           color: '#1a1614', padding: '10px 18px', borderRadius: 99,
           fontWeight: 700, fontSize: '0.85rem',
+          maxWidth: 'calc(100vw - 2.5rem)',
           boxShadow: '0 4px 20px rgba(212,175,55,0.4)',
           animation: 'slideIn 0.3s ease',
         }}>

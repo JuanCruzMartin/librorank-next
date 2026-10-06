@@ -19,6 +19,7 @@ export default function Toast({ mensaje, puntos, onClose }: ToastProps) {
 
   return (
     <div
+      className="lr-toast"
       style={{
         position: 'fixed',
         bottom: '2rem',

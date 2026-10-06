@@ -71,18 +71,20 @@ export default function BannerSugerenciasFlotante() {
 
   if (!visible) return null
 
-  const posStyle = pos.x >= 0
+  const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window)
+
+  const posStyle = (!isMobile && pos.x >= 0)
     ? { left: pos.x, top: pos.y, bottom: 'auto', right: 'auto' }
-    : { bottom: 24, right: 24 }
+    : { bottom: 24, left: 16, right: 'auto' }
 
   return (
     <div
       ref={bannerRef}
-      onMouseDown={onMouseDown}
+      onMouseDown={isMobile ? undefined : onMouseDown}
       style={{
         position: 'fixed', zIndex: 8000,
         ...posStyle,
-        width: 320, borderRadius: 14,
+        width: 'calc(100vw - 2rem)', maxWidth: 320, borderRadius: 14,
         background: 'linear-gradient(135deg, #1e1040 0%, #0f172a 100%)',
         border: '1px solid rgba(139,92,246,0.4)',
         boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,92,246,0.15)',

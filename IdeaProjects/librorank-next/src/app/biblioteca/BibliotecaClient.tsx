@@ -318,7 +318,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
             borderRadius: 18, padding: '1.1rem 1.5rem',
             boxShadow: `0 8px 40px ${ligaToast.color}55`,
             display: 'flex', alignItems: 'center', gap: '1rem',
-            maxWidth: 300,
+            maxWidth: 'min(300px, calc(100vw - 2.5rem))',
             animation: 'slideInRight 0.4s cubic-bezier(.17,.67,.35,1.2)',
           }}
         >

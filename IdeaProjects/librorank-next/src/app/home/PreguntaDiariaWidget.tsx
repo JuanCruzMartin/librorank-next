@@ -92,7 +92,7 @@ export default function PreguntaDiariaWidget() {
         {/* Card expandida */}
         {abierto && (
           <div style={{
-            width: 320,
+            width: 'calc(100vw - 3rem)', maxWidth: 320,
             background: 'linear-gradient(145deg, #1a0d2e, #130920)',
             border: '1px solid rgba(155,89,182,0.4)',
             borderRadius: 16,
