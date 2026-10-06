@@ -12,12 +12,12 @@ import BannerExplicativo from '@/components/BannerExplicativo'
 import Toast from '@/components/Toast'
 import StarPicker from '@/components/StarPicker'
 import StarDisplay from '@/components/StarDisplay'
+import MoodPicker from '@/components/MoodPicker'
 import { GENEROS } from '@/lib/generos'
 import { getLiga } from '@/lib/ligas'
 import RecomendacionesClient from '@/app/recomendaciones/RecomendacionesClient'
 
-const ESTADOS = ['PENDIENTE', 'LEYENDO', 'LEIDO', 'PAUSA']
-const MOODS = ['Relajado', 'Aventurero', 'Emotivo', 'Intelectual', 'Nostálgico', 'Inspirador', 'Oscuro', 'Divertido']
+const ESTADOS = ['PENDIENTE', 'LEYENDO', 'LEIDO', 'PAUSA', 'DNF']
 
 interface Sugerencia { titulo: string; autor: string; anio: string; paginas: string; portada: string; genero: string }
 
@@ -63,10 +63,12 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
   const [scannerBuscando, setScannerBuscando] = useState(false)
   const [isbnDetectado, setIsbnDetectado] = useState<string | null>(null)
   const [editEstrellas, setEditEstrellas] = useState<number>(0)
+  const [editMood, setEditMood] = useState<string>('')
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setEditEstrellas(editando?.estrellas ?? 0)
+    setEditMood(editando?.mood ?? '')
   }, [editando?.id])
 
   // Atajo "/" enfoca el buscador de la biblioteca
@@ -212,7 +214,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
         estrellas: String(editEstrellas),
         resena:   (fd.get('resena')   as string) || '',
         genero:   (fd.get('genero')   as string) || '',
-        mood:     (fd.get('mood')     as string) || '',
+        mood:     editMood,
       }
       const res = await fetch('/api/libros', {
         method: 'POST',
@@ -301,6 +303,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
     if (estado === 'LEIDO')    return { bg: '#4cd137', color: '#000' }
     if (estado === 'LEYENDO')  return { bg: '#f1c40f', color: '#000' }
     if (estado === 'PAUSA')    return { bg: '#5dade2', color: '#000' }
+    if (estado === 'DNF')      return { bg: 'rgba(231,76,60,0.85)', color: '#fff' }
     return { bg: 'rgba(255,255,255,0.25)', color: '#fff' }
   }
 
@@ -612,7 +615,7 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                   color: filtro === e ? '#000' : 'rgba(255,255,255,0.6)',
                   cursor: 'pointer', transition: 'all 0.15s',
                 }}>
-                {e === 'TODOS' ? 'Todos' : e === 'LEIDO' ? '✅ Leído' : e === 'LEYENDO' ? '📖 Leyendo' : e === 'PENDIENTE' ? '🕐 Pendiente' : '⏸ Pausa'}
+                {e === 'TODOS' ? 'Todos' : e === 'LEIDO' ? '✅ Leído' : e === 'LEYENDO' ? '📖 Leyendo' : e === 'PENDIENTE' ? '🕐 Pendiente' : e === 'DNF' ? '❌ DNF' : '⏸ Pausa'}
               </button>
             ))}
             {!soloLectura && (
@@ -1122,10 +1125,10 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                       </div>
                       <div className="col-4">
                         <label className="form-label text-muted" style={{ fontSize: '0.8rem' }}>Mood</label>
-                        <select name="mood" className="form-select">
-                          <option value="">Sin mood</option>
-                          {MOODS.map(m => <option key={m} value={m}>{m}</option>)}
-                        </select>
+                        <input name="mood" type="hidden" value="" />
+                        <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', paddingTop: 8 }}>
+                          Se elige al reseñar
+                        </div>
                       </div>
                     </div>
 
@@ -1199,12 +1202,9 @@ export default function BibliotecaClient({ librosIniciales, stats, autorMasLeido
                         {GENEROS.map(g => <option key={g} value={g}>{g}</option>)}
                       </select>
                     </div>
-                    <div className="col-6">
-                      <label className="form-label text-gold fw-bold mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.5px' }}>MOOD</label>
-                      <select name="mood" defaultValue={editando.mood || ''} className="form-select">
-                        <option value="">Sin mood</option>
-                        {MOODS.map(m => <option key={m} value={m}>{m}</option>)}
-                      </select>
+                    <div className="col-12">
+                      <label className="form-label text-gold fw-bold mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.5px' }}>VIBE DEL LIBRO</label>
+                      <MoodPicker value={editMood} onChange={setEditMood} />
                     </div>
                     <div className="col-12">
                       <label className="form-label text-gold fw-bold mb-2" style={{ fontSize: '0.8rem', letterSpacing: '0.5px' }}>RESEÑA</label>

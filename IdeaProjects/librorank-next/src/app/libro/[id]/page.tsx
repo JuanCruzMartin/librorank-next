@@ -75,12 +75,17 @@ export default async function LibroPage({ params }: Props) {
 
   // Verificar si el usuario ya tiene este libro en su biblioteca
   let yaEnBiblioteca = false
+  let libroUsuario: { id: number; estrellas: number; resena: string | null; mood: string | null; estado: string; genero: string | null } | undefined
   if (authUser) {
     try {
       const misL = await misLibros(authUser.id)
-      yaEnBiblioteca = misL.some(l =>
+      const match = misL.find(l =>
         l.titulo.toLowerCase().trim() === (libro as NonNullable<typeof libro>).titulo.toLowerCase().trim()
       )
+      if (match) {
+        yaEnBiblioteca = true
+        libroUsuario = { id: match.id, estrellas: match.estrellas, resena: match.resena, mood: match.mood, estado: match.estado, genero: match.genero }
+      }
     } catch (err) {
       console.error('[LibroPage] Error en misLibros:', err)
     }
@@ -96,6 +101,7 @@ export default async function LibroPage({ params }: Props) {
     if (estado === 'LEIDO')    return { bg: '#4cd137', color: '#000', label: 'Leído' }
     if (estado === 'LEYENDO')  return { bg: '#f1c40f', color: '#000', label: 'Leyendo' }
     if (estado === 'PAUSA')    return { bg: '#5dade2', color: '#000', label: 'Pausa' }
+    if (estado === 'DNF')      return { bg: 'rgba(231,76,60,0.8)', color: '#fff', label: 'Abandonó' }
     return { bg: 'rgba(255,255,255,0.2)', color: '#fff', label: 'Pendiente' }
   }
 
@@ -205,6 +211,7 @@ export default async function LibroPage({ params }: Props) {
                       anio={libro.anio}
                       paginas={libro.paginas}
                       yaEnBiblioteca={yaEnBiblioteca}
+                      libroUsuario={libroUsuario}
                     />
                   ) : (
                     <Link href="/login" style={{
@@ -286,13 +293,20 @@ export default async function LibroPage({ params }: Props) {
                         border: '1px solid rgba(255,255,255,0.07)',
                         borderRadius: 14, padding: '1.1rem 1.25rem',
                       }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.6rem' }}>
                           <Link href={`/perfil/${r.username}`} style={{ fontWeight: 700, color: '#fff', textDecoration: 'none', fontSize: '0.88rem' }}>
                             @{r.username}
                           </Link>
-                          {r.estrellas > 0 && (
-                            <StarDisplay value={r.estrellas} size={14} />
-                          )}
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                            {r.estrellas > 0 && <StarDisplay value={r.estrellas} size={14} />}
+                            {r.mood && (
+                              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                {r.mood.split(',').map(m => m.trim()).filter(Boolean).map(m => (
+                                  <span key={m} style={{ fontSize: '0.62rem', padding: '2px 7px', borderRadius: 99, background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.25)', color: 'rgba(212,175,55,0.7)' }}>{m}</span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <p style={{
                           margin: 0, fontSize: '0.88rem', color: 'rgba(255,255,255,0.65)',

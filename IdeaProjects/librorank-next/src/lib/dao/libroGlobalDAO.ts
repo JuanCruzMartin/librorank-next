@@ -15,6 +15,7 @@ export interface LibroGlobal {
 export interface ReviewGlobal {
   resena: string
   estrellas: number
+  mood: string | null
   username: string
 }
 
@@ -65,7 +66,7 @@ export async function buscarPorId(id: number): Promise<LibroGlobal | null> {
 
 export async function obtenerReviews(libroGlobalId: number): Promise<ReviewGlobal[]> {
   return query<ReviewGlobal>(
-    `SELECT lu.resena, lu.estrellas, u.username
+    `SELECT lu.resena, lu.estrellas, lu.mood, u.username
      FROM libros_usuario lu JOIN usuarios u ON lu.usuario_id=u.id
      WHERE lu.libro_global_id=? AND lu.resena IS NOT NULL AND lu.resena!=''
      ORDER BY lu.id DESC`,
