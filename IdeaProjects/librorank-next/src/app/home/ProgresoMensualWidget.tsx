@@ -16,6 +16,7 @@ export default function ProgresoMensualWidget({ datos, anio }: Props) {
   })
   const max = Math.max(...totales, 1)
   const totalAnio = totales.reduce((a, b) => a + b, 0)
+  const mesMejor = totales.indexOf(max)
 
   if (totalAnio === 0) return null
 
@@ -30,18 +31,34 @@ export default function ProgresoMensualWidget({ datos, anio }: Props) {
         </span>
       </div>
 
-      <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: 56 }}>
+      <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: 76 }}>
         {totales.map((val, i) => {
           const mes = i + 1
           const esActual = mes === mesActual
+          const esMejor = i === mesMejor && val > 0
           const esFuturo = mes > mesActual
           const barHeight = val > 0 ? Math.round((val / max) * 48) + 8 : 4
 
           return (
             <div
               key={i}
-              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}
             >
+              {/* Count label */}
+              <span style={{
+                fontSize: 8,
+                lineHeight: 1,
+                height: 10,
+                color: esActual
+                  ? '#f1c40f'
+                  : esMejor
+                  ? 'rgba(212,175,55,0.7)'
+                  : 'transparent',
+                fontWeight: 700,
+                fontVariantNumeric: 'tabular-nums',
+              }}>
+                {val > 0 ? val : ''}
+              </span>
               <div
                 title={`${MESES_FULL[i]}: ${val} libro${val !== 1 ? 's' : ''}`}
                 style={{
@@ -50,10 +67,12 @@ export default function ProgresoMensualWidget({ datos, anio }: Props) {
                   borderRadius: 3,
                   background: esActual
                     ? 'linear-gradient(180deg, #f1c40f, #b8860b)'
+                    : esMejor && !esFuturo
+                    ? 'rgba(212,175,55,0.55)'
                     : esFuturo || val === 0
                     ? 'rgba(255,255,255,0.07)'
-                    : 'rgba(212,175,55,0.35)',
-                  border: esActual ? '1px solid rgba(212,175,55,0.6)' : 'none',
+                    : 'rgba(212,175,55,0.3)',
+                  border: esActual ? '1px solid rgba(212,175,55,0.6)' : esMejor && !esFuturo ? '1px solid rgba(212,175,55,0.4)' : 'none',
                   cursor: 'default',
                   transition: 'opacity 0.15s',
                 }}
@@ -61,8 +80,8 @@ export default function ProgresoMensualWidget({ datos, anio }: Props) {
               <span style={{
                 fontSize: 9,
                 lineHeight: 1,
-                color: esActual ? '#d4af37' : 'rgba(255,255,255,0.25)',
-                fontWeight: esActual ? 700 : 400,
+                color: esActual ? '#d4af37' : esMejor ? 'rgba(212,175,55,0.6)' : 'rgba(255,255,255,0.25)',
+                fontWeight: esActual || esMejor ? 700 : 400,
               }}>
                 {MESES[i]}
               </span>

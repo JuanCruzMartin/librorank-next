@@ -27,7 +27,7 @@ export async function GET() {
   const [
     resumen, generos, autores, meses, mejorLibro, librosRecientes,
     libroMasLargo, primerLibro, rachaUsuario,
-    diaFavoritoRow, anioAnteriorRow, logrosEsteAnio,
+    diaFavoritoRow, anioAnteriorRow, logrosEsteAnio, moodRows,
   ] = await Promise.all([
     queryOne<{ total: number; paginas: number; promedio: number }>(`
       SELECT
@@ -68,8 +68,8 @@ export async function GET() {
       SELECT titulo, autor, estrellas, portada_url
       FROM libros_usuario
       WHERE usuario_id = ? AND UPPER(estado) IN ('LEIDO','LEÍDO')
-        AND estrellas = 5 AND YEAR(fecha_registro) = ?
-      ORDER BY fecha_registro DESC LIMIT 1
+        AND estrellas > 0 AND YEAR(fecha_registro) = ?
+      ORDER BY estrellas DESC, fecha_registro DESC LIMIT 1
     `, [uid, anio]),
 
     query<{ titulo: string; portada_url: string; autor: string }>(`
@@ -124,7 +124,27 @@ export async function GET() {
       FROM usuario_logros
       WHERE usuario_id = ? AND YEAR(fecha_desbloqueo) = ?
     `, [uid, anio]),
+
+    // Moods usados este año
+    query<{ mood: string }>(`
+      SELECT mood FROM libros_usuario
+      WHERE usuario_id = ? AND UPPER(estado) IN ('LEIDO','LEÍDO')
+        AND YEAR(fecha_registro) = ?
+        AND mood IS NOT NULL AND mood != ''
+    `, [uid, anio]),
   ])
+
+  // Aggregate comma-separated mood tags
+  const moodCount: Record<string, number> = {}
+  for (const row of moodRows) {
+    for (const tag of row.mood.split(',').map(s => s.trim()).filter(Boolean)) {
+      moodCount[tag] = (moodCount[tag] ?? 0) + 1
+    }
+  }
+  const topVibes = Object.entries(moodCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([tag, total]) => ({ tag, total }))
 
   const mesMasActivo = meses.length > 0
     ? meses.reduce((a, b) => a.total > b.total ? a : b)
@@ -170,5 +190,6 @@ export async function GET() {
     progresoObjetivo,
     logrosEsteAnio: Number(logrosEsteAnio?.total ?? 0),
     frase: generarFrase(totalActual, resumen?.paginas ?? 0, autores),
+    topVibes,
   })
 }

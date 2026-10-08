@@ -33,6 +33,7 @@ interface WrappedData {
   progresoObjetivo: number | null
   logrosEsteAnio: number
   frase: string
+  topVibes: { tag: string; total: number }[]
 }
 
 const BANNER_NIVEL: Record<number, string> = {
@@ -985,6 +986,26 @@ export default function PerfilClient({
                       ))}
                     </div>
                   </div>
+
+                  {/* Top vibes */}
+                  {wrapped.topVibes && wrapped.topVibes.length > 0 && (
+                    <div className="card p-4" style={{ marginBottom: '1.5rem' }}>
+                      <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: '1rem', margin: '0 0 1rem' }}>✨ Tus vibes del año</p>
+                      <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                        {wrapped.topVibes.map((v, i) => (
+                          <div key={v.tag} style={{
+                            display: 'flex', alignItems: 'center', gap: '0.5rem',
+                            padding: '0.4rem 0.9rem', borderRadius: 99,
+                            background: i === 0 ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.05)',
+                            border: `1px solid ${i === 0 ? 'rgba(212,175,55,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                          }}>
+                            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: i === 0 ? '#d4af37' : 'rgba(255,255,255,0.6)' }}>{v.tag}</span>
+                            <span style={{ fontSize: '0.65rem', color: i === 0 ? 'rgba(212,175,55,0.6)' : 'rgba(255,255,255,0.3)', fontWeight: 600 }}>{v.total}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Mejor libro */}
                   {wrapped.mejorLibro && (
