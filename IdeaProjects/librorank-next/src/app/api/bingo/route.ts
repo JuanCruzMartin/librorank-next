@@ -28,9 +28,10 @@ export async function POST(req: NextRequest) {
 
   const ok = await bingoDAO.marcarCasilla(user.id, Number(retoId), Number(libroId), nota ?? undefined)
   if (ok) {
-    await libroDAO.otorgarPuntos(user.id, 25, 'Casilla del bingo completada')
-    await registrarActividad(user.id, 'BINGO', Number(retoId), 'Ha completado una casilla del Bingo Lector')
-    await verificarLogros(user.id)
+    // Wrap side-effects so they don't crash the response if they fail
+    try { await libroDAO.otorgarPuntos(user.id, 25, 'Casilla del bingo completada') } catch {}
+    try { await registrarActividad(user.id, 'BINGO', Number(retoId), 'Ha completado una casilla del Bingo Lector') } catch {}
+    try { await verificarLogros(user.id) } catch {}
   }
   return NextResponse.json({ ok })
 }
