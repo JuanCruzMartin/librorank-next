@@ -72,7 +72,7 @@ export default function AdminPage() {
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔐</div>
-          <h1 style={{ color: '#d4af37', fontSize: '1.3rem', fontWeight: 800, margin: 0 }}>Admin — LibroRank</h1>
+          <h1 style={{ color: '#d4af37', fontSize: '1.3rem', fontWeight: 800, margin: 0 }}>Admin — LibroRanking</h1>
           <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.78rem', marginTop: '0.4rem' }}>
             Reseteo de contraseña
           </p>

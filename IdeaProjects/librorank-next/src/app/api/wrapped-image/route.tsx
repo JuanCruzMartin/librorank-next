@@ -154,8 +154,8 @@ export async function GET(req: NextRequest) {
             padding: '22px 80px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             borderTop: '1px solid rgba(212,175,55,0.12)',
           }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#d4af37', display: 'flex' }}>📚 LibroRank</div>
-            <div style={{ fontSize: 16, color: 'rgba(255,255,255,0.25)', display: 'flex' }}>librorank-next.vercel.app</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#d4af37', display: 'flex' }}>📚 LibroRanking</div>
+            <div style={{ fontSize: 16, color: 'rgba(255,255,255,0.25)', display: 'flex' }}>libroranking.com</div>
           </div>
 
           {/* Barra dorada inferior */}

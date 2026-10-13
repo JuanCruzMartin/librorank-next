@@ -43,7 +43,7 @@ export default async function LandingPage() {
               <h1>Tu biblioteca personal,<br /><span>gamificada al máximo.</span></h1>
               <p style={{ maxWidth: 560, margin: '1rem auto 2rem', opacity: 0.75 }}>
                 Registrá cada libro, ganá puntos, completá misiones y competí con amigos.
-                LibroRank convierte tu hábito lector en una aventura épica.
+                LibroRanking convierte tu hábito lector en una aventura épica.
               </p>
               <div className="hero-btns">
                 <Link href="/signup" className="btn-main text-decoration-none">Empezar gratis →</Link>

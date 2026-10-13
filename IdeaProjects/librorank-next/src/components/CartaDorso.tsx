@@ -84,7 +84,7 @@ export default function CartaDorso({ size = 'lg', glowColor, pulsar, imagen }: P
           color: '#d4af37',
           textTransform: 'uppercase',
         }}>
-          LibroRank
+          LibroRanking
         </div>
         <div style={{
           fontFamily: 'Georgia, serif',

@@ -6,7 +6,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import CuentoClient from './CuentoClient'
 
-export const metadata = { title: 'Mis Cuentos — LibroRank' }
+export const metadata = { title: 'Mis Cuentos — LibroRanking' }
 
 export default async function CuentoPage() {
   const authUser = await getAuthUser()

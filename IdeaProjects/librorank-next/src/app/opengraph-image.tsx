@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
-export const alt = 'LibroRank — La red social para lectores en español'
+export const alt = 'LibroRanking — La red social para lectores en español'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -34,7 +34,7 @@ export default function OGImage() {
           color: '#ffffff', marginBottom: 16,
           display: 'flex',
         }}>
-          Libro<span style={{ color: '#d4af37' }}>Rank</span>
+          Libro<span style={{ color: '#d4af37' }}>Ranking</span>
         </div>
 
         {/* Tagline */}
@@ -65,7 +65,7 @@ export default function OGImage() {
           position: 'absolute', bottom: 40,
           fontSize: 16, color: 'rgba(255,255,255,0.3)',
         }}>
-          librorank-next.vercel.app
+          libroranking.com
         </div>
       </div>
     ),

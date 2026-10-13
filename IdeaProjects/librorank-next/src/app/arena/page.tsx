@@ -16,7 +16,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ArenaConTabs from './ArenaConTabs'
 
-export const metadata = { title: 'Arena — LibroRank' }
+export const metadata = { title: 'Arena — LibroRanking' }
 
 type Tab = 'arena' | 'misiones' | 'retos' | 'bingo' | 'coleccion'
 

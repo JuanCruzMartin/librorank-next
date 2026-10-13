@@ -10,7 +10,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Ranking de Lectores',
-  description: 'Mirá quiénes son los lectores más activos de LibroRank. Competí, subí de liga y alcanzá la cima del ranking literario.',
+  description: 'Mirá quiénes son los lectores más activos de LibroRanking. Competí, subí de liga y alcanzá la cima del ranking literario.',
 }
 
 export default async function RankingPage() {

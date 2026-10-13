@@ -140,7 +140,7 @@ export default function RankingClient({ ranking, rankingSemanal, rankingAutores,
               <p className="text-muted" style={{ fontSize: '1rem' }}>
                 {estaLogueado
                   ? 'Competí con lectores de toda la comunidad. Leé más, subí de liga.'
-                  : 'Los lectores más dedicados de LibroRank. ¿Te animás a competir?'}
+                  : 'Los lectores más dedicados de LibroRanking. ¿Te animás a competir?'}
               </p>
               {!estaLogueado && (
                 <a href="/signup" style={{

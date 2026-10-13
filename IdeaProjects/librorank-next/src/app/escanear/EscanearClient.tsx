@@ -222,7 +222,7 @@ export default function EscanearClient() {
       <div className="mb-5">
         <h1 className="font-title display-5 mb-2">📷 Escanear libro</h1>
         <p className="text-muted">
-          Apuntá la cámara al código de barras de cualquier libro y mirá su puntaje en la comunidad LibroRank.
+          Apuntá la cámara al código de barras de cualquier libro y mirá su puntaje en la comunidad LibroRanking.
         </p>
       </div>
 
@@ -250,7 +250,7 @@ export default function EscanearClient() {
         <div className="card p-5 text-center">
           <div style={{ fontSize: '2.5rem', marginBottom: '1rem', animation: 'spin 1s linear infinite', display: 'inline-block' }}>🔍</div>
           <p className="text-muted mb-1">Buscando libro{isbnEscaneado ? ` (ISBN: ${isbnEscaneado})` : ''}...</p>
-          <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)' }}>Consultando Google Books y la comunidad LibroRank</p>
+          <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)' }}>Consultando Google Books y la comunidad LibroRanking</p>
           <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
         </div>
       )}
@@ -388,13 +388,13 @@ export default function EscanearClient() {
 
           <div className="card p-4">
             <h6 className="font-title mb-4" style={{ color: 'var(--accent-gold)', marginBottom: '1rem' }}>
-              🌎 Comunidad LibroRank
+              🌎 Comunidad LibroRanking
             </h6>
             {resultado.comunidad.total_lectores === 0 ? (
               <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
                 <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🌱</div>
                 <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', marginBottom: 0 }}>
-                  Todavía nadie en LibroRank leyó este libro. ¡Sé el primero!
+                  Todavía nadie en LibroRanking leyó este libro. ¡Sé el primero!
                 </p>
               </div>
             ) : (

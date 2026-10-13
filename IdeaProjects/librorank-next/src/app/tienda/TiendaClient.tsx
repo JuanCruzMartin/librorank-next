@@ -477,7 +477,7 @@ export default function TiendaClient({ items, puntosIniciales }: Props) {
                             gap: 6,
                           }}>
                             <span style={{ fontSize: '2rem' }}>📚</span>
-                            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' }}>LibroRank</span>
+                            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' }}>LibroRanking</span>
                           </div>
                         )}
                         {/* hint de click */}

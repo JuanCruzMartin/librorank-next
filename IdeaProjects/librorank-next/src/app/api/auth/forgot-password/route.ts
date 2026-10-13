@@ -36,9 +36,9 @@ export async function POST(req: NextRequest) {
       const link = `${BASE_URL}/reset-password?token=${token}`
 
       await resend.emails.send({
-        from: 'LibroRank <onboarding@resend.dev>',
+        from: 'LibroRanking <onboarding@resend.dev>',
         to: email.trim(),
-        subject: '🔐 Recuperá tu contraseña — LibroRank',
+        subject: '🔐 Recuperá tu contraseña — LibroRanking',
         html: `
           <!DOCTYPE html>
           <html>
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
 
               <div style="padding:40px 36px;">
                 <div style="font-size:2rem;margin-bottom:8px;">📚</div>
-                <h1 style="color:#d4af37;font-size:1.4rem;margin:0 0 8px;">LibroRank</h1>
+                <h1 style="color:#d4af37;font-size:1.4rem;margin:0 0 8px;">LibroRanking</h1>
                 <h2 style="color:#fff;font-size:1.1rem;font-weight:600;margin:0 0 24px;">Recuperá tu contraseña</h2>
 
                 <p style="color:rgba(255,255,255,0.65);font-size:0.92rem;line-height:1.6;margin:0 0 28px;">

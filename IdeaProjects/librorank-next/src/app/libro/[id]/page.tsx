@@ -18,17 +18,17 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
-const BASE = 'https://librorank-next.vercel.app'
+const BASE = 'https://libroranking.com'
 
 export async function generateMetadata({ params }: Props) {
   const { id } = await params
   const libro = await buscarLibroGlobal(Number(id))
-  if (!libro) return { title: 'Libro no encontrado — LibroRank' }
+  if (!libro) return { title: 'Libro no encontrado — LibroRanking' }
 
-  const title = `${libro.titulo} de ${libro.autor} — LibroRank`
+  const title = `${libro.titulo} de ${libro.autor} — LibroRanking`
   const description = libro.nota_media
-    ? `"${libro.titulo}" de ${libro.autor} tiene ${Math.round(Number(libro.nota_media) * 10) / 10}⭐ y ${libro.total_lectores} lectores en LibroRank. Leé reseñas de la comunidad.`
-    : `Mirá reseñas y opiniones de "${libro.titulo}" de ${libro.autor} en LibroRank, la app de lectura gamificada.`
+    ? `"${libro.titulo}" de ${libro.autor} tiene ${Math.round(Number(libro.nota_media) * 10) / 10}⭐ y ${libro.total_lectores} lectores en LibroRanking. Leé reseñas de la comunidad.`
+    : `Mirá reseñas y opiniones de "${libro.titulo}" de ${libro.autor} en LibroRanking, la app de lectura gamificada.`
   const url = `${BASE}/libro/${id}`
   const image = libro.portada_url?.replace('http://', 'https://') ?? `${BASE}/og-default.png`
 
@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: Props) {
       title,
       description,
       url,
-      siteName: 'LibroRank',
+      siteName: 'LibroRanking',
       type: 'book',
       images: [{ url: image, width: 400, height: 600, alt: libro.titulo }],
     },
@@ -153,7 +153,7 @@ export default async function LibroPage({ params }: Props) {
                       <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)' }}>📄 {libro.paginas} páginas</span>
                     )}
                     <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.4)' }}>
-                      👥 {totalLectores} lector{totalLectores !== 1 ? 'es' : ''} en LibroRank
+                      👥 {totalLectores} lector{totalLectores !== 1 ? 'es' : ''} en LibroRanking
                     </span>
                   </div>
 
@@ -273,7 +273,7 @@ export default async function LibroPage({ params }: Props) {
                 </h2>
                 <p className="text-muted small mb-4">
                   {resenasConTexto.length > 0
-                    ? `${resenasConTexto.length} reseña${resenasConTexto.length !== 1 ? 's' : ''} de lectores de LibroRank`
+                    ? `${resenasConTexto.length} reseña${resenasConTexto.length !== 1 ? 's' : ''} de lectores de LibroRanking`
                     : 'Nadie escribió una reseña todavía.'}
                 </p>
 

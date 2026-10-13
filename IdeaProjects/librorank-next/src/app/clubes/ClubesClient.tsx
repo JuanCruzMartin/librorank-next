@@ -7,7 +7,7 @@ import BannerExplicativo from '@/components/BannerExplicativo'
 
 const COMO_FUNCIONA = [
   { emoji: '📖', titulo: 'Elegís un libro', texto: 'Al crear el club indicás qué libro van a leer juntos. Puede ser cualquiera.' },
-  { emoji: '👥', titulo: 'Invitás lectores', texto: 'Compartís el link del club. Cualquier usuario de LibroRank puede unirse (hasta el límite que definas).' },
+  { emoji: '👥', titulo: 'Invitás lectores', texto: 'Compartís el link del club. Cualquier usuario de LibroRanking puede unirse (hasta el límite que definas).' },
   { emoji: '💬', titulo: 'Discuten por capítulos', texto: 'Cada mensaje pertenece a un capítulo. Así evitás spoilers y las conversaciones quedan organizadas.' },
   { emoji: '🔒', titulo: 'Sin spoilers', texto: 'Solo ves los mensajes del capítulo que elegís. El ritmo lo define cada lector.' },
 ]
