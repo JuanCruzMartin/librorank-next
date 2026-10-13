@@ -9,7 +9,7 @@ import { obtenerAmigos } from '@/lib/dao/amigoDAO'
 import { obtenerMisionesConProgreso } from '@/lib/dao/misionDAO'
 import { obtenerRetosActivos } from '@/lib/dao/retoDAO'
 import { obtenerBingo } from '@/lib/dao/bingoDAO'
-import { buscarPorUsuario } from '@/lib/dao/libroDAO'
+import { buscarPorUsuario, migrarFechaLeido } from '@/lib/dao/libroDAO'
 import { CARTAS } from '@/lib/cartas'
 import { ITEMS_TIENDA } from '@/lib/tienda'
 import Header from '@/components/Header'
@@ -38,6 +38,7 @@ export default async function ArenaPage({ searchParams }: { searchParams: Promis
   await expirarDuelos().catch(() => {})
   await migrarLigasArena().catch(() => {})
   await migrarCantidadCartas().catch(() => {})
+  await migrarFechaLeido().catch(() => {})
 
   const [usuario, sala, activo, historial, coleccion, cantidades, tiradas, amigos, stats, statsPorRival, misiones, retos, bingo, misLibros, estadoLiga] = await Promise.all([
     buscarPorId(authUser.id),

@@ -2,6 +2,26 @@ import { query, queryOne, execute, transaction } from '@/lib/db'
 import { obtenerOCrear } from './libroGlobalDAO'
 import { crearNotificacion } from './notificacionDAO'
 
+let _fechaLeidoMigrated = false
+export async function migrarFechaLeido(): Promise<void> {
+  if (_fechaLeidoMigrated) return
+  try {
+    const col = await queryOne<{ COLUMN_NAME: string }>(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'libros_usuario' AND COLUMN_NAME = 'fecha_leido'`,
+      []
+    )
+    if (!col) {
+      await execute(`ALTER TABLE libros_usuario ADD COLUMN fecha_leido DATETIME NULL DEFAULT NULL`, [])
+      await execute(
+        `UPDATE libros_usuario SET fecha_leido = fecha_registro WHERE UPPER(estado) IN ('LEIDO','LEÍDO') AND fecha_leido IS NULL`,
+        []
+      )
+    }
+  } catch { }
+  _fechaLeidoMigrated = true
+}
+
 let _decimalMigrated = false
 export async function migrarEstrellasDecimal(): Promise<void> {
   if (_decimalMigrated) return
