@@ -42,6 +42,9 @@ export const metadata: Metadata = {
       'Registrá tus libros, ganá puntos y competí con amigos. La red social para lectores en español.',
     images: ['/og-image.png'],
   },
+  verification: {
+    google: 'QWjQkesj2J-e4TK7VuoVTk2h-Y3_5Cf91M-6q4Jgp0o',
+  },
   icons: {
     icon: [
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
