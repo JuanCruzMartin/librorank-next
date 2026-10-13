@@ -1,7 +1,6 @@
 ﻿'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import React, { useState, useEffect, useRef } from 'react'
 import {
@@ -182,7 +181,9 @@ export default function Header({ user }: HeaderProps) {
       <header className="site-header">
         <div className="container d-flex justify-content-between align-items-center">
           <Link href="/" className="logo-landing text-decoration-none" style={{ display: 'flex', alignItems: 'center' }}>
-            <Image src="/logo.jpg" alt="LibroRank" width={120} height={40} style={{ objectFit: 'contain' }} priority />
+            <span style={{ fontFamily: 'Georgia, serif', fontSize: '1.35rem', fontWeight: 700, letterSpacing: '-0.5px' }}>
+              <span style={{ color: '#fff' }}>Libro</span><span style={{ color: '#d4af37' }}>Ranking</span>
+            </span>
           </Link>
           <div className="d-flex align-items-center gap-4">
             <Link href="/ranking" className="nav-link-custom">Ranking</Link>
@@ -201,8 +202,10 @@ export default function Header({ user }: HeaderProps) {
         <div className="container d-flex justify-content-between align-items-center">
 
           {/* Logo */}
-          <Link href="/home" style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-            <Image src="/logo.jpg" alt="LibroRank" width={120} height={40} style={{ objectFit: 'contain' }} priority />
+          <Link href="/home" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <span style={{ fontFamily: 'Georgia, serif', fontSize: '1.35rem', fontWeight: 700, letterSpacing: '-0.5px' }}>
+              <span style={{ color: '#fff' }}>Libro</span><span style={{ color: '#d4af37' }}>Ranking</span>
+            </span>
           </Link>
 
           {/* Nav desktop */}
@@ -566,8 +569,10 @@ export default function Header({ user }: HeaderProps) {
         }}>
           {/* Header del menú */}
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <Link href="/home" onClick={() => setMenuAbierto(false)} style={{ display: 'flex', alignItems: 'center' }}>
-              <Image src="/logo.jpg" alt="LibroRank" width={110} height={36} style={{ objectFit: 'contain' }} />
+            <Link href="/home" onClick={() => setMenuAbierto(false)} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+              <span style={{ fontFamily: 'Georgia, serif', fontSize: '1.35rem', fontWeight: 700, letterSpacing: '-0.5px' }}>
+                <span style={{ color: '#fff' }}>Libro</span><span style={{ color: '#d4af37' }}>Ranking</span>
+              </span>
             </Link>
             <button
               onClick={() => setMenuAbierto(false)}

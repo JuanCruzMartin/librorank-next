@@ -36,7 +36,7 @@ export default function SignupClient() {
       <aside className="auth-visual" />
       <main className="auth-content" style={{ maxWidth: 420 }}>
         <header className="auth-header">
-          <Link href="/" className="logo text-decoration-none">Libro<span>Rank</span></Link>
+          <Link href="/" className="logo text-decoration-none">Libro<span>Ranking</span></Link>
         </header>
 
         <div className="auth-form-container">

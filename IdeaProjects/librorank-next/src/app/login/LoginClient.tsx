@@ -30,7 +30,7 @@ export default function LoginClient() {
       <aside className="auth-visual" />
       <main className="auth-content">
         <header className="auth-header">
-          <Link href="/" className="logo text-decoration-none">Libro<span>Rank</span></Link>
+          <Link href="/" className="logo text-decoration-none">Libro<span>Ranking</span></Link>
         </header>
 
         <div className="auth-form-container">
