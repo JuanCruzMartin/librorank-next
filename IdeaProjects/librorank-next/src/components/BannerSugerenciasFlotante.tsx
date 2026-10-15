@@ -5,6 +5,9 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 const LS_KEY = 'lr_sugerencia_enviada'
 const SS_KEY = 'lr_sugerencia_sesion'
 
+// Flag de módulo para evitar que múltiples mounts acumulen timers
+let _dismissed = false
+
 export default function BannerSugerenciasFlotante() {
   const [visible, setVisible] = useState(false)
   const [texto, setTexto] = useState('')
@@ -16,8 +19,10 @@ export default function BannerSugerenciasFlotante() {
   const bannerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (sessionStorage.getItem(SS_KEY)) return
-    const t = setTimeout(() => setVisible(true), 4000)
+    if (_dismissed || sessionStorage.getItem(SS_KEY)) return
+    const t = setTimeout(() => {
+      if (!_dismissed && !sessionStorage.getItem(SS_KEY)) setVisible(true)
+    }, 4000)
     return () => clearTimeout(t)
   }, [])
 
@@ -48,8 +53,9 @@ export default function BannerSugerenciasFlotante() {
   }, [dragging])
 
   const cerrar = () => {
+    _dismissed = true
     setVisible(false)
-    sessionStorage.setItem(SS_KEY, '1')
+    try { sessionStorage.setItem(SS_KEY, '1') } catch {}
   }
 
   const enviar = async () => {
@@ -130,7 +136,6 @@ export default function BannerSugerenciasFlotante() {
             onChange={e => setTexto(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && enviar()}
             maxLength={120}
-            autoFocus
             style={{
               width: '100%', padding: '0.45rem 0.75rem', borderRadius: 8, boxSizing: 'border-box',
               background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(139,92,246,0.35)',
