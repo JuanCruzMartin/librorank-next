@@ -1,5 +1,5 @@
 import { query, queryOne, execute } from '@/lib/db'
-import { otorgarPuntos } from './libroDAO'
+import { otorgarPuntos, migrarFechaLeido } from './libroDAO'
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -198,7 +198,7 @@ async function calcularProgreso(usuarioId: number): Promise<Map<string, number>>
 // ── Obtener misiones con progreso ────────────────────────────────────────────
 
 export async function obtenerMisionesConProgreso(usuarioId: number): Promise<MisionConProgreso[]> {
-  await inicializarTabla()
+  await Promise.all([inicializarTabla(), migrarFechaLeido().catch(() => {})])
   const todasMisiones = getMisiones()
   const [progresoMap, reclamadas] = await Promise.all([
     calcularProgreso(usuarioId),
