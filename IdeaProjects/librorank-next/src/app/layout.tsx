@@ -3,9 +3,10 @@ import './globals.css'
 import PreguntaDiariaWidget from './home/PreguntaDiariaWidget'
 import ChatFab from './home/ChatFab'
 import BannerSugerenciasFlotante from '@/components/BannerSugerenciasFlotante'
+import OnboardingTour from '@/components/OnboardingTour'
 import { getAuthUser } from '@/lib/auth'
 
-const BASE_URL = 'https://librorank-next.vercel.app'
+const BASE_URL = 'https://libroranking.com'
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -75,6 +76,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {children}
         {user && (
           <>
+            <OnboardingTour />
             <PreguntaDiariaWidget />
             <ChatFab />
             <BannerSugerenciasFlotante />
