@@ -87,7 +87,6 @@ export default function OnboardingTour() {
         {/* Card */}
         <div className="tour-card" style={{
           width: '100%', maxWidth: 420,
-          background: 'linear-gradient(145deg, #1a1614, #111',
           background: '#1a1614',
           border: `1px solid ${actual.color}55`,
           borderRadius: 20,
